@@ -1,0 +1,119 @@
+
+$color: #007bff;
+
+/* 主体 */
+.select{
+  width:268px;
+  position: relative;
+  user-select: none;
+  cursor: pointer;
+  .checkbox{
+    display: block;
+    padding-left:32px;
+    position: relative;
+    height:32px;
+    .select-option{
+      position: absolute;
+      top:0;
+      right:0;
+      left: 32px;
+      bottom:0;
+    }
+  }
+   
+  .checkbox-icon{
+    position: absolute;
+    top:50%;left:12px;
+    margin-top:-6px;
+    width:13px;
+    height:13px;
+    line-height: 13px;
+  }
+
+}
+
+/* 选择框 */
+.select-input{
+  border:1px solid #aaa;
+  border-radius:4px;
+}
+  
+.select-input__exact{
+  width: 100%;
+  padding:5px 8px;
+  line-height:20px;
+  user-select: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+.select-multiple-wrap{
+  top:0;left:0;
+  white-space: wrap;
+  padding: 4px 6px;
+  line-height:30px;
+}
+.select-multiple-tag{
+  background: rgba(32,160,255,0.10);
+  border: 1px solid rgba(32,160,255,0.20);
+  border-radius: 4px; 
+  color: $color;
+  padding:0 12px 0 6px;
+  line-height:22px;
+  display: inline-block;
+  margin-right: 10px;
+   
+}
+.icon__select-reduce{
+  font-size:8px !important;
+  margin-left:8px;
+}
+
+
+
+/* 下拉菜单 */
+.select-dropdown{
+  position: absolute;
+  right:0;left:0;
+  top:100%;
+  z-index: 1900;
+  margin-top:3px;
+  display: none;
+  overflow-y: auto;
+    // @extend .border !optional;
+  padding: 4px 0;
+  background:#fff;
+  box-shadow: 1px 1px 5px 0 rgba(0,0,0,0.2);
+  &.is-active{
+    display: block;
+  }
+  .checkbox-group{
+    overflow-y: auto;
+    height: 8*32px;
+  }
+}
+
+.select-search__input-wrap{padding: 4px;}
+  
+  /* Option */
+.select-group__title,
+.select-option{
+  line-height:32px;
+  padding:0 8px;
+  &:hover{
+    background:#eee;
+  }
+}
+.select-option.selected{
+  background: $color;
+  color:#fff;
+}
+  /* option-group */
+.select-group__wrap{
+  list-style: none;
+}
+.select-group{
+  padding-left:16px;
+}
+
+
