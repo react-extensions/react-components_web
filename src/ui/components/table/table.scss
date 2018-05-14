@@ -1,0 +1,29 @@
+  .table{
+    width: 100%;
+    border-spacing: 0px;
+    table-layout: fixed;
+  }
+  
+  .th{
+    height:36px;
+    background: #F5F5F5;
+    padding-left:15px;
+    border-top:1px solid #e9e9e9;
+    border-bottom:1px solid #e9e9e9;
+  }
+  
+  .td{
+    height:80px;
+    padding:12px;
+    vertical-align: top;
+    border-bottom:1px solid #e9e9e9;
+  }
+  th,
+  td{
+    text-align: left;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  

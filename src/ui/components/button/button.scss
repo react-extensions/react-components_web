@@ -1,0 +1,74 @@
+@import '../../style/theme.scss';
+
+
+  .btn{
+    margin: 6px;
+    min-width:73px;
+    line-height:20px;
+    padding:5px 16px;
+    font-size:13px;
+    outline: none !important;
+    color:#fff;
+    background: $primary;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: box-shadow ease-out .2s;
+    cursor: pointer;
+    &:hover{
+      background-color: darken($primary, 5%);
+      border-color: darken($primary, 10%);
+    }
+    &:focus{
+      box-shadow: 0 0 0 4px fade-out($primary, 0.5);
+    }
+    &.light{
+      background: $light;
+      border-color: $light;
+      color:#212529;
+      &:hover{
+        background-color: darken($light, 5%);
+        border-color: darken($light, 10%);
+      }
+      &:focus{
+        box-shadow: 0 0 0 4px fade-out($light, 0.5);
+      }
+    }
+    &.success{
+      background: $success;
+      border-color: $success;
+      color:#fff;
+      &:hover{
+        background-color: darken($success, 5%);
+        border-color: darken($success, 10%);
+      }
+      &:focus{
+        box-shadow: 0 0 0 4px fade-out($success, 0.5);
+      }
+    }
+    &.warning{
+      background: $warning;
+      border-color: $warning;
+      color:#fff;
+      &:hover{
+        background-color: darken($warning, 5%);
+        border-color: darken($warning, 10%);
+      }
+      &:focus{
+        box-shadow: 0 0 0 4px fade-out($warning, 0.5);
+      }
+    }
+    &.danger{
+      background: $danger;
+      border-color: $danger;
+      color:#fff;
+      &:hover{
+        background-color: darken($danger, 5%);
+        border-color: darken($danger, 10%);
+      }
+      &:focus{
+        box-shadow: 0 0 0 4px fade-out($danger, 0.5);
+      }
+    }
+
+
+   }

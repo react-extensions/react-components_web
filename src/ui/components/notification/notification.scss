@@ -1,0 +1,23 @@
+@import '../../style/theme.scss';
+
+  .notification {
+    position: fixed;
+    top: 40px;
+    left: 50%; 
+    transform: translateX(-50%);
+    min-width: 220px;
+    min-height: 20px;
+    padding: 14px;
+    font-size:15px;
+    line-height:20px;
+    background: #fff;
+    text-align: center;
+    border-radius: 4px;
+    z-index: 2000;
+    box-shadow: 0 2px 4px rgba(0,0,0,.12), 0 0 6px rgba(0,0,0,.04);
+    &.success{ color: $success}
+    &.warning{color: $warning}
+    &.danger{color: $danger}
+
+  }
+

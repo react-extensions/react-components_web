@@ -1,0 +1,48 @@
+
+:global{
+   /* toast通知 */
+  .dialog-wrap{
+    display: none;
+    
+    position: fixed;
+    top:0;left:0;
+    bottom: 0;right:0;
+    z-index:1900;
+    background:rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+  } 
+  .dialog{
+    width:320px ;
+    background:#fff;
+    border-radius: 4px;
+    position: relative;
+  }
+  
+  .dialog-hd{
+    cursor: move;
+    user-select: none;
+    padding:10px 20px;
+    background: #F5F5F5;
+    border-radius: 4px 4px 0 0;
+  }
+  .dialog-close-btn{
+    position: absolute;
+    top:9px;
+    right:9px;
+    font-size:14px;
+    color:#ccc;
+    cursor: pointer;
+  }
+  .dialog-bd{
+    padding: 20px;
+  }
+  .dialog-ft{
+    padding: 20px 0 28px;
+    text-align: center;
+    .btn{
+      margin: 0 6px;
+    }
+  }
+
+}

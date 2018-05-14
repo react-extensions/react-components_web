@@ -1,0 +1,65 @@
+@import '../../style/theme.scss';
+
+:global{
+  .pagination{
+    line-height: 20px;
+    user-select: none;
+  }
+  .pager{
+    list-style: none;
+    float: left;
+  }
+  .page-num,
+  .prev-btn,
+  .next-btn{
+    width:20px;
+    height:20px;
+    border:0;
+    text-align: center;
+    float: left;
+    outline: none;
+    background: none;
+    cursor: pointer;
+    margin:0 2px;
+    border-radius:3px;
+    line-height: 20px;
+    &:hover{
+      background:#eee;
+    }
+  }
+  .page-num.active{
+    background:$color !important;
+    color:#fff;
+  }
+  .prev-btn,
+  .next-btn{
+    &:disabled{
+      color:#bfbfbf;
+    }
+  }
+
+  .page-info {
+    padding:0 6px;
+    float: left;
+  }
+  .pager-input__label{
+    float: left;
+    margin:0 16px;
+  }
+  .pager-input{
+    width:60px !important;
+    margin:0 3px;
+  }
+  .pager-select .select-input__exact,
+  .pager-select .select-input,
+  .pager-input{
+    padding-top:1px;
+    padding-bottom:1px;
+    height:24px !important;
+    line-height:22px;
+  }
+  .pager-select{
+    width:82px !important;
+    float: left;
+  }
+}
