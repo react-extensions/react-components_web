@@ -13,9 +13,9 @@ class Comp extends Component {
 }
 
 Comp.propTypes = {
-
+  message: PropTypes.oneOf([PropTypes.number, PropTypes.string]),
+  type: PropTypes.oneOf(['success', 'danger', 'warning'])
 }
-
 
 function Notification(option = {}) {
   option = Object.assign({}, {

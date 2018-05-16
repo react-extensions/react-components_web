@@ -1,6 +1,6 @@
 import React from 'react'
 import './dialog.scss'
-import {attachEvent, detachEvent, target} from '../../libs/utils'
+import {attachEvent, detachEvent} from '../../libs/utils'
 import Icon from '../icon/icon'
 
 // title, content, ft , show, className

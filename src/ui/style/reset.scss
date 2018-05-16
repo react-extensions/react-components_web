@@ -1,0 +1,32 @@
+.pointer{
+  cursor: pointer;
+}
+.d-none{display: none;}
+.d-flex{display: flex;}
+
+html {
+  box-sizing: border-box;
+  -ms-overflow-style: scrollbar;
+}
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body,ul, li, h1,h2,h3,h4,h5,h6, p{
+  padding:0;
+  margin: 0;
+}
+
+a{
+  color:inherit;
+  font-size: inherit;
+  text-decoration: none;
+}
+
+input, button{
+  outline: 0;
+  font-size:inherit;
+  border-width: 1px;
+}
