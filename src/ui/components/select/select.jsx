@@ -12,7 +12,6 @@ import { attachEvent, detachEvent, contains, target } from '../../libs/utils'
 *  @param selected   String     单选时, 默认选中, 值应该为 要选中option的label值
 *  @param placeholder<String>   单选时, 选择框的标题
 *  @param disabled   <Boolean>  禁用选择框
-
 */
 class Select extends React.Component {
   constructor(props) {
