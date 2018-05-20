@@ -1,6 +1,6 @@
 import './style/reset.scss'
 
-import Select from './components/select/select'
+import Select from './components/select/index'
 import Button from './components/button/button'
 import Icon from './components/icon/icon'
 import Cell from './components/cell/cell'

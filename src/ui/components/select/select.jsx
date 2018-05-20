@@ -1,225 +1,209 @@
-
 import React from 'react'
-import PropTypes from 'prop-types'
-import {attachEvent, detachEvent, contains, target}  from '../../libs/utils'
-import './select.scss'
-// import classname from 'classname'
-import Icon from '../icon/icon'
+import PropTypes from "prop-types";
+import { attachEvent, detachEvent, contains, target } from '../../libs/utils'
 
-/* 
-*  Select props
-*  multiple   Boolean  是否多选
-*  search    Boolean   是否需要搜索框
-*  plugin    element   搜索框旁边的按钮
-*  className  String   自定义类名,方便修改样式
-*  selected   String   label 单选时, 默认选中
-*  selectedList  Array [label, label]
-*  onChange  Function  当选择器为单选时, 向父组件发送选中数据
-*   ----------------------------
-*
-*  Option props
-*  label   String  用于显示
-*  value   Any     每个选项代表的数据
+/** 
+*  @Component Select 
+*  @param multiple   Boolean    是否多选
+*  @param search     <Boolean>  是否显示搜索框
+*  @param plugin     element    搜索框旁边的按钮
+*  @param onChange   Function   当选择器为单选时, 向父组件发送选中数据
+*  @param className  String     自定义类名,方便修改样式
+*  @param selected   String     单选时, 默认选中, 值应该为 要选中option的label值
+*  @param placeholder<String>   单选时, 选择框的标题
+*  @param disabled   <Boolean>  禁用选择框
+
 */
 class Select extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props)
     this.state = {
-      isCollapsed: true,
-      // 用于多选选中
-      selectedList:[],
-      // 用于单选选中
-      selected: '',
-      searchText: ''
+      isCollapsed: true, // 是否折叠下拉框
+      selectedList: [],  // 用于多选选中
+      selected: null,      // 用于单选选中
     }
+    this.static = {
+      selectedValueList: {},
+      selectedValue: '',
+      searching: false,
+      shouldUpdate: true
+    }
+
     this.toggleDropdown = this.toggleDropdown.bind(this)
     this.closeDropdown = this.closeDropdown.bind(this)
+
+
+    const { selected, selectedList, multiple } = props
+    if (multiple) {  // 多选下拉框
+      this.state.selectedList = selectedList
+    } else if (selected) {  // 单选
+      this.state.selected = selected
+    }
+
+
   }
   /* childcontext */
   getChildContext() {
-    return {
-      Select: this
-    }
+    return { Select: this }
   }
-  toggleDropdown(e) {
-    if(!this.props.disabled) {
-      const isOff = this.state.isCollapsed
-      if(isOff) {
-        attachEvent(document, 'click', this.closeDropdown)
+  sendList() {
+    const { onChange, multiple } = this.props
+    if (multiple && onChange) {
+      const list = this.static.selectedValueList
+      const arr = []
+      for (let item in list) {
+        arr.push(list[item])
       }
-      this.setState({isCollapsed: !isOff})
+      onChange(arr)
+    }
+
+  }
+  initial() {
+    if (this.static.shouldUpdate) {
+      this.static.shouldUpdate = false
+      this.sendList()
     }
   }
-  closeDropdown(e) {
-    // 这个函数未经过react处理
-    e = e || window.event
-    if(!contains(this.dropdown, target(e))){
-      this.setState({isCollapsed: true})
-      detachEvent(document, 'click', this.closeDropdown)
-    }
+  componentDidUpdate() {
+    this.initial()
   }
-  // 从上方已选中栏中直接删除选项
-  cancelFromList(e, cancel) {
-    // react兼容IE8的 取消事件冒泡, 这样写就行了
-    e.stopPropagation()
-    const list =  this.state.selectedList.filter(item => (item !== cancel)) 
-    this.setState({selectedList: list})
-  }
-  search(e) {
-    this.setState({searchText: e.target.value})
-  }
-  componentWillMount() {
-    const {selected, multiple, selectedList} = this.props
-    if(multiple && selectedList) {
-      this.setState({selectedList: selectedList})
-    } else if(selected) {
-      this.setState({selected: selected }) 
-    }
+  componentDidMount() {
+    this.initial()
   }
   componentWillUnmount() {
     detachEvent(document, 'click', this.closeDropdown)
   }
-  // 这里还没性能优化
-  /* shouldComponentUpdate(prevP, prevS) {
+  // willReceiveProps 和 shouldUpdate  待优化 
+  componentWillReceiveProps(nP) {
+    const { selected, selectedList, multiple } = this.props
+    if (multiple && (nP.selectedList !== selectedList)) {
+      this.setState({ selectedList: nP.selectedList })
+      this.static.shouldUpdate = true
+      this.static.selectedValueList = {}
+    } else if (selected !== nP.selected) {
+      this.setState({ selected: nP.selected })
+      this.static.shouldUpdate = true
+    }
+  }
+  /*  shouldComponentUpdate(nP, nS) {
+     const { disabled } = this.props
+     const { selected, selectedList, isCollapsed } = this.state
+     return disabled !== nP.disabled
+       || nS.selected !== selected
+       || nS.selectedList !== selectedList
+       || isCollapsed !== nS.isCollapsed
+       || this.static.shouldUpdate
+   } */
+  toggleDropdown() {
+    if (!this.props.disabled) {
+      this.setState((prev) => {
+        const isOff = prev.isCollapsed
+        if (isOff) {
+          attachEvent(document, 'click', this.closeDropdown)
+        } else {
+          detachEvent(document, 'click', this.closeDropdown)
+        }
+        return { isCollapsed: !isOff }
+      })
+    }
+  }
+  closeDropdown(e) {
+    e = e || window.event
+    if (!contains(this.dropdown, target(e))) {
+      this.setState({ isCollapsed: true })
+      detachEvent(document, 'click', this.closeDropdown)
+    }
+  }
 
-  } */
+  // 从上方已选中栏中直接删除选项
+  cancelFromList(e, cancel) {
+    e.stopPropagation()
+    this.onClickOption({ label: cancel }, true)
+  }
+  search(e) {
+    this.searching = true
+    this.setState({ searchText: e.target.value })
+  }
+  cancelSearch(e) {
+    this.searching = !!e.target.value
+  }
+  onClickOption(option, prevChecked) {
+    const { multiple, onChange } = this.props
+    if (multiple) {
+      let list = this.state.selectedList
+      if (!prevChecked) {
+        this.static.selectedValueList[option.label] = option.value
+        list = list.concat([option.label])
+      } else {
+        list = list.filter((item, i) => {
+          const bool = item === option.label
+          if (bool) { // 删除值, 待优化
+            delete this.static.selectedValueList[option.label]
+          }
+          return !bool
+        })
+      }
+      this.setState({ selectedList: list })
+      this.sendList()
+    } else {
+      if (!prevChecked) {
+        this.setState({ selected: option.label });
+        onChange && onChange(option.value)
+      }
+    }
+
+  }
   render() {
-    const {selected, isCollapsed, selectedList} = this.state
-    const {multiple, children,  plugin, search, className, max} = this.props
+    const { selected, isCollapsed, selectedList } = this.state
+    const { multiple, children, plugin, className, disabled, search, placeholder } = this.props
+    let max = parseInt(this.props.max)
     const len = selectedList.length
-    
+
     return (
-      <div className = {'select ' + (className || '')}> 
+      <div className={'select ' + (disabled ? ' disabled' : '') + (className || '')}>
         <div className='select-input' onClick={this.toggleDropdown}>
           {/* tags 或者 input */}
           {
-            !multiple ? (<span className='select-input__exact'>{selected || '请选择'}</span>) : (
-              <div className="select-multiple-wrap base-color " >
+            !multiple ? (<div className={'select-input__exact'} > {selected || (placeholder || '请选择')}</div>) : (
+              <div className="select-multiple-wrap" >
                 {
-                  selectedList.map((item, i) => (
-                    <span className='select-multiple-tag pointer' key={item} onClick={e => this.cancelFromList(e, item)}>
+                  selectedList.map(item => (
+                    <span className='select-multiple-tag' key={item} onClick={e => this.cancelFromList(e, item)}>
                       {item}
-                      <i className="iconfont icon-close icon__select-reduce"></i>
+                      <i className="iconfont icon-close iconselect-reduce"></i>
                     </span>
-                  )) 
+                  ))
                 }
-                <span className={'select-add-tag-btn ' + (((isCollapsed && len < parseInt(max)) || len === 0)  ? '' : 'd-none')}> + 选择</span>
+                <span className={'no-wrap base-color ' + (((!isCollapsed && len !== 0) || len >= max) ? 'd-none ' : '')} > + 选择</span>
               </div>
-            ) 
+            )
           }
         </div>
 
         {/* Dropdown */}
-        <div className={'select-dropdown ' + (isCollapsed ? '' : 'is-active')} ref={el=> this.dropdown = el}>
-          {
-            search ? (
-              <div className="select-search__input-wrap clearfix">
-                  <input type="text" className='select-search__input' 
-                         placeholder ={'搜索'} 
-                         onChange={e => this.search(e)}
-                         />
-                  {plugin}
-              </div>
-            ) : null
+        <div className={'select-dropdown ' + (isCollapsed ? '' : 'is-active')} ref={el => this.dropdown = el}>
+          {search &&
+            (<div className="select-searchinput-wrap clearfix">
+              <input type="text" className='select-searchinput' placeholder={'搜索'} onChange={e => this.search(e)} onBlur={e => this.cancelSearch(e)} />
+              {plugin || null}
+            </div>)
           }
-          <div className="dropdown__track">{children}</div>
+          <div className="select-dropdowntrack">
+            {children}
+          </div>
         </div>
-      </div>
-    )
-  }
-}
-/* Option */
-class Option extends React.Component{
-  parent() {
-    return this.context.Select
-  }
-  handleClick() {
-    const parent = this.parent()
-    const {multiple, onChange} = parent.props
-    const {label} = this.props
-    const selected = this.selected 
-    if(multiple) {
-      if(selected) {
-        parent.setState(prev => ({selectedList: prev.selectedList.filter(item => (item !== label))}))
-      } else {
-        parent.setState(prev => ({selectedList: prev.selectedList.concat([label])}))
-      }
-    }else {
-      parent.setState({ selected: label })
-      onChange && onChange(label)
-    }
-  }
-  
-  shouldComponentUpdate(nP) {
-    const parent = this.parent()
-    const {props, state} = parent
-    const oldV = (this.selected  || false)
-    const newV = this.selected  = props.multiple ?
-                                state.selectedList.some(item => (item === nP.label)) :
-                                state.selected === nP.label
 
-    const oldH = (this.hide || false)
-    const newH = this.hide = (nP.label.indexOf(state.searchText) === -1)
-
-    return (oldV ^ newV) || (oldH ^ newH)
-  }
-  componentDidUpdate() {
-    console.log('更新', this.props.label)
-  }
-  render() {
-    const {label} = this.props
-    const {multiple} = this.parent().props
-    const selected = this.selected 
-    return (
-      <div className={"select-option " + ((selected && !multiple) ? 'selected ' : '') + (this.hide ? 'd-none' : '')} 
-          onClick={this.handleClick.bind(this)}
-      >
-        {multiple && <Icon type={selected ? 'check-fill' : 'check'} className='select-icon__checkbox'/>}
-        {label}
       </div>
     )
   }
 }
 
-/* OptionGroup */
-class OptionGroup extends React.Component{
- 
-  handleClick(e, v) {
-    // e.stopPropagation()
-    this.parent().setState({
-      selected: v
-    })
-  }
-  parent() {
-    return this.context.Select
-  }
-  render() {
-    const {label, value, children} = this.props
-    return (
-      <ul className="select-group__wrap" onClick={e => this.handleClick(e, {value, label})} >
-        <li className="select-group__title">
-          {label}
-        </li>
-        <li>
-          <ul className="select-group">{children}</ul>
-        </li>
-      </ul>
-    )
-  }
-}
 
 Select.defaultProps = {
   max: 10
 }
-
-
-Select.childContextTypes =
-Option.contextTypes = 
-OptionGroup.contextTypes = {
+Select.childContextTypes = {
   Select: PropTypes.any
 }
-
-Select.Option = Option
-Select.OptionGroup = OptionGroup
 
 export default Select

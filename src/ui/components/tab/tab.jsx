@@ -1,6 +1,5 @@
 const React = require('react')
 require('./tab.scss')
-const classname = require('classnames')
 
 // props
 // active 初始选中
@@ -30,7 +29,8 @@ class Tab extends React.Component {
             <ul className='tab-group clearfix'>
               {
                 tabList.map((item, i) => (
-                  <li className={classname('tab-item pointer', {'active': active === i}, {'first': i === 0})}
+                  <li className={'tab-item pointer ' + (i === 0 ? 'first ' : '') + (active === i ? 'active ' : '')}
+                  
                    key={i} 
                    onClick={this.choose.bind(this, i)}>{item}</li>
                 ))

@@ -1,0 +1,15 @@
+ .tag{
+  background: rgba(32,160,255,0.10);
+  border: 1px solid rgba(32,160,255,0.20);
+  border-radius: 4px; 
+  color: $color;
+  padding:0 6px 0 8px;
+  line-height:22px;
+  display: inline-block;
+  margin-right: 10px;
+  .icon__close{
+    font-size:8px !important;
+    margin-left:8px;
+  }
+}
+  

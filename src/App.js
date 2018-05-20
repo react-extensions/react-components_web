@@ -1,17 +1,26 @@
 import React, { Component } from 'react';
 import './App.scss'
-import Checkbox from './components/checkbox/checkbox'
-import Select from './components/select/select'
+
+import {
+Radio,
+Checkbox,
+Select,
+
+} from './ui/index'
 
 class App extends Component {
   constructor(){
     super()
     this.state = {
       bool: true,
-      list: ['1', '3']
+      list: [],
+      radio: '菠萝'
     }
     this.handle = this.handle.bind(this)
     this.change = this.change.bind(this)
+    setTimeout(() => {
+      this.setState({list: ['菠萝', '苹果']})
+    },3000)
   }
   handle() {
     this.setState(prev => ({
@@ -19,27 +28,43 @@ class App extends Component {
     }))
   }
   change(v) {
-    console.log(v)
     this.setState({list: v})
   }
+  changeRadio(v) {
+    console.log(v)
+    this.setState({radio: v})
+  }
+  changeSelect(v) {
+    console.log('父元素',v)
+  }
   render() {
-    const {bool, list} = this.state
+    // Notification({message: 'ssss', type: 'danger'})
+    const {bool, list,radio} = this.state
     return (
-      <div>
+      <div className='container'>
         <button type='button' onClick = {this.handle}>{bool ? 'ON' : 'OFF'}</button>
         <br/>
         <Checkbox.Group checkedList={list} onChange={this.change}>
-          <Checkbox label='1' value='1' />
-          <Checkbox  label='2' value='2'/>
-          <Checkbox label='3' value='3'/>
+          <Checkbox label='菠萝'/>
+          <Checkbox  label='苹果'/>
+          <Checkbox label='香蕉' />
         </Checkbox.Group>
         <br/>
-        <Select multiple = {true}>
-          <Select.Option label='1' value='1'/>
-          <Select.Option label='2' value='2'/>
-          <Select.Option label='3' value='3'/>
-          
+   
+        <br/>
+        <Radio.Group checked= {radio} onChange={this.changeRadio.bind(this)}>
+          <Radio label='菠萝'/>
+          <Radio label='苹果'/>
+          <Radio label='香蕉'/>
+          <Radio label='DDD'/>
+        </Radio.Group>
+        <br/>
+        <Select onChange={this.changeSelect.bind(this)} selectedList={list} multiple>
+          <Select.Option label='苹果' value={{name: "苹果", id:'pg'}}/>
+          <Select.Option label='菠萝' value={{name: "菠萝", id:'PAIAPPLE'}}/>
+          <Select.Option label='香蕉' value={{name: "香蕉", id:'BANANA'}}/>
         </Select>
+        
       </div>
     );
   }
