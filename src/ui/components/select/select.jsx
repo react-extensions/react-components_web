@@ -73,8 +73,16 @@ class Select extends React.Component {
     detachEvent(document, 'click', this.closeDropdown)
   }
   // willReceiveProps 和 shouldUpdate  待优化 
-  componentWillReceiveProps(nP) {
-    const { selected, selectedList, multiple } = this.props
+componentWillReceiveProps(nP) {
+    const { selected, selectedList, multiple, placeholder } = this.props
+    if (!!nP.placeholder && nP.placeholder !== placeholder) {
+      this.setState({
+        selected: null,
+        selectedList: [],
+      })
+      this.static.selectedValueList = {}
+    }
+
     if (multiple && (nP.selectedList !== selectedList)) {
       this.setState({ selectedList: nP.selectedList })
       this.static.shouldUpdate = true
@@ -83,16 +91,19 @@ class Select extends React.Component {
       this.setState({ selected: nP.selected })
       this.static.shouldUpdate = true
     }
+    
   }
-  /*  shouldComponentUpdate(nP, nS) {
-     const { disabled } = this.props
-     const { selected, selectedList, isCollapsed } = this.state
-     return disabled !== nP.disabled
+   shouldComponentUpdate(nP, nS) {
+     const { disabled, placeholder } = this.props
+     const { selected, selectedList, isCollapsed, searchText } = this.state
+     return nP.disabled !== disabled
+       || nP.placeholder !== placeholder
        || nS.selected !== selected
        || nS.selectedList !== selectedList
-       || isCollapsed !== nS.isCollapsed
+       || nS.searchText !== searchText
+       || nS.isCollapsed !== isCollapsed
        || this.static.shouldUpdate
-   } */
+   }
   toggleDropdown() {
     if (!this.props.disabled) {
       this.setState((prev) => {
