@@ -5,14 +5,25 @@ class Row extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      checked: false
+      checked: false, 
+      collapse: true,
+      expandCol: 0
     }
   }
+  // 具有多选功能的表格
   checked() {
     const { checked } = this.state
     const { onChecked, tr } = this.props
     onChecked(tr, !checked)
     this.setState({ checked: !checked })
+  }
+  // 具有扩展功能的表格
+  expand(index) {
+    const collapse = this.state.collapse
+    this.setState({
+      collapse: !collapse,
+      expandCol: index
+    })
   }
   componentWillReceiveProps(nP) {
     const { checkedStatus } = nP
@@ -26,21 +37,42 @@ class Row extends React.Component {
     return nS.checked !== this.state.chekced
   }
   componentDidUpdate() {
-    console.log('更新了', this.tr)
+    // console.log('更新了', 'tr')
   }
   render() {
     const { thead, tr, bgColor} = this.props
-    const { checked } = this.state
+    const { checked, collapse, expandCol} = this.state
     return (
-      <tr className={'tr ' + bgColor} >
+      <React.Fragment>
+        <tr className={'tr ' + bgColor} >
+          {
+            thead.map((th, j) => (
+              <td className='td' key={'td' + j} 
+                  onClick={
+                    th.type === 'checkbox' ? this.checked.bind(this) 
+                      : th.type === 'expand' ? this.expand.bind(this, j)
+                        : null
+                  }
+              >
+                {
+                  th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
+                    : th.type === 'expand' ? (<Icon type= 'down-fill' className={collapse ? 'turn-right' : ''} />) 
+                      : tr[th.prop]
+                }
+              </td>
+            ))
+          }
+        </tr>
         {
-          thead.map((th, j) => (
-            th.type === 'checkbox'
-              ? (<td className='td' key={'td' + j} onClick={this.checked.bind(this)}><Icon type={checked ? 'check-fill' : 'check'} /></td>)
-              : (<td className='td' key={'td' + j} >{tr[th.prop]}</td>)
-          ))
+          !collapse && (
+            <tr className='expand-tr'>
+              <td colSpan={thead.length} className='expand-td'>
+                {thead[expandCol].content}
+              </td>
+            </tr>
+          )
         }
-      </tr>
+      </React.Fragment>
     )
   }
 }

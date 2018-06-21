@@ -166,7 +166,7 @@ componentWillReceiveProps(nP) {
   render() {
     const { selected, isCollapsed, selectedList } = this.state
     const { multiple, children, plugin, className, disabled, search, placeholder } = this.props
-    let max = parseInt(this.props.max)
+    let max = parseInt(this.props.max) // eslint-disable-line
     const len = selectedList.length
 
     return (

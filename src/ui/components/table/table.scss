@@ -1,4 +1,8 @@
+  @import '../../style/animation.scss';
   .table {
+    overflow-x: auto;
+    position: relative;
+
     table{
       width: 100%;
       border-spacing: 0px;
@@ -6,7 +10,19 @@
     }
     .iconfont{
       cursor: pointer;
+      display: block;
+      margin: auto;
+      height: 16px;
+      width: 16px;
+      transition: transform cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
     }
+  }
+  .resize-col-sign{
+    position: absolute;
+    top:0;bottom:0;
+    border-left: 1px dashed #888;
+    width: 0;
+    z-index: 11;
   }
   .table-thead{
     overflow: hidden;
@@ -20,14 +36,18 @@
     background: #F5F5F5;
     border-top:1px solid #e9e9e9;
     border-bottom:1px solid #e9e9e9;
-    
+    position: relative;
   }
   
   .td{
-    vertical-align: top;
     border-bottom:1px solid #e9e9e9;
     padding:15px 0;
+    vertical-align: middle;
+    .turn-right {
+      transform: rotateZ(-90deg);
+    }
   }
+
   .th,
   .td{
     padding-left:15px;
@@ -37,6 +57,7 @@
     overflow: hidden;
     white-space: nowrap;
   }
+
   .tr{
     $darken: #fafafa;
     $lighten: #fff;
@@ -51,6 +72,30 @@
     }
     &:hover{background: #f5f7fa;}
     
+  }
+
+  // 用于调整表格列宽
+  .th-border{
+    display: block;
+    width:3px;
+    height: 60%;
+    background:transparent;
+    position: absolute;
+    right:0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right: 1px dotted #888;
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  // 可扩展 tr
+  .expand-tr{
+    animation: bounceOutDown ease .3s;
+    transform-origin: top;
+  }
+  .expand-td{
+    border-top:2px solid #f9f7f7 !important;
   }
 
   

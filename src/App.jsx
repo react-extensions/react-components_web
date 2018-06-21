@@ -5,7 +5,7 @@ import {
 Radio,
 Checkbox,
 Select,
-
+Table
 } from './ui/index'
 
 class App extends Component {
@@ -14,7 +14,8 @@ class App extends Component {
     this.state = {
       bool: true,
       list: [],
-      radio: '菠萝'
+      radio: '菠萝',
+      input: ''
     }
     this.handle = this.handle.bind(this)
     this.change = this.change.bind(this)
@@ -37,9 +38,69 @@ class App extends Component {
   changeSelect(v) {
     console.log('父元素',v)
   }
+  input(e) {
+    this.setState({input: e.target.value})
+  }
   render() {
     // Notification({message: 'ssss', type: 'danger'})
-    const {bool, list,radio} = this.state
+    const { bool, list, radio, input} = this.state
+    const thead = [
+      {
+        type: 'checkbox'
+      },
+      {
+        type: 'expand',
+        content: (
+          <div>
+            <h1>zhangs</h1>
+            <ul>
+              <li>一</li>
+              <li>二</li>
+              <li>仨</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        width: 100,
+        prop: 1,
+        label: '第一列'
+      },
+      {
+        width: 100,
+        prop: 2,
+        label: '第二列'
+      },
+      {
+        width: 100,
+        prop: 3,
+        label: '第三列'
+      },
+    ]
+    const tbody = [
+     {
+       1: '张',
+       2: '李',
+       3: '吴'
+     },
+      {
+        1: 'a',
+        2: 'b',
+        3: 'c',
+        4: {
+          zhang: 'asfasd '
+        }
+      }
+      ,
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      }
+    ]
     return (
       <div className='container'>
         <button type='button' onClick = {this.handle}>{bool ? 'ON' : 'OFF'}</button>
@@ -64,7 +125,20 @@ class App extends Component {
           <Select.Option label='菠萝' value={{name: "菠萝", id:'PAIAPPLE'}}/>
           <Select.Option label='香蕉' value={{name: "香蕉", id:'BANANA'}}/>
         </Select>
-        
+        <br/>
+        <Table thead={thead} zebra={true} tbody={tbody} />
+
+       {/*  <input type="text" onChange={e => this.input(e)}/>
+        <table border='1'   cellSpacing='0'>
+          <tbody>
+            <tr>
+              <td>
+                {input}
+              </td>
+            </tr>
+          </tbody>
+        </table> */}
+
       </div>
     );
   }

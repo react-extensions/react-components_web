@@ -6,9 +6,9 @@ import PropTypes from 'prop-types'
  *  @param value   Any     每个选项代表的数据
  */
 class Option extends React.Component {
-  constructor(props) {
+ /*  constructor(props) {
     super(props)
-  }
+  } */
   parent() {
     return this.context.Select
   }
