@@ -56,20 +56,18 @@ let contains = function(parent, child){
     }
   }else {
     contains = function (p, c){
-      function x() {
-        c.parentNode === p
+      function x(p, c) {
         const node = c.parentNode
-        if(node) {
-          if(node === p){
-            return true
-          } else{
-            c = node
-            x()
-          }
+        if (!node) return false
+
+        if (node === p) {
+          return true
+        } else {
+          c = node
+          x(p, c)
         }
-        return false
       }
-      return x()
+      return x(p, c)
     }
   }
   return contains(parent, child)

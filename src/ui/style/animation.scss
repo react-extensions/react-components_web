@@ -1,0 +1,11 @@
+  
+  @keyframes bounceOutDown {
+    from {
+      opacity: 0.2;
+      transform: scale3d(1, 0, 1)
+    }
+    to {
+      opacity: 1;
+      transform: scale3d(1, 1, 1)
+    }
+  }

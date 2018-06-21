@@ -72,6 +72,7 @@ class Select extends React.Component {
   componentWillUnmount() {
     detachEvent(document, 'click', this.closeDropdown)
   }
+  // willReceiveProps 和 shouldUpdate  待优化 
 componentWillReceiveProps(nP) {
     const { selected, selectedList, multiple, placeholder } = this.props
     if (!!nP.placeholder && nP.placeholder !== placeholder) {
@@ -165,7 +166,7 @@ componentWillReceiveProps(nP) {
   render() {
     const { selected, isCollapsed, selectedList } = this.state
     const { multiple, children, plugin, className, disabled, search, placeholder } = this.props
-    let max = parseInt(this.props.max)
+    let max = parseInt(this.props.max) // eslint-disable-line
     const len = selectedList.length
 
     return (
@@ -179,7 +180,7 @@ componentWillReceiveProps(nP) {
                   selectedList.map(item => (
                     <span className='select-multiple-tag' key={item} onClick={e => this.cancelFromList(e, item)}>
                       {item}
-                      <i className="iconfont icon-close iconselect-reduce"></i>
+                      <i className="iconfont icon-error iconselect-reduce"></i>
                     </span>
                   ))
                 }
