@@ -46,6 +46,9 @@ class App extends Component {
     const { bool, list, radio, input} = this.state
     const thead = [
       {
+        type: 'index'
+      },
+      {
         type: 'checkbox'
       },
       {
@@ -62,17 +65,14 @@ class App extends Component {
         )
       },
       {
-        width: 100,
         prop: 1,
         label: '第一列'
       },
       {
-        width: 100,
         prop: 2,
         label: '第二列'
       },
       {
-        width: 100,
         prop: 3,
         label: '第三列'
       },
@@ -120,7 +120,7 @@ class App extends Component {
           <Radio label='DDD'/>
         </Radio.Group>
         <br/>
-        <Select onChange={this.changeSelect.bind(this)} selectedList={list} multiple>
+        <Select onChange={this.changeSelect.bind(this)} selectedList={list} multiple search>
           <Select.Option label='苹果' value={{name: "苹果", id:'pg'}}/>
           <Select.Option label='菠萝' value={{name: "菠萝", id:'PAIAPPLE'}}/>
           <Select.Option label='香蕉' value={{name: "香蕉", id:'BANANA'}}/>

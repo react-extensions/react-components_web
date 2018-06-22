@@ -45,9 +45,9 @@ class Option extends React.Component {
     // const selected = this.itemSelected()
     const selected = this.selected
     return (
-      <div className={'select-option ' + (selected ? 'selected ' : '') + (!!this.hide ? 'd-none ' : '')}
+      <div className={'select-option ' + (selected && !multiple ? 'selected ' : '') + (!!this.hide ? 'd-none ' : '')}
         onClick={this.clickOption.bind(this)} >
-        {(multiple && !children) && <i className={'iconfont icon-finish checkbox-icon ' + (selected ? 'is-checked' : '')}></i>}
+        {(multiple && !children) && <i className={'iconfont icon-success checkbox-icon ' + (selected ? 'is-checked' : '')}></i>}
         {children || label}
       </div>
     )

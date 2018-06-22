@@ -40,14 +40,16 @@ class Row extends React.Component {
     // console.log('更新了', 'tr')
   }
   render() {
-    const { thead, tr, bgColor} = this.props
+    const { thead, tr, bgColor, rowIndex} = this.props
     const { checked, collapse, expandCol} = this.state
+    
     return (
       <React.Fragment>
         <tr className={'tr ' + bgColor} >
           {
             thead.map((th, j) => (
-              <td className='td' key={'td' + j} 
+              <td key={'td' + j} 
+                  className= {'td ' + (th.alignCenter ? 'align-center ' : '')}
                   onClick={
                     th.type === 'checkbox' ? this.checked.bind(this) 
                       : th.type === 'expand' ? this.expand.bind(this, j)
@@ -56,8 +58,9 @@ class Row extends React.Component {
               >
                 {
                   th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
-                    : th.type === 'expand' ? (<Icon type= 'down-fill' className={collapse ? 'turn-right' : ''} />) 
-                      : tr[th.prop]
+                    : th.type === 'expand' ? (<Icon type= 'down-fill' className={collapse ? 'turn-right' : ''} />)
+                      : th.type === 'index' ? rowIndex + 1
+                        : tr[th.prop]
                 }
               </td>
             ))

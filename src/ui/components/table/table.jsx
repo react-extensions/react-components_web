@@ -9,6 +9,9 @@ import Row from './row'
  * @param zebra[Boolean]  {表格行斑马线显示}
  * @param thead = [
  *     {
+ *        type: 'index'
+ *     },
+ *     {
  *        type: 'checkbox' // 如果加了这个, 则此列 会渲染成多选按钮
  *     },
  *     {
@@ -37,18 +40,27 @@ class Table extends React.Component {
 
     this.checkedList = []
     this.th = []
+    this.thead = props.thead
 
     // 计算表格每列宽度
     let colWidth = 0,
-        col = null
-    const thead = props.thead,
-          widthList = this.state.widthList
+      col = null
+    const thead = this.thead, // 防止 父组件更新影响内部
+      widthList = this.state.widthList
+
     for (let i = 0, len = thead.length; i < len; i++) {
       col = thead[i]
-      if (col.type === 'checkbox' || col.type === 'expand') {
-        colWidth = col.width || 40
-      } else {
-        colWidth = col.width || 0
+      switch(col.type) {
+        case 'checkbox':
+        case 'expand':
+        case 'index':
+          col.alignCenter = true
+          col.cannotExpand = true
+          colWidth = col.width || 40
+          break;
+        default: 
+          colWidth = col.width || 0
+          break;
       }
       widthList.push(parseFloat(colWidth))
     }
@@ -121,7 +133,7 @@ class Table extends React.Component {
 
     if (!signOffsetLeft) return
 
-    const cha = signOffsetLeft - this.startOffsetLeft,
+    const diff = signOffsetLeft - this.startOffsetLeft,
 
       index = this.resizeColIndex,
 
@@ -130,21 +142,39 @@ class Table extends React.Component {
       // 根据每列的表头, 设置最小宽度
       minWidth = el.getBoundingClientRect().width + el.offsetLeft + 10,
       // 新的宽度
-      newWidth = widthList[index] + cha
+      newWidth = widthList[index] + diff
     
     
     this.setState(prev => ({
       widthList: prev.widthList.map((item, i) => {
         return i === index ? (newWidth < minWidth ? minWidth : newWidth) : item
       }),
-      computeWidth: prev.computeWidth + (newWidth > minWidth ? cha : minWidth - widthList[index]),
+      computeWidth: prev.computeWidth + (newWidth > minWidth ? diff : minWidth - widthList[index]),
       signOffsetLeft: 0
     }))
     
     // this.computeTableWidth()
   }
+  
+  _initialize() {
+
+  }
   // 根据用户设置,计算表格列宽 及 总宽度
   computeTableWidth () {
+    /**
+     * 用户通过thead设置 每列宽度
+     * 默认将按照用户设置宽度渲染表格
+     * 1.1 将所有 用户设置的 列宽相加 得到 计算宽度 computeWidth
+     * 1.2 表格所在容器 实际宽度  currentWidth
+     * 
+     * 2.1 如果 实际宽度 大于 计算宽度, 则获取 多出的差值  平均分配给每一列,  以填充满容器
+     * 2.1.1 如果 存在没有被用户设置值 列, 获取此种列的数量, 将多出的差值 平均分配 给这些列
+     * 2.1.2 如果 不存在, 将多出的差值 平均分配 给每一列 (除了类型是 checkbox 或 expand 的列)
+     * 
+     * 2.2 如果 计算宽度 大于 实际宽度, 默认使用  用户设置的列宽
+     * 2.2.1 如果 用户 没有设置 该列的值, 以最小宽度设置该列的值
+     * 
+     */
 
     const currentWidth = parseFloat(this.table.clientWidth),
       { widthList } = this.state,
@@ -158,45 +188,67 @@ class Table extends React.Component {
       
       if (widthList[i] === 0) hasZero++ 
       
-      if (thead[i].type && (thead[i].type === 'checkbox' || thead[i].type === 'expand')) {
+      if (thead[i].cannotExpand) {
         cannotExpand.width += widthList[i]
         cannotExpand[i] = true
       }
 
       computeWidth += widthList[i]
+
     }
 
-    // 如果表格 计算总宽度  小于 容器渲染宽度   cha > 0
-    const cha = currentWidth - computeWidth
-    
+    // 如果表格 实际 大于 计算   diff > 0
+    const diff = currentWidth - computeWidth,
+      th = this.th
+
+    let minWidth = 0,  // 每列最小宽度
+      lastWidth = 0,    // 最终计算的列宽
+      el = null
+      
     const newState = {
-      widthList: widthList.map((item, i) => {
-        if (hasZero) {
-          return item === 0 ? (cha / hasZero) : item
-        } else {
-          // 如果计算宽度  小于  容器渲染宽度, 此时 扩展每列宽度至填满容器
-          // 当有  不允许扩展的列时 
-          // 
+      widthList: widthList.map((userWidth, i) => {
+        el = th[i]
+        //  对于 像 checkbox  和 expand 这种列  我没有获取 el,  其最小宽度在初始化时(constructor中) 已经被设置了
+        minWidth = el ? el.getBoundingClientRect().width + el.offsetLeft + 10 : userWidth
+        lastWidth = userWidth
 
-          /* return (cha < 0 || (cannotExpand.width && cannotExpand[i])) ? item
-            : (item + cha * (item / (computeWidth - (cannotExpand.width || 0)))) */
-          if (cannotExpand.width) {
-            return cannotExpand[i] ? item : item + cha * (item / (computeWidth - cannotExpand.width))
-          } else {
-            return item + cha * (item / computeWidth)
+        if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
+
+          if (hasZero) { // 存在 没有设置宽度的 列  ==>>  将多余的平均分配
+            if (userWidth === 0) {
+              lastWidth = diff / hasZero
+            } 
+          } else {     // 不存在 没有设置宽度的列  ==>>  除了不允许扩展的列, 其他均匀分配 多出的
+            
+            if (!cannotExpand[i]) {
+              lastWidth = userWidth + diff * (userWidth / (computeWidth - cannotExpand.width))
+            }
           }
+          
+          if (lastWidth > userWidth) {
+            computeWidth += lastWidth - userWidth
+          }
+
         }
-      })
+
+        // 最小宽度
+        if (lastWidth < minWidth) {
+          computeWidth += minWidth - lastWidth
+          return minWidth
+        }
+
+        return lastWidth
+
+      }) // End Map
     }
+
+  
     
-    newState.computeWidth = cha > 0 ? currentWidth : computeWidth
+    newState.computeWidth = computeWidth
 
     this.setState(newState)
   }
   componentDidMount() {
-    
-
-
     setTimeout(()=>{
       this.computeTableWidth()
 
@@ -213,23 +265,19 @@ class Table extends React.Component {
       }))
 
     },30)
-
   }
+  
   render() {
-    const { className, thead, tbody, tbodyHeight, zebra } = this.props
+    const { className, tbody, tbodyHeight, zebra } = this.props
     const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft} = this.state
+    
+    const thead = this.thead
 
     const renderCol = function () {
       return (
         <colgroup>
-          {
-            widthList.map((item, i) => (
-              <col key={i} style={{ width: item}}></col>
-            ))
-          }
-          {
-            placeholder && <col width={placeholder} style={{ width: placeholder }}></col>
-          }
+          { widthList.map((item, i) => (<col key={i} style={{ width: item}}></col>)) }
+          { placeholder && <col width={placeholder} style={{ width: placeholder }}></col> }
         </colgroup>
       )
     }
@@ -246,10 +294,12 @@ class Table extends React.Component {
                   {
                     thead.map((th, i) => (
 
-                      <th className='th' key={'th' + i} onClick={th.type === 'checkbox' ? this.checkedAll.bind(this) : null} >
+                      <th className={'th ' + (th.alignCenter ? 'align-center ' : '')} 
+                          key={'th' + i} 
+                          onClick={th.type === 'checkbox' ? this.checkedAll.bind(this) : null} >
                         {
                           th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} />
-                            : th.type === 'expand' ? null
+                            : (th.type === 'expand' || th.type === 'index') ? null
                               : <span ref={el => this.th[i] = el}>
                                   {th.label}
                                   <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
@@ -273,7 +323,7 @@ class Table extends React.Component {
                   {renderCol()}
                   <tbody className='tbody'>
                     {tbody.map((tr, i) => (
-                      <Row key={'tr' + i} thead={thead} tr={tr} onChecked={this.checkedRow} checkedStatus={checkedStatus} bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')} />
+                      <Row key={'tr' + i} rowIndex ={i} thead={thead} tr={tr} onChecked={this.checkedRow} checkedStatus={checkedStatus} bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')} />
                     ))}
                   </tbody>
                 </table>

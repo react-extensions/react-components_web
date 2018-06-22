@@ -20,6 +20,7 @@ class Select extends React.Component {
       isCollapsed: true, // 是否折叠下拉框
       selectedList: [],  // 用于多选选中
       selected: null,      // 用于单选选中
+      dropPosition: 'bottom'
     }
     this.static = {
       selectedValueList: {},
@@ -30,7 +31,6 @@ class Select extends React.Component {
 
     this.toggleDropdown = this.toggleDropdown.bind(this)
     this.closeDropdown = this.closeDropdown.bind(this)
-
 
     const { selected, selectedList, multiple } = props
     if (multiple) {  // 多选下拉框
@@ -104,16 +104,25 @@ componentWillReceiveProps(nP) {
        || nS.isCollapsed !== isCollapsed
        || this.static.shouldUpdate
    }
-  toggleDropdown() {
+  toggleDropdown(e) {
+    e.persist();
+
     if (!this.props.disabled) {
       this.setState((prev) => {
         const isOff = prev.isCollapsed
+        const newState = { isCollapsed: !isOff, dropPosition: 'bottom' }
+
         if (isOff) {
           attachEvent(document, 'click', this.closeDropdown)
+          // 待优化 ..... 
+          if (window.innerHeight - e.target.getBoundingClientRect().bottom < 100) {
+            newState.dropPosition = 'top'
+          }
         } else {
           detachEvent(document, 'click', this.closeDropdown)
         }
-        return { isCollapsed: !isOff }
+       
+        return newState
       })
     }
   }
@@ -164,13 +173,13 @@ componentWillReceiveProps(nP) {
 
   }
   render() {
-    const { selected, isCollapsed, selectedList } = this.state
+    const { selected, isCollapsed, selectedList, dropPosition } = this.state
     const { multiple, children, plugin, className, disabled, search, placeholder } = this.props
     let max = parseInt(this.props.max) // eslint-disable-line
     const len = selectedList.length
 
     return (
-      <div className={'select ' + (disabled ? ' disabled' : '') + (className || '')}>
+      <div className={'select ' + (disabled ? ' disabled' : '') + (className || '')} >
         <div className='select-input' onClick={this.toggleDropdown}>
           {/* tags 或者 input */}
           {
@@ -180,7 +189,7 @@ componentWillReceiveProps(nP) {
                   selectedList.map(item => (
                     <span className='select-multiple-tag' key={item} onClick={e => this.cancelFromList(e, item)}>
                       {item}
-                      <i className="iconfont icon-close iconselect-reduce"></i>
+                      <i className="iconfont icon-error iconselect-reduce"></i>
                     </span>
                   ))
                 }
@@ -191,14 +200,14 @@ componentWillReceiveProps(nP) {
         </div>
 
         {/* Dropdown */}
-        <div className={'select-dropdown ' + (isCollapsed ? '' : 'is-active')} ref={el => this.dropdown = el}>
+        <div className={dropPosition + ' select-dropdown ' + (isCollapsed ? '' : 'is-active')} ref={el => this.dropdown = el}>
           {search &&
-            (<div className="select-searchinput-wrap clearfix">
-              <input type="text" className='select-searchinput' placeholder={'搜索'} onChange={e => this.search(e)} onBlur={e => this.cancelSearch(e)} />
+            (<div className="select-search__input-wrap clearfix">
+              <input type="text" className='select-search__input' placeholder={'搜索'} onChange={e => this.search(e)} onBlur={e => this.cancelSearch(e)} />
               {plugin || null}
             </div>)
           }
-          <div className="select-dropdowntrack">
+          <div className="select-dropdown__track">
             {children}
           </div>
         </div>
