@@ -9,7 +9,7 @@ Table
 } from './ui/index'
 
 class App extends Component {
-  constructor(){
+  constructor() {
     super()
     this.state = {
       bool: true,
@@ -20,8 +20,8 @@ class App extends Component {
     this.handle = this.handle.bind(this)
     this.change = this.change.bind(this)
     setTimeout(() => {
-      this.setState({list: ['菠萝', '苹果']})
-    },3000)
+      this.setState({ list: ['菠萝', '苹果'] })
+    }, 3000)
   }
   handle() {
     this.setState(prev => ({
@@ -29,14 +29,14 @@ class App extends Component {
     }))
   }
   change(v) {
-    this.setState({list: v})
+    this.setState({ list: v })
   }
   changeRadio(v) {
     console.log(v)
-    this.setState({radio: v})
+    this.setState({ radio: v })
   }
   changeSelect(v) {
-    console.log('父元素',v)
+    console.log('父元素', v)
   }
   input(e) {
     this.setState({input: e.target.value})
@@ -103,21 +103,21 @@ class App extends Component {
     ]
     return (
       <div className='container'>
-        <button type='button' onClick = {this.handle}>{bool ? 'ON' : 'OFF'}</button>
-        <br/>
+        <button type='button' onClick={this.handle}>{bool ? 'ON' : 'OFF'}</button>
+        <br />
         <Checkbox.Group checkedList={list} onChange={this.change}>
-          <Checkbox label='菠萝'/>
-          <Checkbox  label='苹果'/>
+          <Checkbox label='菠萝' />
+          <Checkbox label='苹果' />
           <Checkbox label='香蕉' />
         </Checkbox.Group>
-        <br/>
-   
-        <br/>
-        <Radio.Group checked= {radio} onChange={this.changeRadio.bind(this)}>
-          <Radio label='菠萝'/>
-          <Radio label='苹果'/>
-          <Radio label='香蕉'/>
-          <Radio label='DDD'/>
+        <br />
+
+        <br />
+        <Radio.Group checked={radio} onChange={this.changeRadio.bind(this)}>
+          <Radio label='菠萝' />
+          <Radio label='苹果' />
+          <Radio label='香蕉' />
+          <Radio label='DDD' />
         </Radio.Group>
         <br/>
         <Select onChange={this.changeSelect.bind(this)} selectedList={list} multiple search>
