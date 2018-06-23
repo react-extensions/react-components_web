@@ -2,3 +2,29 @@
 .container{
   padding:50px;
 }
+
+
+
+@keyframes transi {
+  from {
+    transform: scale3d(1, 0, 1)
+  }
+  to{
+    transform: scale3d(1,1,1)
+  }
+}
+
+.queue{
+  overflow: hidden;
+   height: 80px;
+  border: 1px sandybrown solid;
+  border-radius: 4px;
+}
+
+.transition-div{
+  height: 40px;
+  width: 40px;
+  display: inline-block;
+  background:#7777;
+  vertical-align: top;
+}

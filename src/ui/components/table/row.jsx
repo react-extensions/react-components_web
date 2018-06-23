@@ -1,5 +1,6 @@
 import React from 'react'
 import Icon from '../icon/icon'
+// import Transition from '../transition/transition'
 
 class Row extends React.Component {
   constructor(props) {

@@ -5,7 +5,9 @@ import {
 Radio,
 Checkbox,
 Select,
-Table
+Table,
+Notification,
+Transition
 } from './ui/index'
 
 class App extends Component {
@@ -15,35 +17,59 @@ class App extends Component {
       bool: true,
       list: [],
       radio: '菠萝',
-      input: ''
+      input: '',
+      num: []
     }
-    this.handle = this.handle.bind(this)
+    this.toggleBtn = this.toggleBtn.bind(this)
     this.change = this.change.bind(this)
+    this.add = this.add.bind(this)
+    this.minus = this.minus.bind(this)
+
     setTimeout(() => {
       this.setState({ list: ['菠萝', '苹果'] })
     }, 3000)
+   
   }
-  handle() {
+  toggleBtn() {
     this.setState(prev => ({
       bool: !prev.bool
     }))
+
+  }
+  toggleStyle() {
+    this.setState(prev => ({
+      style: !prev.style
+    }))
+  }
+  add() {
+    this.setState(prev => ({
+      num: prev.num.concat(1) 
+    }))
+  }
+  minus() {
+    this.setState(prev => {
+      const arr = [...prev.num]
+      arr.pop()
+      return {
+        num: arr
+      }
+    })
   }
   change(v) {
     this.setState({ list: v })
   }
   changeRadio(v) {
-    console.log(v)
     this.setState({ radio: v })
   }
   changeSelect(v) {
-    console.log('父元素', v)
+    // console.log('父元素', v)
   }
   input(e) {
     this.setState({input: e.target.value})
   }
   render() {
     // Notification({message: 'ssss', type: 'danger'})
-    const { bool, list, radio, input} = this.state
+    const { bool, list, radio, input, num, style} = this.state
     const thead = [
       {
         type: 'index'
@@ -66,15 +92,18 @@ class App extends Component {
       },
       {
         prop: 1,
-        label: '第一列'
+        label: '第一列',
+        width: 10
       },
       {
         prop: 2,
-        label: '第二列'
+        label: '第二列',
+        width: 1000
       },
       {
         prop: 3,
-        label: '第三列'
+        label: '第三列',
+        width: 1000
       },
     ]
     const tbody = [
@@ -103,7 +132,11 @@ class App extends Component {
     ]
     return (
       <div className='container'>
-        <button type='button' onClick={this.handle}>{bool ? 'ON' : 'OFF'}</button>
+        <button type='button' onClick={this.toggleBtn}>{bool ? 'ON' : 'OFF'}</button>&nbsp;&nbsp;
+        <button type='button' onClick={this.toggleStyle.bind(this)}>{style ? 'Red' : 'Gray'}</button>&nbsp;&nbsp;
+        <button type='button' onClick={this.add}>ADD => {num.length}</button>&nbsp;&nbsp;
+        <button type='button' onClick={this.minus}>MINUS => {num.length}</button>&nbsp;&nbsp;
+
         <br />
         <Checkbox.Group checkedList={list} onChange={this.change}>
           <Checkbox label='菠萝' />
@@ -111,6 +144,25 @@ class App extends Component {
           <Checkbox label='香蕉' />
         </Checkbox.Group>
         <br />
+        <Transition>
+          {
+              bool && 
+              (<div className='queue' style={style ? {background: 'red'}: null}>
+                {
+                  num.map((item, i) => {
+                    return (
+                        <Transition key={i}>
+                          <div className='transition-div' ></div>
+                        </Transition>
+                    )
+                  })
+                }
+              </div>)
+          }
+        </Transition>
+        {/* <Transition>
+          { bool && (<div className='queue'></div>) }
+        </Transition> */}
 
         <br />
         <Radio.Group checked={radio} onChange={this.changeRadio.bind(this)}>
@@ -128,16 +180,7 @@ class App extends Component {
         <br/>
         <Table thead={thead} zebra={true} tbody={tbody} />
 
-       {/*  <input type="text" onChange={e => this.input(e)}/>
-        <table border='1'   cellSpacing='0'>
-          <tbody>
-            <tr>
-              <td>
-                {input}
-              </td>
-            </tr>
-          </tbody>
-        </table> */}
+        
 
       </div>
     );
