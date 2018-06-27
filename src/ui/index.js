@@ -3,6 +3,7 @@ import './style/reset.scss'
 import Notification from './components/notification/notification'
 import Transition from './components/transition/transition'
 import Checkbox from './components/checkbox/checkbox'
+import Tooltip from './components/tooltip/tooltip'
 import Select from './components/select/index'
 import Button from './components/button/button'
 import Dialog from './components/dialog/dialog'
@@ -17,6 +18,7 @@ export {
   Notification,
   Transition,
   Checkbox,
+  Tooltip,
   Select,
   Button,
   Dialog,

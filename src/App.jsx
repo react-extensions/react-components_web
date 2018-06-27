@@ -7,6 +7,7 @@ Checkbox,
 Select,
 Table,
 Notification,
+Tooltip,
 Transition
 } from './ui/index'
 
@@ -132,9 +133,15 @@ class App extends Component {
     ]
     return (
       <div className='container'>
-        <button type='button' onClick={this.toggleBtn}>{bool ? 'ON' : 'OFF'}</button>&nbsp;&nbsp;
-        <button type='button' onClick={this.toggleStyle.bind(this)}>{style ? 'Red' : 'Gray'}</button>&nbsp;&nbsp;
-        <button type='button' onClick={this.add}>ADD => {num.length}</button>&nbsp;&nbsp;
+        <Tooltip label='BUTTON'>
+          <button type='button' onClick={this.toggleBtn}>{bool ? 'ON' : 'OFF'}</button>
+        </Tooltip>&nbsp;&nbsp;
+        <Tooltip label='COLOR'>
+          <button type='button' onClick={this.toggleStyle.bind(this)}>{style ? 'Red' : 'Gray'}</button>
+        </Tooltip>&nbsp;&nbsp;
+        <Tooltip label='COMPUTE'>
+          <button type='button' onClick={this.add}>ADD => {num.length}</button>
+        </Tooltip>&nbsp;&nbsp;
         <button type='button' onClick={this.minus}>MINUS => {num.length}</button>&nbsp;&nbsp;
 
         <br />
