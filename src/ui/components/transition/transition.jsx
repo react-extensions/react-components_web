@@ -25,7 +25,7 @@ class transition extends React.Component {
     this.state = {
       className: 'transition-height',
       children: props.children,
-      toggle: { height: '0' },
+      toggle: { height: '0', maxHeight: '0', minHeight: '0'},
 
     }
     
@@ -48,7 +48,7 @@ class transition extends React.Component {
       clearTimeout(this.onTimer)
       clearTimeout(this.offTimer)
 
-      const newState = { toggle: { height: 0 } }
+      const newState = { toggle: {maxHeight: '0'} }
 
       if (isOn) {
         newState.children = newP.children

@@ -144,7 +144,7 @@ class App extends Component {
           <Checkbox label='香蕉' />
         </Checkbox.Group>
         <br />
-        <Transition>
+        {/* <Transition>
           {
               bool && 
               (<div className='queue' style={style ? {background: 'red'}: null}>
@@ -159,10 +159,10 @@ class App extends Component {
                 }
               </div>)
           }
-        </Transition>
-        {/* <Transition>
-          { bool && (<div className='queue'></div>) }
         </Transition> */}
+        <Transition>
+          { bool && (<div className='queue'><div style={{height: '100px',background: '#000'}}></div></div>) }
+        </Transition>
 
         <br />
         <Radio.Group checked={radio} onChange={this.changeRadio.bind(this)}>
