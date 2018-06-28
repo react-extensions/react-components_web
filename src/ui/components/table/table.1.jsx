@@ -35,9 +35,7 @@ class Table extends React.Component {
       checkedStatus: 0,  // 0 有的选中, 有的没选中  -1 全没选中   1 全选中
       placeholder: false, // 表格头占位符, 当tbody滚动时, 需要这个, 用来让表格头和tbody的每一列宽度一致
       computeWidth: 0,    // 计算的表格宽度
-      signOffsetLeft: 0,  // 调整表格列宽时, 指示器样式
-      syncRowIndex: -1,     // 表格行鼠标移入的时候, 颜色同步
-      showShadow: false   // 固定列阴影
+      signOffsetLeft: 0  // 调整表格列宽时, 指示器样式
     }
 
     this.checkedList = []
@@ -69,8 +67,6 @@ class Table extends React.Component {
     this.checkedRow = this.checkedRow.bind(this)
     this.moveSign = this.moveSign.bind(this)
     this.resizeCol = this.resizeCol.bind(this)
-    this.syncRowBG = this.syncRowBG.bind(this)
-    this.addScrollSign = this.addScrollSign.bind(this)
   }
   /**
    * 多选表格
@@ -105,28 +101,6 @@ class Table extends React.Component {
     }
 
     this.checkedList = list
-  }
-  /**
-   * 同步表格行颜色
-   */
-  syncRowBG(index) {
-    this.setState({
-      syncRowIndex: index
-    })
-  }
-  /**
-   * 表格有固定列时, 当左右滚动时, 给固定列添加阴影
-   */
-  addScrollSign(e) {
-    this.setState({
-      showShadow: e.currentTarget.scrollLeft > 0
-    })
-  }
-  /**
-   * 上下滚动
-   */
-  scrollBody(e) {
-    this.fixedBody.scrollTop = e.currentTarget.scrollTop
   }
   /**
    * 调整表格列大小
@@ -275,10 +249,9 @@ class Table extends React.Component {
     setTimeout(() => {
       this.computeTableWidth()
 
-      if (!this.normalBody) return
+      if (!this.body) return
 
-      const offset = this.normalBody.offsetWidth - this.normalBody.clientWidth
-      this.normalBody = null
+      const offset = this.body.offsetWidth - this.body.clientWidth
       const placeholder = offset > 0 ? offset : false
 
       if (!placeholder) return
@@ -293,7 +266,7 @@ class Table extends React.Component {
 
   render() {
     const { className, rows, tbodyHeight, zebra, columns } = this.props
-    const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft , syncRowIndex, showShadow} = this.state
+    const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft } = this.state
     if (!columns) return
 
     const renderCol = function () {
@@ -307,7 +280,7 @@ class Table extends React.Component {
 
     const renderTable = function (fixedTable) {
       return (
-        <div style={fixedTable ? null : { width: computeWidth }} className={(fixedTable ? 'fixed-table ' : '') + (showShadow && fixedTable ? 'shadow ' : '')}>
+        <div style={fixedTable ? null : { width: computeWidth }} className={fixedTable ? 'fixed-table' : ''}>
           <div className="table-thead" >
             <table border='0' cellSpacing='0' cellPadding={0} >
               {renderCol()}
@@ -342,23 +315,12 @@ class Table extends React.Component {
           </div>
           {
             rows && (
-              <div className="table-tbody" 
-                style={{ height: tbodyHeight }} 
-                ref={(el => fixedTable ? this.fixedBody = el : this.normalBody = el) } 
-                onScroll={fixedTable ? null : e => this.scrollBody(e)}
-                >
-
+              <div className="table-tbody" style={{ height: tbodyHeight }} ref={fixedTable ? false : (el => this.body = el)} >
                 <table border='0' cellSpacing='0' cellPadding={0} >
                   {renderCol()}
                   <tbody className='tbody'>
                     {rows.map((tr, i) => (
-                      <Row key={'tr' + i} rowIndex={i} fixedTable={fixedTable} columns={columns} tr={tr} 
-                        onChecked={this.checkedRow} 
-                        checkedStatus={checkedStatus} 
-                        bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')} 
-                        onHover = {this.syncRowBG}
-                        syncRowIndex = {syncRowIndex}
-                      />
+                      <Row key={'tr' + i} rowIndex={i} fixedTable={fixedTable} columns={columns} tr={tr} onChecked={this.checkedRow} checkedStatus={checkedStatus} bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')} />
                     ))}
                   </tbody>
                 </table>
@@ -372,15 +334,12 @@ class Table extends React.Component {
 
     return (
       <div className={'table__wrap ' + (className || '')} ref={el => this.table = el}>
-        
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft }}></div>
-        
         {renderTable.call(this, true)}
         
-        <div className='normal-table' onScroll= {this.addScrollSign}>
+        <div className='normal-table'>
           {renderTable.call(this, false)}
         </div>
-        
       </div>
     )
   }

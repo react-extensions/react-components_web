@@ -6,9 +6,10 @@ class Row extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      checked: false, 
+      checked: false,
       collapse: true,
-      expandCol: 0
+      expandCol: 0,
+      hoverIndex: -1
     }
   }
   // 具有多选功能的表格
@@ -26,6 +27,13 @@ class Row extends React.Component {
       expandCol: index
     })
   }
+  // 鼠标移入样式
+  toggleRowBG(type, index) {
+    this.setState({
+      hoverIndex: type > 0 ? index : -1
+    })
+    this.props.onHover(type > 0 ? index : -1)
+  }
   componentWillReceiveProps(nP) {
     const { checkedStatus } = nP
     if (checkedStatus === 1) {
@@ -34,37 +42,38 @@ class Row extends React.Component {
       this.setState({ checked: false })
     }
   }
-  shouldComponentUpdate(nP, nS) {
-    return nS.checked !== this.state.chekced
-  }
-  componentDidUpdate() {
-    // console.log('更新了', 'tr')
-  }
   render() {
-    const { columns, tr, bgColor, rowIndex} = this.props
-    const { checked, collapse, expandCol} = this.state
-    
+    const { columns, tr, bgColor, rowIndex, fixedTable, syncRowIndex} = this.props
+    const { checked, collapse, expandCol, hoverIndex } = this.state
+
     return (
       <React.Fragment>
-        <tr className={'tr ' + bgColor} >
+        <tr className={'tr ' + (bgColor || '') + ((hoverIndex === rowIndex || syncRowIndex === rowIndex)? ' hover' : '') } 
+          onMouseOver= {() => this.toggleRowBG(1, rowIndex)} 
+          onMouseLeave={() => this.toggleRowBG(-1, rowIndex)}>
           {
-            columns.map((th, j) => (
-              <td key={'td' + j} 
-                  className= {'td ' + (th.alignCenter ? 'align-center ' : '')}
+            columns.map((th, j) => {
+              if (fixedTable && !th.fixed) return null
+              if (!fixedTable && th.fixed) return (<td key={'td' + j}></td>)
+              return (
+                <td key={'td' + j}
+                  className={'td ' + (th.alignCenter ? 'align-center ' : '')}
                   onClick={
-                    th.type === 'checkbox' ? this.checked.bind(this) 
+                    th.type === 'checkbox' ? this.checked.bind(this)
                       : th.type === 'expand' ? this.expand.bind(this, j)
                         : null
                   }
-              >
-                {
-                  th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
-                    : th.type === 'expand' ? (<Icon type= 'down-fill' className={collapse ? 'turn-right' : ''} />)
-                      : th.type === 'index' ? rowIndex + 1
-                        : tr[th.prop]
-                }
-              </td>
-            ))
+                >
+                  {
+                    th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
+                      : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} />)
+                        : th.type === 'index' ? rowIndex + 1
+                          : tr[th.prop]
+                  }
+                </td>
+              )
+
+            })
           }
         </tr>
         {

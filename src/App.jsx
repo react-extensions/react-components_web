@@ -72,14 +72,14 @@ class App extends Component {
     // Notification({message: 'ssss', type: 'danger'})
     const { bool, list, radio, input, num, style} = this.state
     const thead = [
+      
       {
-        type: 'index'
-      },
-      {
-        type: 'checkbox'
+        type: 'checkbox',
+        fixed: true
       },
       {
         type: 'expand',
+        fixed: true,
         content: (
           <div>
             <h1>zhangs</h1>
@@ -94,18 +94,21 @@ class App extends Component {
       {
         prop: 1,
         label: '第一列',
-        width: 10
+        width: 300,
+        
       },
       {
         prop: 2,
         label: '第二列',
-        width: 1000
+        width: 600
       },
       {
         prop: 3,
         label: '第三列',
-        width: 1000
+        width: 600,
+        
       },
+      
     ]
     const tbody = [
      {
@@ -122,6 +125,57 @@ class App extends Component {
         }
       }
       ,
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      }
+      ,
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      }
+      ,
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      }
+      ,
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      },
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      },
+      {
+        1: 'z',
+        2: 'x',
+        3: 'd',
+        4: {
+          zhang: 'fasfd  '
+        }
+      },
       {
         1: 'z',
         2: 'x',
@@ -151,7 +205,7 @@ class App extends Component {
           <Checkbox label='香蕉' />
         </Checkbox.Group>
         <br />
-        {/* <Transition>
+        <Transition>
           {
               bool && 
               (<div className='queue' style={style ? {background: 'red'}: null}>
@@ -166,10 +220,8 @@ class App extends Component {
                 }
               </div>)
           }
-        </Transition> */}
-        <Transition>
-          { bool && (<div className='queue'><div style={{height: '100px',background: '#000'}}></div></div>) }
         </Transition>
+ 
 
         <br />
         <Radio.Group checked={radio} onChange={this.changeRadio.bind(this)}>
@@ -185,7 +237,7 @@ class App extends Component {
           <Select.Option label='香蕉' value={{name: "香蕉", id:'BANANA'}}/>
         </Select>
         <br/>
-        <Table thead={thead} zebra={true} tbody={tbody} />
+        <Table columns={thead} zebra={true} rows={tbody} tbodyHeight={400}/>
 
         
 

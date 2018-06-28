@@ -1,10 +1,9 @@
   @import '../../style/animation.scss';
-  .table {
-    overflow-x: auto;
+  .table__wrap {
     position: relative;
-
+    background:#fff;
+    overflow: hidden;
     table{
-      width: 100%;
       border-spacing: 0px;
       table-layout: fixed;
     }
@@ -17,6 +16,25 @@
       transition: transform cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
     }
   }
+  .fixed-table{
+    position: absolute;
+    top:0;
+    z-index: 11;
+    transition: box-shadow ease-out .4s;
+    &.shadow{
+      box-shadow: 0 -3px 10px 0 #ccc;
+    }
+    .table-tbody{
+      overflow: hidden;
+    }
+  }
+  .normal-table{
+    overflow-x: auto;
+    table{
+      width: 100%;
+    }
+  }
+
   .resize-col-sign{
     position: absolute;
     top:0;bottom:0;
@@ -51,9 +69,9 @@
 
   .th,
   .td{
-    padding-left:15px;
-    height:36px;
-    text-align: left;
+    // padding-left:15px;
+    height:50px;
+    text-align: center;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
@@ -64,18 +82,14 @@
   }
 
   .tr{
-    $darken: #fafafa;
-    $lighten: #fff;
     
     &.darken{
-      background:  $darken;
-      // &:hover{background: darken($darken, 5%)}
+      background:  #fafafa;
     }
      &.lighten{
-      background: $lighten;
-      // &:hover{background: darken($lighten, 5%)}
+      background: #fff;
     }
-    &:hover{background: #f5f7fa;}
+    &.hover{background: #d5eaff;}
     
   }
 
@@ -98,9 +112,9 @@
   .expand-tr{
     animation: bounceOut ease .3s;
     transform-origin: top;
+    background:#fff;
   }
   .expand-td{
     border-top:2px solid #f9f7f7 !important;
   }
 
-  
