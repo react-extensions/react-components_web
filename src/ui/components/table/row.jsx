@@ -41,14 +41,14 @@ class Row extends React.Component {
     // console.log('更新了', 'tr')
   }
   render() {
-    const { thead, tr, bgColor, rowIndex} = this.props
+    const { columns, tr, bgColor, rowIndex} = this.props
     const { checked, collapse, expandCol} = this.state
     
     return (
       <React.Fragment>
         <tr className={'tr ' + bgColor} >
           {
-            thead.map((th, j) => (
+            columns.map((th, j) => (
               <td key={'td' + j} 
                   className= {'td ' + (th.alignCenter ? 'align-center ' : '')}
                   onClick={
@@ -70,8 +70,8 @@ class Row extends React.Component {
         {
           !collapse && (
             <tr className='expand-tr'>
-              <td colSpan={thead.length} className='expand-td'>
-                {thead[expandCol].content}
+              <td colSpan={columns.length} className='expand-td'>
+                {columns[expandCol].content}
               </td>
             </tr>
           )

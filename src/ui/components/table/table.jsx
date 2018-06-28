@@ -4,10 +4,10 @@ import Icon from '../icon/icon'
 import Row from './row'
 
 /**
- * @param tbody[Array]    {表格数据}
+ * @param rows[Array]    {表格数据}
  * @param tbodyHeight     {tbody高度}
  * @param zebra[Boolean]  {表格行斑马线显示}
- * @param thead = [
+ * @param columns = [
  *     {
  *        type: 'index'
  *     },
@@ -21,7 +21,7 @@ import Row from './row'
  *     {
  *        width: 80,       // 列宽
  *        label: '',       // 表头文字
- *        prop: ''         // tbody 中数据的属性
+ *        prop: ''         // rows 中数据的属性
  *     }
  * ]
  * 
@@ -40,16 +40,16 @@ class Table extends React.Component {
 
     this.checkedList = []
     this.th = []
-    this.thead = props.thead
+    this.columns = props.columns
 
     // 计算表格每列宽度
     let colWidth = 0,
       col = null
-    const thead = this.thead, // 防止 父组件更新影响内部
+    const columns = this.columns, // 防止 父组件更新影响内部
       widthList = this.state.widthList
 
-    for (let i = 0, len = thead.length; i < len; i++) {
-      col = thead[i]
+    for (let i = 0, len = columns.length; i < len; i++) {
+      col = columns[i]
       switch(col.type) {
         case 'checkbox':
         case 'expand':
@@ -76,14 +76,14 @@ class Table extends React.Component {
   checkedAll() {
     const bool = this.state.checkedStatus === 1
     this.setState({ checkedStatus: bool ? -1 : 1 })
-    this.checkedList = bool ? [] : [...this.props.tbody]
+    this.checkedList = bool ? [] : [...this.props.rows]
     console.log(this.checkedList);
 
   }
   // 单行选中, 不选中
   checkedRow(row, isChecked) {
     let list = this.checkedList
-    const max = this.props.tbody.length
+    const max = this.props.rows.length
 
     if (isChecked) { // 选中
       list = list.concat([row]);
@@ -178,7 +178,7 @@ class Table extends React.Component {
 
     const currentWidth = parseFloat(this.table.clientWidth),
       { widthList } = this.state,
-      { thead } = this.props
+      { columns } = this.props
 
     let computeWidth = 0,
       hasZero = 0,
@@ -188,7 +188,7 @@ class Table extends React.Component {
       
       if (widthList[i] === 0) hasZero++ 
       
-      if (thead[i].cannotExpand) {
+      if (columns[i].cannotExpand) {
         cannotExpand.width += widthList[i]
         cannotExpand[i] = true
       }
@@ -268,10 +268,10 @@ class Table extends React.Component {
   }
   
   render() {
-    const { className, tbody, tbodyHeight, zebra } = this.props
+    const { className, rows, tbodyHeight, zebra } = this.props
     const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft} = this.state
     
-    const thead = this.thead
+    const columns = this.columns
 
     const renderCol = function () {
       return (
@@ -282,7 +282,7 @@ class Table extends React.Component {
       )
     }
 
-    return thead && (
+    return columns && (
       <div className={'table ' + (className || '')} ref={el => this.table = el}>
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft}}></div>
         <div style={{ width: computeWidth }}>
@@ -292,7 +292,7 @@ class Table extends React.Component {
               <thead>
                 <tr>
                   {
-                    thead.map((th, i) => (
+                    columns.map((th, i) => (
 
                       <th className={'th ' + (th.alignCenter ? 'align-center ' : '')} 
                           key={'th' + i} 
@@ -317,13 +317,13 @@ class Table extends React.Component {
             </table>
           </div>
           {
-            tbody && (
+            rows && (
               <div className="table-tbody" style={{ height: tbodyHeight }} ref={el => this.body = el} >
                 <table border='0' cellSpacing='0' cellPadding={0} >
                   {renderCol()}
                   <tbody className='tbody'>
-                    {tbody.map((tr, i) => (
-                      <Row key={'tr' + i} rowIndex ={i} thead={thead} tr={tr} onChecked={this.checkedRow} checkedStatus={checkedStatus} bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')} />
+                    {rows.map((tr, i) => (
+                      <Row key={'tr' + i} rowIndex ={i} columns={columns} tr={tr} onChecked={this.checkedRow} checkedStatus={checkedStatus} bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')} />
                     ))}
                   </tbody>
                 </table>
