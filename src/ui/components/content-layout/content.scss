@@ -1,0 +1,25 @@
+/* 内容区域通用样式 */
+.content-container{
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  width:100%;
+}
+.content-body{
+  flex-grow: 1;
+  overflow-y: hidden;
+}
+.content-footer{
+  height: 50px;
+  flex-shrink: 0;
+  background:#fff;
+  padding: 9px ;
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 0 10px 0 rgba(170,170,170,0.75);
+}
+
+.content-header{
+  padding:0 10px;
+  background:#fff;
+}
