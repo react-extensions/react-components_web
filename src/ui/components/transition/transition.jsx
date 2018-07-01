@@ -1,125 +1,97 @@
-import React from 'react'
-import './transition.scss'
+import React, { Component } from 'react'
 
-/**
- * 根据 props.children 判断是显示 还是隐藏
- * 如果有 就是显示, 没有 就是隐藏
- * 
- * 一 . 显示时
- * 1. 将高度设置成 0, 待渲染完成取消高度设置
- * 2. 缓存该元素, 供隐藏时使用
- * 
- * 二 . 隐藏时, 因为没有props.children, 此时使用缓存元素代替渲染
- * 1. 将高度设置成 0, 待动画过渡完成, 移除元素
- * 
- */
-/**
- * 有四种状态
- *  1. 开启   2. 关闭   3. transition 组件state引起的更新   4.  transition外部组件引起的 children 内部更新
- *  
- */
-class transition extends React.Component {
+
+class Transition extends Component {
   constructor(props) {
     super(props)
-
+    const {children, name} = props
     this.state = {
-      className: 'transition-height',
-      children: props.children,
-      toggle: { height: '0', maxHeight: '0', minHeight: '0'},
+      children: children || null,
+      className: children ? name + '-enter-active ' + name + '-enter' : '',
+    }
 
+  }
+  getDuration() {
+    const style = document.defaultView.getComputedStyle(this.el, null)
+
+    let duration = style.animationDuration
+
+    if(duration === '0s' || duration === '0ms') {
+      duration = style.transitionDuration
+    }
+
+    if(duration.indexOf('ms') > -1) {
+      return parseFloat(duration.slice(0,-2))
+    } else{
+      return parseFloat(duration.slice(0,-1)) * 1000
     }
     
-    this.isOn = true
-    
   }
- 
-  /**
-   * 前置操作
-   */
-  componentWillReceiveProps(newP) {
-    const newC = !!newP.children
-    const oldC = !! this.props.children
-    const isOn = this.isOn = newC && !oldC
-    const isOff = this.isOff = !newC && oldC
 
+  toggleON() {
+    const name = this.props.name
+    setTimeout(()=> {
+      this.setState({ className: name + '-enter-active ' + name + '-enter-to' })
+    }, 0)
 
-    if(isOn || isOff) {
+    setTimeout(() => {
+      this.setState({className: ''})
+    }, this.getDuration())
 
-      clearTimeout(this.onTimer)
-      clearTimeout(this.offTimer)
+  }
 
-      const newState = { toggle: {maxHeight: '0'} }
+  toggleOFF() {
+  
+    setTimeout(() => {
+      this.setState({children: null})
+    }, this.getDuration() - 30)
 
-      if (isOn) {
-        newState.children = newP.children
-      }
+  }
 
-      this.setState(newState)
-    } else {
-      const children = this.state.children
-      if(!(!!children)) return
-      //transition外部组件引起的 children 内部更新, 此时 合并新的属性进来
-      this.setState({
-        children: React.cloneElement(
-          children,
-          Object.assign({}, children.props,newP.children.props)
-        )
-      })
+  componentWillReceiveProps(nextP) {
+
+    // 显示
+    if(nextP.children && !this.props.children) {
+      this.setState({className: nextP.name + '-enter-active ' + nextP.name + '-enter', children: nextP.children})
+      // 隐藏
+    } else if(!nextP.children && this.props.children){
+      this.setState({className: nextP.name + '-leave'})
     }
 
   }
 
-  /**
-   * 后置操作
-   */
-  componentDidMount() {
-    this.doNext()
+  componentDidMount(){
+    this.toggleON()
   }
-  componentDidUpdate() {
-    this.doNext()
-  }
-  doNext() {
 
-    if(this.isOn) {
-      this.onTimer = setTimeout(() => {
-        this.setState({ toggle: {} })
-      }, 20) // 这里必须一些延迟
-    } else if(this.isOff){
-      this.offTimer = setTimeout(() => {
-        this.setState({ children: null })
-      }, 300)
+  componentDidUpdate(prevP) {
+
+    if(!prevP.children && this.props.children) {
+      this.toggleON()
+    } else if(prevP.children && !this.props.children){
+      this.toggleOFF()
     }
 
-    this.isOn = this.isOff = false
-
   }
-
   render() {
-    const { toggle, className, children} = this.state
+
+    const {className, children} = this.state
 
     if(!children) return false
 
-    const mergeStyle = Object.assign({}, children.props.style || {}, toggle)
-    const mergeClass = (children.props.className + ' ' || '' )+ className
+    const oldClassName = children.props.className || ''
 
     return (
       <React.Fragment>
         {
-          React.cloneElement(
-            children,
-            Object.assign(
-              {}, children.props,
-              {
-                className: mergeClass ,
-                style: mergeStyle
-              }
-            )
-          )
+          React.cloneElement(children, Object.assign({}, children.props, {
+            className: oldClassName + ' ' + className,
+            ref: el => this.el = el
+          }))
         }
       </React.Fragment>
     )
-
-  } // End render
+  }
 }
 
-export default transition
+export default Transition

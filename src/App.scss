@@ -16,15 +16,31 @@
 
 .queue{
   overflow: hidden;
-  max-height: 150px;
   border: 1px sandybrown solid;
   border-radius: 4px;
+  height: 200px;
+  transform-origin: top;
+  transition: ease .4s all;
 }
 
-.transition-div{
-  height: 40px;
-  width: 40px;
-  display: inline-block;
-  background:#7777;
-  vertical-align: top;
+.transition-enter-active{
+  // animation: xx ease 3s;
+}
+.transition-enter{
+  transform: scale3d(1,0,1)
+}
+.transition-enter-to{
+  transform: scale(1,1,1)
+}
+.transition-leave{
+  animation: xx ease 3s reverse;
+}
+
+@keyframes xx {
+  from {
+    transform: scale3d(1,0,1)
+  }
+  to{
+    transform: scale(1,1,1)
+  }
 }

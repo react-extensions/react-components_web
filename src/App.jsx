@@ -75,7 +75,7 @@ class App extends Component {
       
       {
         type: 'checkbox',
-        fixed: true
+        fixed: true  
       },
       {
         type: 'expand',
@@ -148,20 +148,14 @@ class App extends Component {
           <Checkbox label='香蕉' />
         </Checkbox.Group>
         <br />
-        <Transition>
+        <Transition name='transition'>
           {
-              bool && 
-              (<div className='queue' style={style ? {background: 'red'}: null}>
-                {
-                  num.map((item, i) => {
-                    return (
-                        <Transition key={i}>
-                          <div className='transition-div' ></div>
-                        </Transition>
-                    )
-                  })
-                }
-              </div>)
+              bool && <div className='queue' style={style ? {background: 'red'}: null}>
+                1 <br/>
+                2 <br/>
+                3 <br/>
+
+              </div>
           }
         </Transition>
  
