@@ -8,7 +8,7 @@ class Row extends React.Component {
     this.state = {
       checked: false,
       collapse: true,
-      expandCol: 0,
+      colIndex: 0,
       hoverIndex: -1
     }
     this.td = []
@@ -21,19 +21,25 @@ class Row extends React.Component {
     this.setState({ checked: !checked })
   }
   // 具有扩展功能的表格
-  expand(index) {
+  expand(colIndex) {
     const collapse = this.state.collapse
+    const {fixedTable, syncRow, rowIndex} = this.props
     this.setState({
       collapse: !collapse,
-      expandCol: index
+      colIndex: colIndex
     })
+
+    if(fixedTable && syncRow) {
+      syncRow('expand', collapse ? rowIndex : -1, collapse ? colIndex : false)
+    }
   }
   // 鼠标移入样式
-  toggleRowBG(type, index) {
-    this.setState({
-      hoverIndex: type > 0 ? index : -1
-    })
-    this.props.onHover(type > 0 ? index : -1)
+  toggleRowBG(type) {
+    const {syncRow, rowIndex} = this.props
+
+    this.setState({ hoverIndex: type > 0 ? rowIndex : -1 })
+
+    syncRow && syncRow('hover', type > 0 ? rowIndex : -1)
   }
 
   // 将列宽按照最宽设置
@@ -59,14 +65,14 @@ class Row extends React.Component {
     }
   }
   render() {
-    const { columns, tr, bgColor, rowIndex, fixedTable, syncRowIndex } = this.props
-    const { checked, collapse, expandCol, hoverIndex } = this.state
+    const { columns, tr, bgColor, rowIndex, fixedTable, syncHoverRow, syncExpandRow } = this.props
+    const { checked, collapse, colIndex, hoverIndex } = this.state
 
     return (
       <React.Fragment>
-        <tr className={'tr ' + (bgColor || '') + ((hoverIndex === rowIndex || syncRowIndex === rowIndex) ? ' hover' : '')}
-          onMouseOver={() => this.toggleRowBG(1, rowIndex)}
-          onMouseLeave={() => this.toggleRowBG(-1, rowIndex)}>
+        <tr className={'tr ' + (bgColor || '') + ((hoverIndex === rowIndex || syncHoverRow === rowIndex) ? ' hover' : '')}
+          onMouseOver={() => this.toggleRowBG(1)}
+          onMouseLeave={() => this.toggleRowBG(-1)}>
           {
             columns.map((th, j) => {
               if (fixedTable && !th.fixed) return null
@@ -95,11 +101,11 @@ class Row extends React.Component {
           }
         </tr>
         {
-          !collapse && (
+          (!fixedTable && (!collapse || (syncExpandRow.colIndex && syncExpandRow.rowIndex === rowIndex))) && (
             <tr className='expand-tr'>
               <td colSpan={columns.length}
                 className='expand-td'>
-                {columns[expandCol].content}
+                {columns[colIndex || syncExpandRow.colIndex].content}
               </td>
             </tr>
           )

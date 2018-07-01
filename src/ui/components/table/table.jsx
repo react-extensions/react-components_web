@@ -37,12 +37,14 @@ class Table extends React.Component {
       placeholder: false, // 表格头占位符, 当tbody滚动时, 需要这个, 用来让表格头和tbody的每一列宽度一致
       computeWidth: 0,    // 计算的表格宽度
       signOffsetLeft: 0,  // 调整表格列宽时, 指示器样式
-      syncRowIndex: -1,     // 表格行鼠标移入的时候, 颜色同步
+      syncHoverRow: -1,     // 当有 固定列时, 用于表格行数据同步
+      syncExpandRow: {},
       showShadow: false   // 固定列阴影
     }
 
     this.checkedList = []
     this.th = []
+    this.hasFixed = false
 
     // 计算表格每列宽度
     let colWidth = 0,
@@ -64,14 +66,16 @@ class Table extends React.Component {
           colWidth = col.width || 0
           break;
       }
+      if(col.fixed) {
+        this.hasFixed = true 
+      }
       widthList.push(parseFloat(colWidth))
     }
 
     this.checkedRow = this.checkedRow.bind(this)
     this.moveSign = this.moveSign.bind(this)
     this.resizeCol = this.resizeCol.bind(this)
-    this.syncRowBG = this.syncRowBG.bind(this)
-    this.addScrollSign = this.addScrollSign.bind(this)
+    this.showScrollXSign = this.showScrollXSign.bind(this)
   }
   /**
    * 多选表格
@@ -110,20 +114,21 @@ class Table extends React.Component {
     onSelectRowChange && onSelectRowChange(list)
   }
   /**
-   * 同步表格行颜色
+   * 同步表格行
    */
-  syncRowBG(index) {
-    this.setState({
-      syncRowIndex: index
-    })
+  syncRow(type, rowIndex, colIndex) {
+
+    if(type === 'hover') {
+      this.setState({syncHoverRow: rowIndex})
+    } else {
+      this.setState({syncExpandRow:{ rowIndex, colIndex}})
+    }
   }
   /**
    * 表格有固定列时, 当左右滚动时, 给固定列添加阴影
    */
-  addScrollSign(e) {
-    this.setState({
-      showShadow: e.currentTarget.scrollLeft > 0
-    })
+  showScrollXSign(e) {
+    this.setState({ showShadow: e.currentTarget.scrollLeft > 0 })
   }
   /**
    * 上下滚动
@@ -166,7 +171,7 @@ class Table extends React.Component {
       el = this.th[index],
 
       // 根据每列的表头, 设置最小宽度
-      minWidth = el.offsetWidth + el.offsetLeft + 10,
+      minWidth = el.offsetWidth + 10,
       // 容器宽度
       containerWidth = parseFloat(this.table.clientWidth)
 
@@ -189,14 +194,16 @@ class Table extends React.Component {
 
   }
 
-
-
   // 按照每列中最大宽度的td设置列宽
   resizeColToMax(index, width) {
-    if (!this.resizeQueue) {
-      this.resizeQueue = []
+    if (!this.minWidthQueue) {
+      this.minWidthQueue = {}
     }
-    this.resizeQueue.push({ index, width })
+    
+    const col = this.minWidthQueue[index]
+
+    this.minWidthQueue[index] = !col ? width : col > width ? col : width
+
   }
 
   // 根据用户设置,计算表格列宽 及 总宽度
@@ -239,7 +246,8 @@ class Table extends React.Component {
 
     // 如果表格 实际 大于 计算   diff > 0
     const diff = containerWidth - computeWidth,
-      th = this.th
+      th = this.th,
+      minWidthQueue = this.minWidthQueue
 
     let minWidth = 0,  // 每列最小宽度
       lastWidth = 0,    // 最终计算的列宽
@@ -249,7 +257,7 @@ class Table extends React.Component {
       widthList: widthList.map((userWidth, i) => {
         el = th[i]
         //  对于 像 checkbox  和 expand 这种列  我没有获取 el,  其最小宽度在初始化时(constructor中) 已经被设置了
-        minWidth = el ? el.offsetWidth + el.offsetLeft + 20 : userWidth
+        minWidth = el ? ((minWidthQueue[i] && minWidthQueue[i] > el.offsetWidth + 20 )? minWidthQueue[i] : el.offsetWidth + 20  ): userWidth
         lastWidth = userWidth
 
         if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
@@ -290,29 +298,24 @@ class Table extends React.Component {
   }
   componentDidMount() {
 
-    setTimeout(() => {
+    const newState = this.computeTableWidth()
 
-      const newState = this.computeTableWidth()
+    const body = this.normalBody
 
-      const body = this.normalBody
+    if (body) {
+      const offset = body.offsetWidth - body.clientWidth
+      newState.placeholder = offset > 0 ? offset : false
+      newState.computeWidth += offset > 0 ? offset : 0
+    }
 
-      if (body) {
-        const offset = body.offsetWidth - body.clientWidth
-        newState.placeholder = offset > 0 ? offset : false
-        newState.computeWidth += offset > 0 ? offset : 0
-      }
-
-
-      this.setState(newState)
-      // this._step = 1
-
-    }, 30)
+    this.setState(newState)
 
   }
 
   render() {
     const { className, rows, tbodyHeight, zebra, columns } = this.props
-    const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft, syncRowIndex, showShadow } = this.state
+    const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft, syncHoverRow, syncExpandRow, showShadow } = this.state
+    const hasFixed = this.hasFixed
 
     if (!columns) return
 
@@ -327,7 +330,7 @@ class Table extends React.Component {
 
     const renderTable = function (fixedTable) {
       return (
-        <div style={fixedTable ? null : { width: computeWidth }} className={(fixedTable ? 'fixed-table ' : '') + (showShadow && fixedTable ? 'shadow ' : '')}>
+        <div style={fixedTable ? null : { width: computeWidth || 'auto' }} className={(fixedTable ? 'fixed-table ' : '') + (showShadow && fixedTable ? 'shadow ' : '')}>
           <div className="table-thead" >
             <table border='0' cellSpacing='0' cellPadding={0} >
               {renderCol()}
@@ -365,7 +368,7 @@ class Table extends React.Component {
               <div className="table-tbody"
                 style={{ height: tbodyHeight }}
                 ref={(el => fixedTable ? this.fixedBody = el : this.normalBody = el)}
-                onScroll={fixedTable ? null : e => this.scrollBody(e)}
+                onScroll={(!hasFixed ||fixedTable )? null : e => this.scrollBody(e)}
               >
                 <table border='0' cellSpacing='0' cellPadding={0} >
                   {renderCol()}
@@ -378,10 +381,11 @@ class Table extends React.Component {
                         onChecked={this.checkedRow}
                         checkedStatus={checkedStatus}
                         bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                        onHover={this.syncRowBG}
-                        syncRowIndex={syncRowIndex}
                         widthList={widthList}
                         resizeColToMax={this.resizeColToMax.bind(this)}
+                        syncRow={hasFixed ? this.syncRow.bind(this) : null}
+                        syncHoverRow={syncHoverRow}
+                        syncExpandRow = {syncExpandRow}
                       />
                     ))}
                   </tbody>
@@ -399,9 +403,9 @@ class Table extends React.Component {
 
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft }}></div>
 
-        {renderTable.call(this, true)}
+        {hasFixed && renderTable.call(this, true)}
 
-        <div className='normal-table' onScroll={this.addScrollSign}>
+        <div className='normal-table' onScroll={ hasFixed ? this.showScrollXSign : null}>
           {renderTable.call(this, false)}
         </div>
 

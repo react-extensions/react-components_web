@@ -91,7 +91,7 @@
   }
 
   .tr{
-    
+    transition: all ease .3s;
     &.darken{
       background:  #fafafa;
     }
