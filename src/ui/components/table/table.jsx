@@ -66,8 +66,8 @@ class Table extends React.Component {
           colWidth = col.width || 0
           break;
       }
-      if(col.fixed) {
-        this.hasFixed = true 
+      if (col.fixed) {
+        this.hasFixed = true
       }
       widthList.push(parseFloat(colWidth))
     }
@@ -118,10 +118,10 @@ class Table extends React.Component {
    */
   syncRow(type, rowIndex, colIndex) {
 
-    if(type === 'hover') {
-      this.setState({syncHoverRow: rowIndex})
+    if (type === 'hover') {
+      this.setState({ syncHoverRow: rowIndex })
     } else {
-      this.setState({syncExpandRow:{ rowIndex, colIndex}})
+      this.setState({ syncExpandRow: { rowIndex, colIndex } })
     }
   }
   /**
@@ -199,7 +199,7 @@ class Table extends React.Component {
     if (!this.minWidthQueue) {
       this.minWidthQueue = {}
     }
-    
+
     const col = this.minWidthQueue[index]
 
     this.minWidthQueue[index] = !col ? width : col > width ? col : width
@@ -257,7 +257,7 @@ class Table extends React.Component {
       widthList: widthList.map((userWidth, i) => {
         el = th[i]
         //  对于 像 checkbox  和 expand 这种列  我没有获取 el,  其最小宽度在初始化时(constructor中) 已经被设置了
-        minWidth = el ? ((minWidthQueue[i] && minWidthQueue[i] > el.offsetWidth + 20 )? minWidthQueue[i] : el.offsetWidth + 20  ): userWidth
+        minWidth = el ? ((minWidthQueue && minWidthQueue[i] && minWidthQueue[i] > el.offsetWidth + 20) ? minWidthQueue[i] : el.offsetWidth + 20) : userWidth
         lastWidth = userWidth
 
         if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
@@ -296,8 +296,7 @@ class Table extends React.Component {
 
     return newState
   }
-  componentDidMount() {
-
+  _initStructure() {
     const newState = this.computeTableWidth()
 
     const body = this.normalBody
@@ -309,11 +308,20 @@ class Table extends React.Component {
     }
 
     this.setState(newState)
+  }
+  componentDidMount() {
+    this._initStructure()
+  }
 
+  componentDidUpdate(prevP) {
+    if (prevP.rows !== this.props.rows) {
+      this._initStructure()
+    }
   }
 
   render() {
-    const { className, rows, tbodyHeight, zebra, columns } = this.props
+
+    const { className, rows, tbodyHeight, zebra, columns, emptyTip } = this.props
     const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft, syncHoverRow, syncExpandRow, showShadow } = this.state
     const hasFixed = this.hasFixed
 
@@ -363,13 +371,13 @@ class Table extends React.Component {
               </thead>
             </table>
           </div>
-          {
-            rows && (
-              <div className="table-tbody"
-                style={{ height: tbodyHeight }}
-                ref={(el => fixedTable ? this.fixedBody = el : this.normalBody = el)}
-                onScroll={(!hasFixed ||fixedTable )? null : e => this.scrollBody(e)}
-              >
+          <div className="table-tbody"
+            style={{ height: tbodyHeight }}
+            ref={(el => fixedTable ? this.fixedBody = el : this.normalBody = el)}
+            onScroll={(!hasFixed || fixedTable) ? null : e => this.scrollBody(e)}
+          >
+            {
+              rows && rows.length > 0 ? (
                 <table border='0' cellSpacing='0' cellPadding={0} >
                   {renderCol()}
                   <tbody className='tbody'>
@@ -385,14 +393,15 @@ class Table extends React.Component {
                         resizeColToMax={this.resizeColToMax.bind(this)}
                         syncRow={hasFixed ? this.syncRow.bind(this) : null}
                         syncHoverRow={syncHoverRow}
-                        syncExpandRow = {syncExpandRow}
+                        syncExpandRow={syncExpandRow}
                       />
                     ))}
                   </tbody>
                 </table>
-              </div>
-            )
-          }
+              ) : !fixedTable ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
+            }
+          </div>
+
         </div>
       )
     }
@@ -405,7 +414,7 @@ class Table extends React.Component {
 
         {hasFixed && renderTable.call(this, true)}
 
-        <div className='normal-table' onScroll={ hasFixed ? this.showScrollXSign : null}>
+        <div className='normal-table' onScroll={hasFixed ? this.showScrollXSign : null}>
           {renderTable.call(this, false)}
         </div>
 

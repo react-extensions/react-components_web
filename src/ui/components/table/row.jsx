@@ -23,19 +23,19 @@ class Row extends React.Component {
   // 具有扩展功能的表格
   expand(colIndex) {
     const collapse = this.state.collapse
-    const {fixedTable, syncRow, rowIndex} = this.props
+    const { fixedTable, syncRow, rowIndex } = this.props
     this.setState({
       collapse: !collapse,
       colIndex: colIndex
     })
 
-    if(fixedTable && syncRow) {
+    if (fixedTable && syncRow) {
       syncRow('expand', collapse ? rowIndex : -1, collapse ? colIndex : false)
     }
   }
   // 鼠标移入样式
   toggleRowBG(type) {
-    const {syncRow, rowIndex} = this.props
+    const { syncRow, rowIndex } = this.props
 
     this.setState({ hoverIndex: type > 0 ? rowIndex : -1 })
 
@@ -47,22 +47,25 @@ class Row extends React.Component {
     const td = this.td
     const widthList = this.props.widthList
     let width = 0
-    for(let i = 0, len = td.length; i < len; i++) {
-      if(!td[i]) { continue;}
+    for (let i = 0, len = td.length; i < len; i++) {
+      if (!td[i]) { continue; }
       width = td[i].offsetWidth
-      if( width > widthList[i]) {
-        this.props.resizeColToMax(i, width + 20 )
+      if (width > widthList[i]) {
+        this.props.resizeColToMax(i, width + 20)
       }
     }
 
   }
   componentWillReceiveProps(nP) {
     const { checkedStatus } = nP
-    if (checkedStatus === 1) {
-      this.setState({ checked: true })
-    } else if (checkedStatus === -1) {
-      this.setState({ checked: false })
+    if (this.props.checkedStatus !== checkedStatus) {
+      if (checkedStatus === 1) {
+        this.setState({ checked: true })
+      } else if (checkedStatus === -1) {
+        this.setState({ checked: false })
+      }
     }
+
   }
   render() {
     const { columns, tr, bgColor, rowIndex, fixedTable, syncHoverRow, syncExpandRow } = this.props
@@ -86,7 +89,7 @@ class Row extends React.Component {
                         : null
                   }
                 >
-                  <div className='td-content' ref={el => this.td[j] = el  }>
+                  <div className='td-content' ref={el => this.td[j] = el}>
                     {
                       th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
                         : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} />)

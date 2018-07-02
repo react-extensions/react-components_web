@@ -12,7 +12,9 @@ class Transition extends Component {
 
   }
   getDuration() {
-    const style = document.defaultView.getComputedStyle(this.el, null)
+    const elem = this.el
+    if(!elem) return 0
+    const style = document.defaultView.getComputedStyle(elem, null)
 
     let duration = style.animationDuration
 
@@ -55,7 +57,7 @@ class Transition extends Component {
       this.setState({className: nextP.name + '-enter-active ' + nextP.name + '-enter', children: nextP.children})
       // 隐藏
     } else if(!nextP.children && this.props.children){
-      this.setState({className: nextP.name + '-leave'})
+      this.setState({className: nextP.name + '-leave-active'})
     }
 
   }
@@ -80,13 +82,15 @@ class Transition extends Component {
     if(!children) return false
 
     const oldClassName = children.props.className || ''
-
     return (
       <React.Fragment>
         {
           React.cloneElement(children, Object.assign({}, children.props, {
             className: oldClassName + ' ' + className,
-            ref: el => this.el = el
+            ref: el => {
+              if(!el) return
+              this.el = (typeof children.type === 'function' ? el.transitionElem : el)
+            }
           }))
         }
       </React.Fragment>
