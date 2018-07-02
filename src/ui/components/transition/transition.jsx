@@ -4,61 +4,77 @@ import React, { Component } from 'react'
 class Transition extends Component {
   constructor(props) {
     super(props)
-    const {children, name} = props
+    
     this.state = {
-      children: children || null,
-      className: children ? name + '-enter-active ' + name + '-enter' : '',
+      children: props.children || null,
+      durationSuffix: '-enter-active',
+      temporarySuffix: '-enter'
     }
 
   }
   getDuration() {
+
     const elem = this.el
+
     if(!elem) return 0
+
     const style = document.defaultView.getComputedStyle(elem, null)
 
     let duration = style.animationDuration
 
-    if(duration === '0s' || duration === '0ms') {
-      duration = style.transitionDuration
-    }
+    if(duration === '0s' || duration === '0ms') duration = style.transitionDuration
 
-    if(duration.indexOf('ms') > -1) {
-      return parseFloat(duration.slice(0,-2))
-    } else{
-      return parseFloat(duration.slice(0,-1)) * 1000
-    }
+    return duration.indexOf('ms') > -1 ? parseFloat(duration.slice(0,-2)) : parseFloat(duration.slice(0,-1)) * 1000
     
   }
-
+  nextTick (callback, duration) {
+    return setTimeout(callback, duration)
+  }
+  // on
   toggleON() {
-    const name = this.props.name
-    setTimeout(()=> {
-      this.setState({ className: name + '-enter-active ' + name + '-enter-to' })
-    }, 0)
 
-    setTimeout(() => {
-      this.setState({className: ''})
-    }, this.getDuration())
+    this.nextTick(()=> this.setState({ temporarySuffix: '-enter-to' }), 0)
+
+    this.onTimer = this.nextTick(() => this.setState({temporarySuffix: '', durationSuffix: ''}), this.getDuration)
 
   }
-
+  // off
   toggleOFF() {
-  
-    setTimeout(() => {
-      this.setState({children: null})
-    }, this.getDuration() - 30)
+
+    this.nextTick(()=> this.setState({ temporarySuffix: '-leave-to' }), 0)
+
+    this.offTimer = this.nextTick(()=> this.setState({ children: null }), this.getDuration() - 30)
 
   }
 
   componentWillReceiveProps(nextP) {
+    this.isOn = nextP.children && !this.props.children
+    this.isOff = !this.isOn && (!nextP.children && this.props.children)
 
     // 显示
-    if(nextP.children && !this.props.children) {
-      this.setState({className: nextP.name + '-enter-active ' + nextP.name + '-enter', children: nextP.children})
+    if( this.isOn ) {
+      clearTimeout(this.offTimer)
+      this.setState({durationSuffix: '-enter-active', temporarySuffix: '-enter', children: nextP.children})
       // 隐藏
-    } else if(!nextP.children && this.props.children){
-      this.setState({className: nextP.name + '-leave-active'})
+    } else if( this.isOff ){
+      clearTimeout(this.onTimer)
+      this.setState({durationSuffix: '-leave-active', temporarySuffix: '-leave'})
+    } else {
+
+      const children = this.state.children
+
+      if(!(!!children)) return
+      
+      //transition外部组件引起的 children 内部更新, 此时 合并新的属性进来
+      this.setState({
+        children: React.cloneElement(
+          children,
+          Object.assign({}, children.props, nextP.children.props)
+        )
+      })
+
     }
+  
 
   }
 
@@ -66,27 +82,33 @@ class Transition extends Component {
     this.toggleON()
   }
 
-  componentDidUpdate(prevP) {
+  componentDidUpdate() {
 
-    if(!prevP.children && this.props.children) {
+    if( this.isOn ) {
       this.toggleON()
-    } else if(prevP.children && !this.props.children){
+    } else if( this.isOff ){
       this.toggleOFF()
     }
-
+    
+    this.isOff = this.isOn = false
   }
   render() {
 
-    const {className, children} = this.state
+    const {children, durationSuffix, temporarySuffix} = this.state
 
     if(!children) return false
 
-    const oldClassName = children.props.className || ''
+    const {name} = this.props
+
+    const durationClass = durationSuffix ? name + durationSuffix : ''
+
+    const temporaryClass = temporarySuffix ? name + temporarySuffix : ''
+
     return (
       <React.Fragment>
         {
           React.cloneElement(children, Object.assign({}, children.props, {
-            className: oldClassName + ' ' + className,
+            className: (children.props.className || '') + ' ' + durationClass + ' ' +  temporaryClass,
             ref: el => {
               if(!el) return
               this.el = (typeof children.type === 'function' ? el.transitionElem : el)

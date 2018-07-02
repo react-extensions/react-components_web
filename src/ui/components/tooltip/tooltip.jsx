@@ -15,7 +15,7 @@ class Tooltip extends React.Component {
             onMouseOver: function(e) {
               const position = e.currentTarget.getBoundingClientRect()
               // console.log(e)
-              console.log(position)
+              // console.log(position)
               const div = document.createElement('div')
               div.innerText ? div.innerText = label : div.textContent = label;
               div.setAttribute('id', '__tooltip')

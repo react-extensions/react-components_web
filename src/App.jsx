@@ -11,11 +11,13 @@ Tooltip,
 Transition
 } from './ui/index'
 
+import Test from './Test'
+
 class App extends Component {
   constructor() {
     super()
     this.state = {
-      bool: true,
+      bool: false,
       list: [],
       radio: '菠萝',
       input: '',
@@ -150,15 +152,19 @@ class App extends Component {
         <br />
         <Transition name='transition'>
           {
-              bool && <div className='queue' style={style ? {background: 'red'}: null}>
-                1 <br/>
-                2 <br/>
-                3 <br/>
-
-              </div>
+              bool && <Test  />
           }
         </Transition>
- 
+        <Transition name='transition'>
+          {
+              bool && <div className='queue' ref={el => this.transitionElem = el}>
+              1 <br />
+              2 <br />
+              3 <br />
+      
+            </div>
+          }
+        </Transition>
 
         <br />
         <Radio.Group checked={radio} onChange={this.changeRadio.bind(this)}>

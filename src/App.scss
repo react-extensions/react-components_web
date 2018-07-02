@@ -16,31 +16,43 @@
 
 .queue{
   overflow: hidden;
-  border: 1px sandybrown solid;
+  border-radius: 4px;
+  background:#ccc;
   border-radius: 4px;
   height: 200px;
   transform-origin: top;
-  transition: ease .4s all;
+  transition: ease 1s all;
 }
 
-.transition-enter-active{
-  // animation: xx ease 3s;
-}
+// .transition-enter-active{
+//   animation: xx ease 3s;
+// }
+// .transition-leave-active{
+//   animation: xx ease 3s reverse;
+// }
+
+
 .transition-enter{
-  transform: scale3d(1,0,1)
+  height: 0;
+  // opacity: 0;
 }
 .transition-enter-to{
-  transform: scale(1,1,1)
+  height: 200px;
 }
 .transition-leave{
-  animation: xx ease 3s reverse;
+  height: 200px;
 }
+.transition-leave-to{
+  height: 0;
+  // opacity: 0;
+}
+
 
 @keyframes xx {
   from {
-    transform: scale3d(1,0,1)
+    height: 0;
   }
   to{
-    transform: scale(1,1,1)
+    height: 200px;
   }
 }
