@@ -8,9 +8,12 @@ import Row from './row'
  * @param tbodyHeight     {tbody高度}
  * @param zebra[Boolean]  {表格行斑马线显示}
  * @param columns = [
+ *      {
+ *          filter: function () {}  // 对表格中的数据进行操作, 参数为表格中的数据, 返回值将被显示
+ *      },
  *     {
  *        type: 'index',
- *        fixed: true     // 让此列固定不左右滚动
+ *        fixed: true,     // 让此列固定不左右滚动
  *     },
  *     {
  *        type: 'checkbox' // 如果加了这个, 则此列 会渲染成多选按钮
@@ -43,7 +46,7 @@ class Table extends React.Component {
     }
 
     this.checkedList = []
-    this.th = []
+    this.thMinWidth = []
     this.hasFixed = false
 
     // 计算表格每列宽度
@@ -168,10 +171,8 @@ class Table extends React.Component {
 
       index = this.resizeColIndex,
 
-      el = this.th[index],
-
       // 根据每列的表头, 设置最小宽度
-      minWidth = el.offsetWidth + 10,
+      minWidth = this.thMinWidth[index] + 10,
       // 容器宽度
       containerWidth = parseFloat(this.table.clientWidth)
 
@@ -196,13 +197,13 @@ class Table extends React.Component {
 
   // 按照每列中最大宽度的td设置列宽
   resizeColToMax(index, width) {
-    if (!this.minWidthQueue) {
-      this.minWidthQueue = {}
+    if (!this.tdMinWidth) {
+      this.tdMinWidth = {}
     }
 
-    const col = this.minWidthQueue[index]
+    const col = this.tdMinWidth[index]
 
-    this.minWidthQueue[index] = !col ? width : col > width ? col : width
+    this.tdMinWidth[index] = !col ? width : col > width ? col : width
 
   }
 
@@ -246,18 +247,20 @@ class Table extends React.Component {
 
     // 如果表格 实际 大于 计算   diff > 0
     const diff = containerWidth - computeWidth,
-      th = this.th,
-      minWidthQueue = this.minWidthQueue
+      thMinWidth = this.thMinWidth,
+      tdMinWidth = this.tdMinWidth
 
     let minWidth = 0,  // 每列最小宽度
       lastWidth = 0,    // 最终计算的列宽
-      el = null
+      thMinItem = 0
 
     const newState = {
       widthList: widthList.map((userWidth, i) => {
-        el = th[i]
-        //  对于 像 checkbox  和 expand 这种列  我没有获取 el,  其最小宽度在初始化时(constructor中) 已经被设置了
-        minWidth = el ? ((minWidthQueue && minWidthQueue[i] && minWidthQueue[i] > el.offsetWidth + 20) ? minWidthQueue[i] : el.offsetWidth + 20) : userWidth
+
+        thMinItem = thMinWidth[i]
+
+        //  对于 像 checkbox  和 expand 这种列  我没有获取 最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
+        minWidth = thMinItem ? ((tdMinWidth && tdMinWidth[i] && tdMinWidth[i] > thMinItem + 20) ? tdMinWidth[i] : thMinItem + 20) : userWidth
         lastWidth = userWidth
 
         if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
@@ -311,16 +314,21 @@ class Table extends React.Component {
   }
   componentDidMount() {
     this._initStructure()
+    this.initialized = true
   }
 
   componentDidUpdate(prevP) {
-    if (prevP.rows !== this.props.rows) {
+    const {rows, columns} = this.props
+
+    if (prevP.rows !== rows) {
       this._initStructure()
+    }
+    if(prevP.columns !== columns) {
+      this.initialized = false
     }
   }
 
   render() {
-
     const { className, rows, tbodyHeight, zebra, columns, emptyTip } = this.props
     const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft, syncHoverRow, syncExpandRow, showShadow } = this.state
     const hasFixed = this.hasFixed
@@ -349,13 +357,13 @@ class Table extends React.Component {
                       if (fixedTable && !th.fixed) return null
                       if (!fixedTable && th.fixed) return (<th key={'th' + i}></th>)
                       return (
-                        <th className={'th ' /* + (th.alignCenter ? 'align-center ' : '') */}
+                        <th className={'th'}
                           key={'th' + i}
                           onClick={th.type === 'checkbox' ? this.checkedAll.bind(this) : null} >
                           {
                             th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} />
                               : (th.type === 'expand' || th.type === 'index') ? null
-                                : <span ref={el => this.th[i] = el} className='th-content'>
+                                : <span ref = {this.initialized ? null : el => {if(!el) return; this.thMinWidth[i] = el.offsetWidth}} className='th-content' >
                                   {th.label}
                                   <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
                                 </span>

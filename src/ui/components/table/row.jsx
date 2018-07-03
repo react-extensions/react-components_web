@@ -1,6 +1,5 @@
 import React from 'react'
 import Icon from '../icon/icon'
-// import Transition from '../transition/transition'
 
 class Row extends React.Component {
   constructor(props) {
@@ -33,6 +32,7 @@ class Row extends React.Component {
       syncRow('expand', collapse ? rowIndex : -1, collapse ? colIndex : false)
     }
   }
+
   // 鼠标移入样式
   toggleRowBG(type) {
     const { syncRow, rowIndex } = this.props
@@ -48,12 +48,14 @@ class Row extends React.Component {
     const widthList = this.props.widthList
     let width = 0
     for (let i = 0, len = td.length; i < len; i++) {
-      if (!td[i]) { continue; }
+      if (!td[i]) continue;
       width = td[i].offsetWidth
       if (width > widthList[i]) {
         this.props.resizeColToMax(i, width + 20)
       }
     }
+
+    this.initialized = true
 
   }
   componentWillReceiveProps(nP) {
@@ -82,21 +84,27 @@ class Row extends React.Component {
               if (!fixedTable && th.fixed) return (<td key={'td' + j}></td>)
               return (
                 <td key={'td' + j}
-                  className={'td ' /* + (th.alignCenter ? 'align-center ' : '') */}
-                  onClick={
+                  className = 'td'
+                  onClick = {
                     th.type === 'checkbox' ? this.checked.bind(this)
                       : th.type === 'expand' ? this.expand.bind(this, j)
                         : null
                   }
                 >
-                  <div className='td-content' ref={el => this.td[j] = el}>
-                    {
-                      th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
-                        : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} />)
-                          : th.type === 'index' ? rowIndex + 1
-                            : tr[th.prop]
-                    }
-                  </div>
+                  {
+                    th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
+                      : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} />)
+                        : th.type === 'index' ? rowIndex + 1
+                          : (
+                            (tr[th.prop] || tr[th.prop] === 0 || th.filter) && (
+                              <div className='td-content' ref={this.initialized ? null : (el => {if(!el)return;this.td[j] = el})}>
+                                { th.filter ? th.filter(tr[th.prop]) : tr[th.prop] }
+                              </div>
+                            )
+                          )
+
+                  }
+
                 </td>
               )
 

@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 
-
 class Transition extends Component {
   constructor(props) {
     super(props)
@@ -27,23 +26,23 @@ class Transition extends Component {
     return duration.indexOf('ms') > -1 ? parseFloat(duration.slice(0,-2)) : parseFloat(duration.slice(0,-1)) * 1000
     
   }
-  nextTick (callback, duration) {
-    return setTimeout(callback, duration)
+  nextTick (callback) {
+    window.requestAnimationFrame ? window.requestAnimationFrame(callback) : setTimeout(callback, 0)
   }
   // on
   toggleON() {
 
-    this.nextTick(()=> this.setState({ temporarySuffix: '-enter-to' }), 0)
+    this.nextTick(()=> this.setState({ temporarySuffix: '-enter-to' }))
 
-    this.onTimer = this.nextTick(() => this.setState({temporarySuffix: '', durationSuffix: ''}), this.getDuration)
+    this.onTimer = setTimeout(()=> this.setState({temporarySuffix: '', durationSuffix: ''}), this.getDuration())
 
   }
   // off
   toggleOFF() {
 
-    this.nextTick(()=> this.setState({ temporarySuffix: '-leave-to' }), 0)
+    this.nextTick(()=> this.setState({ temporarySuffix: '-leave-to' }))
 
-    this.offTimer = this.nextTick(()=> this.setState({ children: null }), this.getDuration() - 30)
+    this.offTimer = setTimeout(()=> this.setState({ children: null }), this.getDuration() - 34)
 
   }
 
