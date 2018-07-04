@@ -77,7 +77,7 @@ class App extends Component {
       
       {
         type: 'checkbox',
-        fixed: true  
+        fixedLeft: true  
       },
       {
         type: 'expand',
@@ -180,8 +180,7 @@ class App extends Component {
           <Select.Option label='香蕉' value={{name: "香蕉", id:'BANANA'}}/>
         </Select>
         <br/>
-        {bool && <Table columns={thead} zebra={true} rows={tbody} tbodyHeight={400}/>}
-        
+        <Table columns={thead} zebra={true} rows={tbody} tbodyHeight={400}/>
         
 
       </div>

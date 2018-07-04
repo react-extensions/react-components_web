@@ -70,7 +70,7 @@ class Row extends React.Component {
 
   }
   render() {
-    const { columns, tr, bgColor, rowIndex, syncHoverRow, syncExpandRow } = this.props
+    const { columns, tr, bgColor, rowIndex, fixedTable, syncHoverRow, syncExpandRow } = this.props
     const { checked, collapse, colIndex, hoverIndex } = this.state
 
     return (
@@ -80,16 +80,25 @@ class Row extends React.Component {
           onMouseLeave={() => this.toggleRowBG(-1)}>
           {
             columns.map((th, j) => {
+              if (fixedTable && !th.fixed) return null
+              if (!fixedTable && th.fixed) return (<td key={'td' + j}></td>)
               return (
-                <td key={'td' + j} className='td'>
+                <td key={'td' + j}
+                  className = 'td'
+                  onClick = {
+                    th.type === 'checkbox' ? this.checked.bind(this)
+                      : th.type === 'expand' ? this.expand.bind(this, j)
+                        : null
+                  }
+                >
                   {
-                    th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} onClick={this.checked.bind(this)}/>)
-                      : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} onClick={this.expand.bind(this, j)}/>)
+                    th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} />)
+                      : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} />)
                         : th.type === 'index' ? rowIndex + 1
                           : (
                             (tr[th.prop] || tr[th.prop] === 0 || th.filter) && (
-                              <div className='td-content' ref={this.initialized ? null : (el => { if (!el) return; this.td[j] = el })}>
-                                {th.filter ? th.filter(tr[th.prop]) : tr[th.prop]}
+                              <div className='td-content' ref={this.initialized ? null : (el => {if(!el)return;this.td[j] = el})}>
+                                { th.filter ? th.filter(tr[th.prop]) : tr[th.prop] }
                               </div>
                             )
                           )
@@ -102,7 +111,16 @@ class Row extends React.Component {
             })
           }
         </tr>
-
+        {
+          (!fixedTable && (!collapse || (syncExpandRow.colIndex && syncExpandRow.rowIndex === rowIndex))) && (
+            <tr className='expand-tr'>
+              <td colSpan={columns.length}
+                className='expand-td'>
+                {columns[colIndex || syncExpandRow.colIndex].content}
+              </td>
+            </tr>
+          )
+        }
       </React.Fragment>
     )
   }

@@ -1,6 +1,5 @@
   @import '../../style/animation.scss';
-  /* 总体 */
-  .u-table__wrap {
+  .table__wrap {
     position: relative;
     background:#fff;
     overflow: hidden;
@@ -17,14 +16,9 @@
       transition: transform cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
     }
   }
-  /* 布局 */
-  .u-table__track{
-    overflow-x: auto;
-  }
-  .fixed-left__table{
+  .fixed-table{
     position: absolute;
     top:0;
-    left:0;
     z-index: 11;
     background-color:#fff;
     transition: box-shadow ease-out .4s;
@@ -36,12 +30,10 @@
       overflow: hidden;
     }
   }
-  .plain__table{
+  .normal-table{
     overflow-x: auto;
-    table{ width: 100%;}
-    .table-tbody{
-      overflow-y: auto;
-      overflow-x: hidden;
+    table{
+      width: 100%;
     }
   }
 
@@ -53,11 +45,11 @@
     z-index: 11;
   }
   .table-thead{
-    // overflow: hidden;
+    overflow: hidden;
   }
   .table-tbody{
-    /*   overflow-y: auto;
-      overflow-x: hidden; */
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   
   .th{

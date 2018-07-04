@@ -64,11 +64,12 @@ class Table extends React.Component {
         case 'checkbox':
         case 'expand':
         case 'index':
+          col.alignCenter = true
           col.cannotExpand = true
-          colWidth = col.width =  col.width || 40
+          colWidth = col.width || 40
           break;
         default:
-        colWidth = col.width =  col.width || 0
+          colWidth = col.width || 0
           break;
       }
       if (col.fixedLeft) {
@@ -339,87 +340,97 @@ class Table extends React.Component {
 
     if (!columns) return
 
-    const renderCol = function (cols) {
+    const renderCol = function () {
       return (
         <colgroup>
-          {cols.map((item, i) => (<col key={i} style={{ width: item.width }}></col>))}
+          {widthList.map((item, i) => (<col key={i} style={{ width: item }}></col>))}
           {placeholder && <col width={placeholder} style={{ width: placeholder }}></col>}
         </colgroup>
       )
     }
-    
 
-    const renderTable = function (type, cols) {
+
+    const renderHead = function (cols, type) {
+
       return (
-        <div className='u-table'>
-          <div className="table-thead" >
-            <table border='0' cellSpacing='0' cellPadding={0} >
-              {renderCol(cols)}
-              <thead>
-                <tr>
-                  {
-                    cols.map((th, i) => {
-                      return (
-                        <th className={'th'} key={'th' + i} >
-                          {
-                            th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} onClick={this.checkedAll.bind(this)} />
-                              : (th.type === 'expand' || th.type === 'index') ? null
-                                : (
-                                  <span className='th-content' ref = {this.initialized ? null : el => {if(!el) return; this.thMinWidth[i] = el.offsetWidth}}>
-                                    {th.label}
-                                    <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
-                                  </span>
-                                )
-                          }
-                        </th>
-                      )
-                    })
-                  }
-                </tr>
-              </thead>
-            </table>
-          </div>
-          <div className="table-tbody" style={{ height: tbodyHeight }} >
-            <table border='0' cellSpacing='0' cellPadding={0} >
-                  {renderCol(cols)}
-                  <tbody className='tbody'>
-                    {rows.map((tr, i) => (
-                      <Row key={'tr' + i}
-                        rowIndex={i}
-                        fixedTable={type === 0}
-                        columns={cols} tr={tr}
-                        onChecked={this.checkedRow}
-                        checkedStatus={checkedStatus}
-                        bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                        widthList={widthList}
-                        resizeColToMax={this.resizeColToMax.bind(this)}
-                        syncRow={hasFixed ? this.syncRow.bind(this) : null}
-                        syncHoverRow={syncHoverRow}
-                        syncExpandRow={syncExpandRow}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-          </div>
-
+        <div className={'table-thead ' + (type === -1 ? 'fixed-left ' : '')} >
+          <table border='0' cellSpacing='0' cellPadding={0} >
+            {renderCol()}
+            <thead>
+              <tr>
+                {
+                  cols.map((th, i) => {
+                    return (
+                      <th className={'th'} key={'th' + i} >
+                        {
+                          th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} onClick={this.checkedAll.bind(this)} />
+                            : (th.type === 'expand' || th.type === 'index') ? null
+                              : (
+                                <span className='th-content' ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[i] = el.offsetWidth }}>
+                                  {th.label}
+                                  <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
+                                </span>
+                              )
+                        }
+                      </th>
+                    )
+                  })
+                }
+              </tr>
+            </thead>
+          </table>
         </div>
       )
     }
 
+    const renderBody = function (type, cols) {
+      return (
+        <div className="table-tbody" style={{ height: tbodyHeight }} >
+          <table border='0' cellSpacing='0' cellPadding={0} >
+            {renderCol()}
+            <tbody className='tbody'>
+              {rows.map((tr, i) => (
+                <Row key={'tr' + i}
+                  rowIndex={i}
+                  fixedTable={type === 0}
+                  columns={cols} tr={tr}
+                  onChecked={this.checkedRow}
+                  checkedStatus={checkedStatus}
+                  bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
+                  widthList={widthList}
+                  resizeColToMax={this.resizeColToMax.bind(this)}
+                  syncRow={hasFixed ? this.syncRow.bind(this) : null}
+                  syncHoverRow={syncHoverRow}
+                  syncExpandRow={syncExpandRow}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    const handleHead = function () {
+
+      return (
+        <div className='table-thead__wrap'>
+          {this.fixedLeftCols && renderHead.call(this, this.fixedLeftCols, -1)}
+          {renderHead.call(this, this.plainCols, 0)}
+        </div>
+      )
+
+    }
 
     return (
       <div className={'u-table__wrap ' + (className || '')} ref={el => this.table = el}>
 
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft }}></div>
 
-        <div className='u-table__track' style={{padding: ' 0 0 0 40px'}}>
-
-          <div className='fixed-left__table'>
-            {renderTable.call(this, -1, this.fixedLeftCols)}
-          </div>
-
-          <div className='plain__table' style={{width: computeWidth}}>
-            {renderTable.call(this, 0, this.plainCols)}
+        <div className='u-table__track' style={{ padding: '0 0 0 40px' }}>
+          {handleHead.call(this)}
+          <div className='table-tbody__wrap'>
+            {this.fixedLeftCols && renderHead.call(this, this.fixedLeftCols, -1)}
+            {renderHead.call(this, this.plainCols, 0)}
           </div>
 
         </div>

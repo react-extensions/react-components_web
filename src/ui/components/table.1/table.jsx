@@ -49,9 +49,6 @@ class Table extends React.Component {
     this.thMinWidth = []
     this.hasFixed = false
 
-    this.plainCols = []
-    this.fixedLeftCols = []
-
     // 计算表格每列宽度
     let colWidth = 0,
       col = null
@@ -64,17 +61,16 @@ class Table extends React.Component {
         case 'checkbox':
         case 'expand':
         case 'index':
+          col.alignCenter = true
           col.cannotExpand = true
-          colWidth = col.width =  col.width || 40
+          colWidth = col.width || 40
           break;
         default:
-        colWidth = col.width =  col.width || 0
+          colWidth = col.width || 0
           break;
       }
-      if (col.fixedLeft) {
-        this.fixedLeftCols.push(col)
-      } else {
-        this.plainCols.push(col)
+      if (col.fixed) {
+        this.hasFixed = true
       }
       widthList.push(parseFloat(colWidth))
     }
@@ -318,18 +314,18 @@ class Table extends React.Component {
   }
   componentDidMount() {
     this._initStructure()
-    // this.initialized = true
+    this.initialized = true
   }
 
   componentDidUpdate(prevP) {
-    /* const {rows, columns} = this.props
+    const {rows, columns} = this.props
 
     if (prevP.rows !== rows) {
       this._initStructure()
     }
     if(prevP.columns !== columns) {
       this.initialized = false
-    } */
+    }
   }
 
   render() {
@@ -339,55 +335,65 @@ class Table extends React.Component {
 
     if (!columns) return
 
-    const renderCol = function (cols) {
+    const renderCol = function () {
       return (
         <colgroup>
-          {cols.map((item, i) => (<col key={i} style={{ width: item.width }}></col>))}
+          {widthList.map((item, i) => (<col key={i} style={{ width: item }}></col>))}
           {placeholder && <col width={placeholder} style={{ width: placeholder }}></col>}
         </colgroup>
       )
     }
-    
 
-    const renderTable = function (type, cols) {
+    const renderTable = function (fixedTable) {
       return (
-        <div className='u-table'>
+        <div style={fixedTable ? null : { width: computeWidth || 'auto' }} className={(fixedTable ? 'fixed-table ' : '') + (showShadow && fixedTable ? 'shadow ' : '')}>
           <div className="table-thead" >
             <table border='0' cellSpacing='0' cellPadding={0} >
-              {renderCol(cols)}
+              {renderCol()}
               <thead>
                 <tr>
                   {
-                    cols.map((th, i) => {
+                    columns.map((th, i) => {
+                      if (fixedTable && !th.fixed) return null
+                      if (!fixedTable && th.fixed) return (<th key={'th' + i}></th>)
                       return (
-                        <th className={'th'} key={'th' + i} >
+                        <th className={'th'}
+                          key={'th' + i}
+                          onClick={th.type === 'checkbox' ? this.checkedAll.bind(this) : null} >
                           {
-                            th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} onClick={this.checkedAll.bind(this)} />
+                            th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} />
                               : (th.type === 'expand' || th.type === 'index') ? null
-                                : (
-                                  <span className='th-content' ref = {this.initialized ? null : el => {if(!el) return; this.thMinWidth[i] = el.offsetWidth}}>
-                                    {th.label}
-                                    <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
-                                  </span>
-                                )
+                                : <span ref = {this.initialized ? null : el => {if(!el) return; this.thMinWidth[i] = el.offsetWidth}} className='th-content' >
+                                  {th.label}
+                                  <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
+                                </span>
                           }
                         </th>
                       )
                     })
                   }
+                  {
+                    (!fixedTable && placeholder) && <th className='th th__placeholder' width={placeholder} style={{ width: placeholder }}></th>
+                  }
                 </tr>
               </thead>
             </table>
           </div>
-          <div className="table-tbody" style={{ height: tbodyHeight }} >
-            <table border='0' cellSpacing='0' cellPadding={0} >
-                  {renderCol(cols)}
+          <div className="table-tbody"
+            style={{ height: tbodyHeight }}
+            ref={(el => fixedTable ? this.fixedBody = el : this.normalBody = el)}
+            onScroll={(!hasFixed || fixedTable) ? null : e => this.scrollBody(e)}
+          >
+            {
+              rows && rows.length > 0 ? (
+                <table border='0' cellSpacing='0' cellPadding={0} >
+                  {renderCol()}
                   <tbody className='tbody'>
                     {rows.map((tr, i) => (
                       <Row key={'tr' + i}
                         rowIndex={i}
-                        fixedTable={type === 0}
-                        columns={cols} tr={tr}
+                        fixedTable={fixedTable}
+                        columns={columns} tr={tr}
                         onChecked={this.checkedRow}
                         checkedStatus={checkedStatus}
                         bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
@@ -400,6 +406,8 @@ class Table extends React.Component {
                     ))}
                   </tbody>
                 </table>
+              ) : !fixedTable ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
+            }
           </div>
 
         </div>
@@ -408,21 +416,16 @@ class Table extends React.Component {
 
 
     return (
-      <div className={'u-table__wrap ' + (className || '')} ref={el => this.table = el}>
+      <div className={'table__wrap ' + (className || '')} ref={el => this.table = el}>
 
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft }}></div>
 
-        <div className='u-table__track' style={{padding: ' 0 0 0 40px'}}>
+        {hasFixed && renderTable.call(this, true)}
 
-          <div className='fixed-left__table'>
-            {renderTable.call(this, -1, this.fixedLeftCols)}
-          </div>
-
-          <div className='plain__table' style={{width: computeWidth}}>
-            {renderTable.call(this, 0, this.plainCols)}
-          </div>
-
+        <div className='normal-table' onScroll={hasFixed ? this.showScrollXSign : null}>
+          {renderTable.call(this, false)}
         </div>
+
       </div>
     )
   }
