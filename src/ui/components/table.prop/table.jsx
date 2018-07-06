@@ -2,6 +2,7 @@ import React from 'react'
 import './table.scss'
 import Icon from '../icon/icon'
 import Row from './row'
+import { Object } from 'core-js';
 
 /**
  * @param rows[Array]    {表格数据}
@@ -10,6 +11,7 @@ import Row from './row'
  * @param columns = [
  *      {
  *          filter: function () {}  // 对表格中的数据进行操作, 参数为表格中的数据, 返回值将被显示
+ * cannotExpand // 不允许扩展
  *      },
  *     {
  *        type: 'index',
@@ -35,23 +37,21 @@ class Table extends React.Component {
     super(props)
 
     this.state = {
-      widthList: [],     // 每一列宽度
+      widthList: {},     // 每一列宽度
       checkedStatus: 0,  // 0 有的选中, 有的没选中  -1 全没选中   1 全选中
       placeholder: false, // 表格头占位符, 当tbody滚动时, 需要这个, 用来让表格头和tbody的每一列宽度一致
-      computeWidth: 0,    // 计算的表格宽度
+      compute: {},    // 计算的表格宽度
       signOffsetLeft: 0,  // 调整表格列宽时, 指示器样式
       syncHoverRow: -1,     // 当有 固定列时, 用于表格行数据同步
       syncExpandRow: {},
-      showShadow: false,   // 固定列阴影
+      showShadow: false   // 固定列阴影
     }
 
     this.checkedList = []
-    this.thMinWidth = []
-    this.hasFixed = false
+    this.thMinWidth = {}
 
-    /* ------------------- */
-    /* -->> 数据预处理 <<-- */
-    /* ------------------- */
+    this.plainCols = []
+    this.fixedLeftCols = []
 
     // 计算表格每列宽度
     let colWidth = 0,
@@ -65,7 +65,6 @@ class Table extends React.Component {
         case 'checkbox':
         case 'expand':
         case 'index':
-          col.alignCenter = true
           col.cannotExpand = true
           colWidth = col.width || 40
           break;
@@ -73,10 +72,12 @@ class Table extends React.Component {
           colWidth = col.width || 0
           break;
       }
-
-      if (col.fixed) this.hasFixed = true
-
-      widthList.push(parseFloat(colWidth))
+      if (col.fixedLeft) {
+        this.fixedLeftCols.push(col)
+      } else {
+        this.plainCols.push(col)
+      }
+      widthList[col.prop || col.type] = parseFloat(colWidth)
     }
 
     this.checkedRow = this.checkedRow.bind(this)
@@ -84,15 +85,15 @@ class Table extends React.Component {
     this.resizeCol = this.resizeCol.bind(this)
     this.showScrollXSign = this.showScrollXSign.bind(this)
   }
-  /* ------------------- */
-  /* --->> 多选表格 <<--- */
-  /* ------------------- */
+  /**
+   * 多选表格
+   */
   // 全部选中, 不选中
   checkedAll() {
     const { rows, onSelectRowChange } = this.props
     const bool = this.state.checkedStatus === 1
     this.setState({ checkedStatus: bool ? -1 : 1 })
-    this.checkedList = bool ? [] : (!rows || rows.length === 0) ? [] : [...rows]
+    this.checkedList = bool ? [] : [...rows]
     onSelectRowChange && onSelectRowChange(this.checkedList)
   }
   // 单行选中, 不选中
@@ -120,9 +121,9 @@ class Table extends React.Component {
     this.checkedList = list
     onSelectRowChange && onSelectRowChange(list)
   }
-  /* ------------------- */
-  /* -->> 同步表格行 <<-- */
-  /* ------------------- */
+  /**
+   * 同步表格行
+   */
   syncRow(type, rowIndex, colIndex) {
 
     if (type === 'hover') {
@@ -137,20 +138,20 @@ class Table extends React.Component {
   showScrollXSign(e) {
     this.setState({ showShadow: e.currentTarget.scrollLeft > 0 })
   }
-  /* ------------------- */
-  /* --->> 上下滚动 <<--- */
-  /* ------------------- */
+  /**
+   * 上下滚动
+   */
   scrollBody(e) {
-    this.fixedTbody.scrollTop = e.currentTarget.scrollTop
+    this.fixedBody.scrollTop = e.currentTarget.scrollTop
   }
-  /* ------------------- */
-  /*->> 调整表格列大小 <<-*/
-  /* ------------------- */
+  /**
+   * 调整表格列大小
+   */
   prepareResizeCol(e, index) {
     e.preventDefault()
     e.stopPropagation()
 
-    const table = this.table
+    const table = this.wrap
     // 记录调整的  1. 列索引  2. 初始位置
     this.resizeColIndex = index
     this.startOffsetLeft = e.clientX - table.offsetLeft + table.scrollLeft + 2
@@ -158,18 +159,16 @@ class Table extends React.Component {
     document.addEventListener('mousemove', this.moveSign)
     document.addEventListener('mouseup', this.resizeCol)
   }
-
   // 修改指示器位置
   moveSign(e) {
-    const table = this.table
+    const table = this.wrap
     this.setState({ signOffsetLeft: e.clientX - table.offsetLeft + table.scrollLeft + 1 })
   }
-
   resizeCol() {
     document.removeEventListener('mousemove', this.moveSign)
     document.removeEventListener('mouseup', this.resizeCol)
 
-    const { signOffsetLeft, widthList, computeWidth } = this.state
+    const { signOffsetLeft, widthList, compute } = this.state
 
     if (!signOffsetLeft) return
 
@@ -180,37 +179,37 @@ class Table extends React.Component {
       // 根据每列的表头, 设置最小宽度
       minWidth = this.thMinWidth[index] + 10,
       // 容器宽度
-      containerWidth = parseFloat(this.table.clientWidth)
+      containerWidth = parseFloat(this.wrap.clientWidth)
 
     let newWidth = widthList[index] + diff
 
     if (newWidth < minWidth) newWidth = minWidth
 
-    let newTotalWidth = computeWidth + newWidth - widthList[index]
+    let newTotalWidth = compute.tableWidth + newWidth - widthList[index]
 
     if (containerWidth > newTotalWidth) {
       newWidth += containerWidth - newTotalWidth
       newTotalWidth = containerWidth
     }
-
+    const obj = {}
+    obj[index] = newWidth
     this.setState({
-      widthList: widthList.map((item, i) => (i === index ? newWidth : item)),
-      computeWidth: newTotalWidth,
+      widthList: Object.assign({}, widthList, obj),
+      compute: Object.assign({}, compute, {tableWidth: newTotalWidth}),
       signOffsetLeft: 0
     })
 
   }
 
   // 按照每列中最大宽度的td设置列宽
-  resizeColToMax(index, width) {
-    console.log(index, width)
+  resizeColToMax(prop, width) {
     if (!this.tdMinWidth) {
-      this.tdMinWidth = []
+      this.tdMinWidth = {}
     }
 
-    const col = this.tdMinWidth[index]
+    const col = this.tdMinWidth[prop]
 
-    this.tdMinWidth[index] = !col ? width : col > width ? col : width
+    this.tdMinWidth[prop] = !col ? width : col > width ? col : width
 
   }
 
@@ -219,7 +218,7 @@ class Table extends React.Component {
     /**
      * 用户通过thead设置 每列宽度
      * 默认将按照用户设置宽度渲染表格
-     * 1.1 将所有 用户设置的 列宽相加 得到 计算宽度 computeWidth
+     * 1.1 将所有 用户设置的 列宽相加 得到 计算宽度 compute.tableWidth
      * 1.2 表格所在容器 实际宽度  containerWidth
      * 
      * 2.1 如果 实际宽度 大于 计算宽度, 则获取 多出的差值  平均分配给每一列,  以填充满容器
@@ -231,84 +230,110 @@ class Table extends React.Component {
      * 
      */
 
-    const containerWidth = parseFloat(this.table.clientWidth),
+    const containerWidth = parseFloat(this.wrap.clientWidth),
       { widthList } = this.state,
-      { columns } = this.props
+      { columns } = this.props,
+      cannotExpand = { width: 0 },
+      fixed = {}
 
-    let computeWidth = 0,
+    let compute = {pLeft: 0, pRight: 0, pBottom: 0, tableWidth: 0},
       hasZero = 0,
-      cannotExpand = { width: 0 }
+      prop = null,
+      widthItem = 0,
+      colItem
 
-    for (let i = 0, len = widthList.length; i < len; i++) {
+    for (let i = 0, len = columns.length; i < len; i++) {
+      colItem = columns[i]
+      prop = colItem.prop || colItem.type
 
-      if (widthList[i] === 0) hasZero++
+      widthItem = widthList[prop]
+      if (widthItem === 0) hasZero++
 
-      if (columns[i].cannotExpand) {
-        cannotExpand.width += widthList[i]
-        cannotExpand[i] = true
+      if (colItem.cannotExpand) {
+        cannotExpand.width += widthItem
+        cannotExpand[prop] = true
       }
-
-      computeWidth += widthList[i]
-
+      
+      if(colItem.fixedLeft) {
+        fixed[prop] = -1
+        compute.pLeft += widthItem
+      } else if(colItem.fixedRight) {
+        fixed[prop] = 1
+        compute.right += widthItem
+      } else {
+        fixed[prop] = '0'
+        compute.tableWidth += widthItem
+      }
     }
 
+
     // 如果表格 实际 大于 计算   diff > 0
-    const diff = containerWidth - computeWidth,
+    const diff = containerWidth - compute.tableWidth,
       thMinWidth = this.thMinWidth,
       tdMinWidth = this.tdMinWidth
 
     let minWidth = 0,  // 每列最小宽度
       lastWidth = 0,    // 最终计算的列宽
-      thMinItem = 0
+      userWidthItem = 0,
+      thMinItem = 0,
+      tdMinItem = 0
 
-    const newState = {
-      widthList: widthList.map((userWidth, i) => {
+    const newWidthList = {}
 
-        thMinItem = thMinWidth[i]
+    for (let prop in widthList) {
+      thMinItem = thMinWidth[prop]
+      tdMinItem = (tdMinWidth && tdMinWidth[prop]) || -1
+      userWidthItem = widthList[prop]
 
-        //  对于 像 checkbox  和 expand 这种列  我没有获取 最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
-        minWidth = thMinItem ? ((tdMinWidth && tdMinWidth[i] && tdMinWidth[i] > thMinItem + 20) ? tdMinWidth[i] : thMinItem + 20) : userWidth
-        lastWidth = userWidth
 
-        if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
+      minWidth = thMinItem ? (tdMinItem > (thMinItem + 20) ? tdMinItem : thMinItem + 20) : userWidthItem
 
-          if (hasZero) { // 存在 没有设置宽度的 列  ==>>  将多余的平均分配
-            if (userWidth === 0) {
-              lastWidth = diff / hasZero
-            }
-          } else {     // 不存在 没有设置宽度的列  ==>>  除了不允许扩展的列, 其他均匀分配 多出的
+      lastWidth = userWidthItem
 
-            if (!cannotExpand[i]) {
-              lastWidth = userWidth + diff * (userWidth / (computeWidth - cannotExpand.width))
-            }
+      if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
+
+        if (hasZero) { // 存在 没有设置宽度的 列  ==>>  将多余的平均分配
+          if (userWidthItem === 0) {
+            lastWidth = diff / hasZero
           }
+        } else {     // 不存在 没有设置宽度的列  ==>>  除了不允许扩展的列, 其他均匀分配 多出的
 
-          if (lastWidth > userWidth) {
-            computeWidth += lastWidth - userWidth
+          if (!cannotExpand[prop]) {
+            lastWidth = userWidthItem + diff * (userWidthItem / (compute.tableWidth - cannotExpand.width))
           }
-
+        }
+        if (lastWidth > userWidthItem) {
+          let diff = lastWidth - userWidthItem
+          if(fixed[prop] === -1) {
+            console.log(123)
+            compute.pLeft += diff
+          } else if(fixed[prop] === 1) {
+            compute.pRight += diff
+          } else {
+            compute.tableWidth += diff
+          }
         }
 
-        // 最小宽度
-        if (lastWidth < minWidth) {
-          computeWidth += minWidth - lastWidth
-          return minWidth
-        }
+      }
 
-        return lastWidth
-
-      }) // End Map
+      // 最小宽度
+      if (lastWidth < minWidth) {
+         let diff = minWidth - lastWidth
+          if(fixed[prop] === -1) {
+            console.log(123)
+            compute.pLeft += diff
+          } else if(fixed[prop] === 1) {
+            compute.pRight += diff
+          } else {
+            compute.tableWidth += diff
+          }
+        lastWidth = minWidth
+      }
+      newWidthList[prop] = lastWidth
     }
-
-
-
-    newState.computeWidth = computeWidth
-
-    return newState
+    return { widthList: newWidthList, compute }
   }
-
   _initStructure() {
-    // 初始化 横向结构, 列宽,
     const newState = this.computeTableWidth()
 
     // 如果表格需要滚动才进行以下操作
@@ -320,7 +345,7 @@ class Table extends React.Component {
       if (tbody) {
         const offset = tbody.offsetWidth - tbody.clientWidth
         newState.placeholder = offset > 0 ? offset : false
-        newState.computeWidth += offset > 0 ? offset : 0
+        newState.compute.tableWidth += offset > 0 ? offset : 0
       }
 
       // 判断有没有水平方向滚动条
@@ -329,9 +354,9 @@ class Table extends React.Component {
       if (pTable) {
         this.xAxisBlank = pTable.offsetHeight - pTable.clientHeight + 1
       }
+
       // 判断底部 有没有固定行
-      const fixedRows = this.props.fixedRows
-      if (fixedRows) {
+      if (this.props.fixedRows) {
         this.fixedRowsHeight = 50
         //  if(Object.prototype.toString.call(fixedRows) === '[object Array]') {
       }
@@ -339,13 +364,13 @@ class Table extends React.Component {
     }
 
     this.setState(newState)
-
   }
-
   componentDidMount() {
     this._initStructure()
     this.initialized = true
   }
+
+
   componentDidUpdate(prevP) {
     // rows 数据更新后, 重新设置col宽度
     if (prevP.rows !== this.props.rows) {
@@ -360,87 +385,73 @@ class Table extends React.Component {
     }
 
   }
-
   render() {
-    const { className, rows, zebra, columns, emptyTip, tbodyHeight } = this.props
-    const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft, syncHoverRow, syncExpandRow, showShadow } = this.state
-    const hasFixed = this.hasFixed
+    const { className, rows, tbodyHeight, zebra, columns, emptyTip } = this.props
+    const { placeholder, checkedStatus, compute, widthList, signOffsetLeft, syncHoverRow, syncExpandRow, showShadow } = this.state
 
     if (!columns) return
 
-    const renderCol = function () {
+    const renderCol = function (cols) {
       return (
         <colgroup>
-          {widthList.map((item, i) => (<col key={i} style={{ width: item }}></col>))}
+          {cols.map((item, i) => (<col key={i} style={{ width: widthList[item.type || item.prop] }}></col>))}
           {placeholder && <col width={placeholder} style={{ width: placeholder }}></col>}
         </colgroup>
       )
     }
 
-    const renderTable = function (fixedTable) {
+
+    const renderTable = function (type, cols) {
       return (
-        <div style={fixedTable ? null : { width: computeWidth || 'auto' }} className={(fixedTable ? 'fixed-left__table ' : '') + (showShadow && fixedTable ? 'shadow ' : '')}>
+        <div className='u-table'>
           <div className="table-thead" >
             <table border='0' cellSpacing='0' cellPadding={0} >
-              {renderCol()}
+              {renderCol(cols)}
               <thead>
                 <tr>
                   {
-                    columns.map((th, i) => {
-                      if (fixedTable && !th.fixed) return null
-                      if (!fixedTable && th.fixed) return (<th key={'th' + i}></th>)
+                    cols.map((th, i) => {
                       return (
-                        <th className={'th'}
-                          key={'th' + i}
-                          onClick={th.type === 'checkbox' ? this.checkedAll.bind(this) : null} >
+                        <th className={'th'} key={'th' + i} >
                           {
-                            th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} />
+                            th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} onClick={this.checkedAll.bind(this)} />
                               : (th.type === 'expand' || th.type === 'index') ? null
-                                : <span ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[i] = el.offsetWidth }} className='th-content' >
-                                  {th.label}
-                                  <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
-                                </span>
+                                : (
+                                  <span className='th-content' ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[th.type || th.prop] = el.offsetWidth }}>
+                                    {th.label}
+                                    <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, th.type || th.prop)}></i>
+                                  </span>
+                                )
                           }
                         </th>
                       )
                     })
                   }
-                  {
-                    (!fixedTable && placeholder) && <th className='th th__placeholder' width={placeholder} style={{ width: placeholder }}></th>
-                  }
                 </tr>
               </thead>
             </table>
           </div>
-          <div className="table-tbody"
-            style={tbodyHeight ? { height: tbodyHeight - (this.xAxisBlank || 0) - (this.fixedRowsHeight || 0) } : null}/* 规定大于此高度显示滚动 */
-            ref={(el => fixedTable ? this.fixedTbody = el : this.plainTbody = el)}/* 同步滚动固定列 和  显示placeholder */
-            onScroll={(!hasFixed || fixedTable) ? null : e => this.scrollBody(e)}/* 同步滚动 固定列 */
-          >
-            {
-              rows && rows.length > 0 ? (
-                <table border='0' cellSpacing='0' cellPadding={0} >
-                  {renderCol()}
-                  <tbody className='tbody'>
-                    {rows.map((tr, i) => (
-                      <Row key={'tr' + i}
-                        rowIndex={i}
-                        fixedTable={fixedTable}
-                        columns={columns} tr={tr}
-                        onChecked={this.checkedRow}
-                        checkedStatus={checkedStatus}
-                        bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                        widthList={widthList}
-                        resizeColToMax={this.resizeColToMax.bind(this)}
-                        syncRow={hasFixed ? this.syncRow.bind(this) : null}
-                        syncHoverRow={syncHoverRow}
-                        syncExpandRow={syncExpandRow}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              ) : !fixedTable ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
-            }
+          <div className="table-tbody" style={{ height: tbodyHeight }} >
+            <table border='0' cellSpacing='0' cellPadding={0} >
+              {renderCol(cols)}
+              <tbody className='tbody'>
+                {rows.map((tr, i) => (
+                  <Row key={'tr' + i}
+                    rowIndex={i}
+                    fixedTable={type === 0}
+                    columns={cols} tr={tr}
+                    onChecked={this.checkedRow}
+                    checkedStatus={checkedStatus}
+                    bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
+                    widthList={widthList}
+                    resizeColToMax={this.resizeColToMax.bind(this)}
+                    syncRow={this.fixedLeftCols ? this.syncRow.bind(this) : null}
+                    syncHoverRow={syncHoverRow}
+                    syncExpandRow={syncExpandRow}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
 
         </div>
@@ -449,28 +460,24 @@ class Table extends React.Component {
 
 
     return (
-      <div className={'u-table__wrap ' + (className || '')} ref={el => this.table = el}>
+      <div className={'u-table__wrap ' + (className || '')} ref={el => this.wrap = el}>
 
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft }}></div>
 
-        {/* 固定列表格 */}
-        {hasFixed && renderTable.call(this, true)}
+        <div className='u-table__track' style={{ paddingLeft:compute.pLeft+'px', paddingRight: compute.pRight+'px' }}>
 
-        {/* 表格主体 */}
-        <div className='plain__table'
-          onScroll={hasFixed ? this.showScrollXSign : null}
-          ref={el => this.plainTable = el}
-          style={this.fixedRowsHeight ? { paddingBottom: this.fixedRowsHeight + 'px' } : null}
-        >
-          {renderTable.call(this, false)}
-        </div>
+          { this.fixedLeftCols &&
+            <div className='fixed-left__table'>
+              {renderTable.call(this, -1, this.fixedLeftCols)}
+            </div>
+          }
 
-        {/* 固定行表格 */}
-        {
-          <div className='fixed-bottom__table' style={{ bottom: (this.xAxisBlank || 0) + 'px' }}>
 
+          <div className='plain__table' style={{ width: compute.tableWidth }}>
+            {renderTable.call(this, 0, this.plainCols)}
           </div>
-        }
+
+        </div>
       </div>
     )
   }

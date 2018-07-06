@@ -203,9 +203,8 @@ class Table extends React.Component {
 
   // 按照每列中最大宽度的td设置列宽
   resizeColToMax(index, width) {
-    console.log(index, width)
     if (!this.tdMinWidth) {
-      this.tdMinWidth = []
+      this.tdMinWidth = {}
     }
 
     const col = this.tdMinWidth[index]
@@ -468,7 +467,6 @@ class Table extends React.Component {
         {/* 固定行表格 */}
         {
           <div className='fixed-bottom__table' style={{ bottom: (this.xAxisBlank || 0) + 'px' }}>
-
           </div>
         }
       </div>

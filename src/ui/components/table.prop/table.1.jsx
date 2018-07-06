@@ -42,16 +42,15 @@ class Table extends React.Component {
       signOffsetLeft: 0,  // 调整表格列宽时, 指示器样式
       syncHoverRow: -1,     // 当有 固定列时, 用于表格行数据同步
       syncExpandRow: {},
-      showShadow: false,   // 固定列阴影
+      showShadow: false   // 固定列阴影
     }
 
     this.checkedList = []
     this.thMinWidth = []
     this.hasFixed = false
 
-    /* ------------------- */
-    /* -->> 数据预处理 <<-- */
-    /* ------------------- */
+    this.plainCols = []
+    this.fixedLeftCols = []
 
     // 计算表格每列宽度
     let colWidth = 0,
@@ -73,9 +72,11 @@ class Table extends React.Component {
           colWidth = col.width || 0
           break;
       }
-
-      if (col.fixed) this.hasFixed = true
-
+      if (col.fixedLeft) {
+        this.fixedLeftCols.push(col)
+      } else {
+        this.plainCols.push(col)
+      }
       widthList.push(parseFloat(colWidth))
     }
 
@@ -84,15 +85,15 @@ class Table extends React.Component {
     this.resizeCol = this.resizeCol.bind(this)
     this.showScrollXSign = this.showScrollXSign.bind(this)
   }
-  /* ------------------- */
-  /* --->> 多选表格 <<--- */
-  /* ------------------- */
+  /**
+   * 多选表格
+   */
   // 全部选中, 不选中
   checkedAll() {
     const { rows, onSelectRowChange } = this.props
     const bool = this.state.checkedStatus === 1
     this.setState({ checkedStatus: bool ? -1 : 1 })
-    this.checkedList = bool ? [] : (!rows || rows.length === 0) ? [] : [...rows]
+    this.checkedList = bool ? [] : [...rows]
     onSelectRowChange && onSelectRowChange(this.checkedList)
   }
   // 单行选中, 不选中
@@ -120,9 +121,9 @@ class Table extends React.Component {
     this.checkedList = list
     onSelectRowChange && onSelectRowChange(list)
   }
-  /* ------------------- */
-  /* -->> 同步表格行 <<-- */
-  /* ------------------- */
+  /**
+   * 同步表格行
+   */
   syncRow(type, rowIndex, colIndex) {
 
     if (type === 'hover') {
@@ -137,15 +138,15 @@ class Table extends React.Component {
   showScrollXSign(e) {
     this.setState({ showShadow: e.currentTarget.scrollLeft > 0 })
   }
-  /* ------------------- */
-  /* --->> 上下滚动 <<--- */
-  /* ------------------- */
+  /**
+   * 上下滚动
+   */
   scrollBody(e) {
-    this.fixedTbody.scrollTop = e.currentTarget.scrollTop
+    this.fixedBody.scrollTop = e.currentTarget.scrollTop
   }
-  /* ------------------- */
-  /*->> 调整表格列大小 <<-*/
-  /* ------------------- */
+  /**
+   * 调整表格列大小
+   */
   prepareResizeCol(e, index) {
     e.preventDefault()
     e.stopPropagation()
@@ -158,13 +159,11 @@ class Table extends React.Component {
     document.addEventListener('mousemove', this.moveSign)
     document.addEventListener('mouseup', this.resizeCol)
   }
-
   // 修改指示器位置
   moveSign(e) {
     const table = this.table
     this.setState({ signOffsetLeft: e.clientX - table.offsetLeft + table.scrollLeft + 1 })
   }
-
   resizeCol() {
     document.removeEventListener('mousemove', this.moveSign)
     document.removeEventListener('mouseup', this.resizeCol)
@@ -203,9 +202,8 @@ class Table extends React.Component {
 
   // 按照每列中最大宽度的td设置列宽
   resizeColToMax(index, width) {
-    console.log(index, width)
     if (!this.tdMinWidth) {
-      this.tdMinWidth = []
+      this.tdMinWidth = {}
     }
 
     const col = this.tdMinWidth[index]
@@ -306,63 +304,37 @@ class Table extends React.Component {
 
     return newState
   }
-
   _initStructure() {
-    // 初始化 横向结构, 列宽,
     const newState = this.computeTableWidth()
 
-    // 如果表格需要滚动才进行以下操作
-    if (this.props.tbodyHeight) {
+    const body = this.normalBody
 
-      // 判断有没有竖直方向滚动条
-      const tbody = this.plainTbody
-
-      if (tbody) {
-        const offset = tbody.offsetWidth - tbody.clientWidth
-        newState.placeholder = offset > 0 ? offset : false
-        newState.computeWidth += offset > 0 ? offset : 0
-      }
-
-      // 判断有没有水平方向滚动条
-      const pTable = this.plainTable
-
-      if (pTable) {
-        this.xAxisBlank = pTable.offsetHeight - pTable.clientHeight + 1
-      }
-      // 判断底部 有没有固定行
-      const fixedRows = this.props.fixedRows
-      if (fixedRows) {
-        this.fixedRowsHeight = 50
-        //  if(Object.prototype.toString.call(fixedRows) === '[object Array]') {
-      }
-
+    if (body) {
+      const offset = body.offsetWidth - body.clientWidth
+      newState.placeholder = offset > 0 ? offset : false
+      newState.computeWidth += offset > 0 ? offset : 0
     }
 
     this.setState(newState)
-
   }
-
   componentDidMount() {
     this._initStructure()
-    this.initialized = true
+    // this.initialized = true
   }
+
   componentDidUpdate(prevP) {
-    // rows 数据更新后, 重新设置col宽度
-    if (prevP.rows !== this.props.rows) {
+    /* const {rows, columns} = this.props
+
+    if (prevP.rows !== rows) {
       this._initStructure()
     }
-
-  }
-  componentWillReceiveProps(nextP) {
-    // 更新了 表头数据, 重新获取col宽
-    if (nextP.columns !== this.props.columns) {
+    if(prevP.columns !== columns) {
       this.initialized = false
-    }
-
+    } */
   }
 
   render() {
-    const { className, rows, zebra, columns, emptyTip, tbodyHeight } = this.props
+    const { className, rows, tbodyHeight, zebra, columns, emptyTip } = this.props
     const { placeholder, checkedStatus, computeWidth, widthList, signOffsetLeft, syncHoverRow, syncExpandRow, showShadow } = this.state
     const hasFixed = this.hasFixed
 
@@ -377,100 +349,91 @@ class Table extends React.Component {
       )
     }
 
-    const renderTable = function (fixedTable) {
+
+    const renderHead = function (cols, type) {
+
       return (
-        <div style={fixedTable ? null : { width: computeWidth || 'auto' }} className={(fixedTable ? 'fixed-left__table ' : '') + (showShadow && fixedTable ? 'shadow ' : '')}>
-          <div className="table-thead" >
-            <table border='0' cellSpacing='0' cellPadding={0} >
-              {renderCol()}
-              <thead>
-                <tr>
-                  {
-                    columns.map((th, i) => {
-                      if (fixedTable && !th.fixed) return null
-                      if (!fixedTable && th.fixed) return (<th key={'th' + i}></th>)
-                      return (
-                        <th className={'th'}
-                          key={'th' + i}
-                          onClick={th.type === 'checkbox' ? this.checkedAll.bind(this) : null} >
-                          {
-                            th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} />
-                              : (th.type === 'expand' || th.type === 'index') ? null
-                                : <span ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[i] = el.offsetWidth }} className='th-content' >
+        <div className={'table-thead ' + (type === -1 ? 'fixed-left ' : '')} >
+          <table border='0' cellSpacing='0' cellPadding={0} >
+            {renderCol()}
+            <thead>
+              <tr>
+                {
+                  cols.map((th, i) => {
+                    return (
+                      <th className={'th'} key={'th' + i} >
+                        {
+                          th.type === 'checkbox' ? <Icon type={checkedStatus === 1 ? 'check-fill' : 'check'} onClick={this.checkedAll.bind(this)} />
+                            : (th.type === 'expand' || th.type === 'index') ? null
+                              : (
+                                <span className='th-content' ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[i] = el.offsetWidth }}>
                                   {th.label}
                                   <i className='th-border' onMouseDown={e => this.prepareResizeCol(e, i)}></i>
                                 </span>
-                          }
-                        </th>
-                      )
-                    })
-                  }
-                  {
-                    (!fixedTable && placeholder) && <th className='th th__placeholder' width={placeholder} style={{ width: placeholder }}></th>
-                  }
-                </tr>
-              </thead>
-            </table>
-          </div>
-          <div className="table-tbody"
-            style={tbodyHeight ? { height: tbodyHeight - (this.xAxisBlank || 0) - (this.fixedRowsHeight || 0) } : null}/* 规定大于此高度显示滚动 */
-            ref={(el => fixedTable ? this.fixedTbody = el : this.plainTbody = el)}/* 同步滚动固定列 和  显示placeholder */
-            onScroll={(!hasFixed || fixedTable) ? null : e => this.scrollBody(e)}/* 同步滚动 固定列 */
-          >
-            {
-              rows && rows.length > 0 ? (
-                <table border='0' cellSpacing='0' cellPadding={0} >
-                  {renderCol()}
-                  <tbody className='tbody'>
-                    {rows.map((tr, i) => (
-                      <Row key={'tr' + i}
-                        rowIndex={i}
-                        fixedTable={fixedTable}
-                        columns={columns} tr={tr}
-                        onChecked={this.checkedRow}
-                        checkedStatus={checkedStatus}
-                        bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                        widthList={widthList}
-                        resizeColToMax={this.resizeColToMax.bind(this)}
-                        syncRow={hasFixed ? this.syncRow.bind(this) : null}
-                        syncHoverRow={syncHoverRow}
-                        syncExpandRow={syncExpandRow}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              ) : !fixedTable ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
-            }
-          </div>
-
+                              )
+                        }
+                      </th>
+                    )
+                  })
+                }
+              </tr>
+            </thead>
+          </table>
         </div>
       )
     }
 
+    const renderBody = function (type, cols) {
+      return (
+        <div className="table-tbody" style={{ height: tbodyHeight }} >
+          <table border='0' cellSpacing='0' cellPadding={0} >
+            {renderCol()}
+            <tbody className='tbody'>
+              {rows.map((tr, i) => (
+                <Row key={'tr' + i}
+                  rowIndex={i}
+                  fixedTable={type === 0}
+                  columns={cols} tr={tr}
+                  onChecked={this.checkedRow}
+                  checkedStatus={checkedStatus}
+                  bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
+                  widthList={widthList}
+                  resizeColToMax={this.resizeColToMax.bind(this)}
+                  syncRow={hasFixed ? this.syncRow.bind(this) : null}
+                  syncHoverRow={syncHoverRow}
+                  syncExpandRow={syncExpandRow}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+
+    const handleHead = function () {
+
+      return (
+        <div className='table-thead__wrap'>
+          {this.fixedLeftCols && renderHead.call(this, this.fixedLeftCols, -1)}
+          {renderHead.call(this, this.plainCols, 0)}
+        </div>
+      )
+
+    }
 
     return (
       <div className={'u-table__wrap ' + (className || '')} ref={el => this.table = el}>
 
         <div className="resize-col-sign" style={{ display: signOffsetLeft ? 'block' : 'none', left: signOffsetLeft }}></div>
 
-        {/* 固定列表格 */}
-        {hasFixed && renderTable.call(this, true)}
-
-        {/* 表格主体 */}
-        <div className='plain__table'
-          onScroll={hasFixed ? this.showScrollXSign : null}
-          ref={el => this.plainTable = el}
-          style={this.fixedRowsHeight ? { paddingBottom: this.fixedRowsHeight + 'px' } : null}
-        >
-          {renderTable.call(this, false)}
-        </div>
-
-        {/* 固定行表格 */}
-        {
-          <div className='fixed-bottom__table' style={{ bottom: (this.xAxisBlank || 0) + 'px' }}>
-
+        <div className='u-table__track' style={{ padding: '0 0 0 40px' }}>
+          {handleHead.call(this)}
+          <div className='table-tbody__wrap'>
+            {this.fixedLeftCols && renderHead.call(this, this.fixedLeftCols, -1)}
+            {renderHead.call(this, this.plainCols, 0)}
           </div>
-        }
+
+        </div>
       </div>
     )
   }

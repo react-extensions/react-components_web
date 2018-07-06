@@ -1,4 +1,5 @@
 @import '../../style/animation.scss';
+
   $row-height: 50px; // 表格行高
   /* 主体 */
 
@@ -41,6 +42,7 @@
     }
     .u-table-body {
       overflow: hidden;
+      transition: height ease .3s;
     }
   }
 
@@ -59,7 +61,6 @@
   }
   .u-body__track {
     overflow: auto;
-    transition: height ease .3s;
   }
 
   .u-table-header,
@@ -85,32 +86,22 @@
 
   /* 细节 */
 
-  .table-thead {
-    overflow: hidden;
-  }
-
-  .table-tbody {
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: height ease .3s;
-  }
-
-  .th {
+  .u-th {
     background: #F5F5F5;
     border-top: 1px solid #e9e9e9;
     border-bottom: 1px solid #e9e9e9;
     position: relative;
   }
 
-  .td {
+  .u-td {
     border-bottom: 1px solid #e9e9e9;
-    .turn-right {
+    .u-turn-right {
       transform: rotateZ(-90deg);
     }
   }
 
-  .th,
-  .td {
+  .u-th,
+  .u-td {
     height: $row-height;
     text-align: center;
     vertical-align: middle;
@@ -118,14 +109,14 @@
     text-overflow: ellipsis;
   }
 
-  .th-content,
-  .td-content {
+  .u-th-content,
+  .u-td-content {
     padding: 0 5px;
     white-space: nowrap;
     display: inline-block;
   }
 
-  .tr {
+  .u-tr {
     transition: all ease .3s;
     &.darken {
       background: #fafafa;
@@ -140,7 +131,7 @@
 
   /* 用于调整表格列宽 */
 
-  .th-border {
+  .u-th-border {
     display: block;
     width: 3px;
     height: 60%;
