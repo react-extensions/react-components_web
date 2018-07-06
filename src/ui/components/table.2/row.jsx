@@ -10,7 +10,7 @@ class Row extends React.Component {
       colIndex: 0,
       hoverIndex: -1
     }
-    this.tdWidthList = []
+    this.td = []
   }
   // 具有多选功能的表格
   checked() {
@@ -35,33 +35,23 @@ class Row extends React.Component {
 
   // 鼠标移入样式
   toggleRowBG(type) {
-
-    if(this.state.hoverIndex === rowIndex) return
-
     const { syncRow, rowIndex } = this.props
 
     this.setState({ hoverIndex: type > 0 ? rowIndex : -1 })
 
-    syncRow('hover', type > 0 ? rowIndex : -1)
+    syncRow && syncRow('hover', type > 0 ? rowIndex : -1)
   }
 
   // 将列宽按照最宽设置
   componentDidMount() {
-    const tdWidthList = this.tdWidthList
-
-    const {widthList, columns} = this.props
-    let index = 0
+    const td = this.td
+    const widthList = this.props.widthList
     let width = 0
-    for (let i = 0, len = tdWidthList.length; i < len; i++) {
-
-      if(columns[i].cannotExpand) continue;
-
-      index = columns[i].__i__
-
-      width = tdWidthList[i]
-      
-      if (width > widthList[index]) {
-        this.props.resizeColToMax(index, width + 20)
+    for (let i = 0, len = td.length; i < len; i++) {
+      if (!td[i]) continue;
+      width = td[i].offsetWidth
+      if (width > widthList[i]) {
+        this.props.resizeColToMax(i, width + 20)
       }
     }
 
@@ -69,56 +59,50 @@ class Row extends React.Component {
 
   }
   componentWillReceiveProps(nP) {
-    const { checkboxStatus } = nP
-    if (this.props.checkboxStatus !== checkboxStatus) {
-      if (checkboxStatus === 1) {
+    const { checkedStatus } = nP
+    if (this.props.checkedStatus !== checkedStatus) {
+      if (checkedStatus === 1) {
         this.setState({ checked: true })
-      } else if (checkboxStatus === -1) {
+      } else if (checkedStatus === -1) {
         this.setState({ checked: false })
       }
     }
 
   }
   render() {
-    const { columns, tr, bgColor, rowIndex, syncHoverRow, syncExpandRow, fixedTable, } = this.props
-    const { checked, collapse, hoverIndex, colIndex, } = this.state
-    if (!tr) return null
+    const { columns, tr, bgColor, rowIndex, syncHoverRow, syncExpandRow } = this.props
+    const { checked, collapse, colIndex, hoverIndex } = this.state
+
     return (
       <React.Fragment>
         <tr className={'tr ' + (bgColor || '') + ((hoverIndex === rowIndex || syncHoverRow === rowIndex) ? ' hover' : '')}
-          onMouseEnter={() => this.toggleRowBG(1)}
+          onMouseOver={() => this.toggleRowBG(1)}
           onMouseLeave={() => this.toggleRowBG(-1)}>
           {
             columns.map((th, j) => {
               return (
                 <td key={'td' + j} className='td'>
                   {
-                    th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} onClick={this.checked.bind(this)} />)
-                      : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} onClick={this.expand.bind(this, th.__i__)} />)
+                    th.type === 'checkbox' ? (<Icon type={checked ? 'check-fill' : 'check'} onClick={this.checked.bind(this)}/>)
+                      : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'turn-right' : ''} onClick={this.expand.bind(this, j)}/>)
                         : th.type === 'index' ? rowIndex + 1
                           : (
                             (tr[th.prop] || tr[th.prop] === 0 || th.filter) && (
-                              <div className='td-content' ref={el => { if (!el) return; this.tdWidthList[j] = el.offsetWidth }}>
+                              <div className='td-content' ref={this.initialized ? null : (el => { if (!el) return; this.td[j] = el })}>
                                 {th.filter ? th.filter(tr[th.prop]) : tr[th.prop]}
                               </div>
                             )
                           )
+
                   }
+
                 </td>
               )
+
             })
           }
         </tr>
-        {/* {
-          (!fixedTable && (!collapse || (syncExpandRow.colIndex && syncExpandRow.rowIndex === rowIndex))) && (
-            <tr className='expand-tr'>
-              <td colSpan={columns.length}
-                className='expand-td'>
-                {columns[colIndex || syncExpandRow.colIndex].content}
-              </td>
-            </tr>
-          )
-        } */}
+
       </React.Fragment>
     )
   }
