@@ -54,10 +54,10 @@ class Row extends React.Component {
 
       index = columns[i].__i__
 
-      width = tdWidthList[i]
+      width = tdWidthList[i] + 20
 
       if (width > widthList[index]) {
-        this.props.resizeColToMax(index, width + 20)
+        this.props.resizeColToMax(index, width)
       }
     }
 

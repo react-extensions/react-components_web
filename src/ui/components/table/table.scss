@@ -10,6 +10,7 @@
     table {
       border-spacing: 0px;
       table-layout: fixed;
+      width:100%;
     }
     .iconfont {
       cursor: pointer;
@@ -22,12 +23,7 @@
   }
 
   /* 布局 */
-
-  .u-plain__table {
-    table {
-      width: 100%;
-    }
-  }
+ 
 
   .u-fixed-left__table,
   .u-fixed-right__table {

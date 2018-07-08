@@ -79,7 +79,6 @@ class App extends Component {
       
       {
         type: 'checkbox',
-        fixedLeft: true
       },
       {
         type: 'expand',
@@ -92,11 +91,12 @@ class App extends Component {
               <li>仨</li>
             </ul>
           </div>
-        )
+        ),
       },
       {
         prop: 1,
         label: '第一列',
+        
       },
       {
         prop: 2,

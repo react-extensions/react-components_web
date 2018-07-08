@@ -162,7 +162,7 @@ class Table extends React.Component {
 
     const table = this.container
     // 记录调整的  1. 列索引  2. 初始位置
-    this.resizeData = { index, type, offset: e.clientX - table.offsetLeft + table.scrollLeft + 2 }
+    this.resizeData = {index, type, offset: e.clientX - table.offsetLeft + table.scrollLeft + 2}
 
     document.addEventListener('mousemove', this.moveSign)
     document.addEventListener('mouseup', this.resizeCol)
@@ -181,28 +181,30 @@ class Table extends React.Component {
     if (!offset) return
 
     const data = this.resizeData
+      , diff = offset - data.offset // 调整的宽度
       , oldWidth = this.widthList[data.index]
       // 根据每列的表头, 设置最小宽度
-      , minWidth = this.thMinWidth[data.index]
+      , minWidth = this.thMinWidth[data.index] + 10
+      // 容器宽度
+      , containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)
 
-    let newWidth = oldWidth + offset - data.offset
+    let newWidth = oldWidth + diff
 
-      ; (newWidth < minWidth) && (newWidth = minWidth);
+    ;(newWidth < minWidth) && (newWidth = minWidth);
 
-    const { left, right, plain } = this.tableWidth
-      , containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)// 容器宽度
-      , diff = newWidth - oldWidth
 
-    let subDiff = containerWidth - (left + right + plain + diff)
-    if (subDiff > 0) {
-      newWidth += subDiff
+    let newTotalWidth = this.tableWidth[data.type || 'plain'] + newWidth - oldWidth
+
+    if (containerWidth > newTotalWidth) {
+      newWidth += containerWidth - newTotalWidth
+      newTotalWidth = containerWidth
     }
 
-    this.tableWidth[data.type] +=  (diff + (subDiff > 0 ? subDiff: 0))
+    this.tableWidth[data.type || 'plain'] = newTotalWidth
 
     this.widthList[data.index] = newWidth
 
-    this.analyXscroll(subDiff)
+    this.analyXscroll(containerWidth, newTotalWidth)
 
     this.setState({ signOffset: 0 })
   }
@@ -223,7 +225,7 @@ class Table extends React.Component {
     const containerWidth = parseFloat(this.container.clientWidth) - this.yScrollBar || 0
       , { columns } = this.props
       , widthList = this.widthList
-
+    
     let totalWidth = 0
       , hasZero = 0
       , cannotExpand = { width: 0 }
@@ -244,11 +246,12 @@ class Table extends React.Component {
         }
       }())
 
+      console.log(containerWidth, totalWidth)
 
     // 如果表格 实际 大于 计算   diff > 0
     const diff = containerWidth - totalWidth,
       thMinWidth = this.thMinWidth
-      , tdMinWidth = this.tdMinWidth
+     , tdMinWidth = this.tdMinWidth
 
     let minWidth = 0  // 每列最小宽度
       , lastWidth = 0    // 最终计算的列宽
@@ -261,9 +264,9 @@ class Table extends React.Component {
     this.widthList = widthList.map((oldWidth, i) => {
       thMinItem = thMinWidth[i]
 
-      //  对于 像 checkbox  和 expand 这种列  我没有获取 最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
-      minWidth = thMinItem ? ((tdMinWidth && tdMinWidth[i] && tdMinWidth[i] > thMinItem + 20) ? tdMinWidth[i] : thMinItem + 20) : oldWidth
-      lastWidth = oldWidth
+        //  对于 像 checkbox  和 expand 这种列  我没有获取 最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
+        minWidth = thMinItem ? ((tdMinWidth && tdMinWidth[i] && tdMinWidth[i] > thMinItem + 20) ? tdMinWidth[i] : thMinItem + 20) : oldWidth
+        lastWidth = oldWidth
 
       if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
 
@@ -293,7 +296,7 @@ class Table extends React.Component {
       }
 
       col = columns[i].fixed
-
+      
       if (col === 'left') {
         leftW += lastWidth
       } else if (col === 'right') {
@@ -306,7 +309,7 @@ class Table extends React.Component {
 
     }) // End Map
 
-    this.analyXscroll(containerWidth - totalWidth)
+    this.analyXscroll(containerWidth, totalWidth)
 
     this.tableWidth = { left: leftW, right: rightW, plain: plainW }
 
@@ -316,6 +319,7 @@ class Table extends React.Component {
   // 按照每列中最大宽度的td设置列宽
   resizeColToMax(index, newWidth) {
 
+    console.log(index, newWidth)
     if (!this.tdMinWidth) {
       this.tdMinWidth = []
     }
@@ -334,8 +338,8 @@ class Table extends React.Component {
     }
 
   }
-  analyXscroll(diff) {
-    this.xScrollBar = diff < 0 ? 17 : 0
+  analyXscroll(max, cur) {
+    this.xScrollBar = max < cur ? 17 : 0
   }
 
   _initStructure() {
@@ -380,9 +384,9 @@ class Table extends React.Component {
                     {
                       th.type === 'checkbox' ? <Icon type={status === 0 ? 'half-checked' : status > 0 ? 'check-fill' : 'check'} onClick={this.checkedAll} />
                         : (th.type === 'expand' || th.type === 'index') ? null
-                          : <span ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[th.__i__] = el.offsetWidth + 20 }} className='u-th-content' >
+                          : <span ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[th.__i__] = el.offsetWidth }} className='u-th-content' >
                             {th.label}
-                            <i className='u-th-border' onMouseDown={e => this.prepareResizeCol(e, th.__i__, th.fixed || 'plain')}></i>
+                            <i className='u-th-border' onMouseDown={e => this.prepareResizeCol(e, th.__i__, th.fixed)}></i>
                           </span>
                     }
                   </th>
@@ -439,7 +443,7 @@ class Table extends React.Component {
   }
 
   render() {
-    // console.log('render')
+    console.log('render')
     const
       { fixedLeft, fixedRight, plain } = this.columns
       , { fixedRows, scrollY } = this.props
@@ -456,11 +460,14 @@ class Table extends React.Component {
       , L_W = TW.left
       , R_W = TW.right
 
-    // , fixedBottomTable = this.renderTable(plain, 0, fixedRows)
+      // , fixedBottomTable = this.renderTable(plain, 0, fixedRows)
 
     const B_H = fixedRows ? 50 : 0
 
     const fixedTableHeight = (hasFixed && scrollY) ? (scrollY - (this.xScrollBar || 0) - B_H) + 'px' : 'auto'
+
+
+
 
     return (
       <div className={'u-table__container ' + (this.props.className || '')} ref={el => { this.container = el }}>
