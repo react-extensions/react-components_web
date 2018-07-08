@@ -187,18 +187,21 @@ class Table extends React.Component {
 
     let newWidth = oldWidth + offset - data.offset
 
-      ; (newWidth < minWidth) && (newWidth = minWidth);
+    newWidth < minWidth && (newWidth = minWidth)
 
     const { left, right, plain } = this.tableWidth
       , containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)// 容器宽度
-      , diff = newWidth - oldWidth
+      , diff = newWidth - oldWidth  //位移差
 
-    let subDiff = containerWidth - (left + right + plain + diff)
-    if (subDiff > 0) {
+    let subDiff = containerWidth - (left + right + plain + diff) // 新 总宽度
+
+    if (subDiff > 0) { // 如果新总宽度 小于容器宽度, 禁止缩小
       newWidth += subDiff
+    } else {
+      subDiff = 0
     }
 
-    this.tableWidth[data.type] +=  (diff + (subDiff > 0 ? subDiff: 0))
+    this.tableWidth[data.type] += (diff + subDiff)
 
     this.widthList[data.index] = newWidth
 
@@ -248,7 +251,6 @@ class Table extends React.Component {
     // 如果表格 实际 大于 计算   diff > 0
     const diff = containerWidth - totalWidth,
       thMinWidth = this.thMinWidth
-      , tdMinWidth = this.tdMinWidth
 
     let minWidth = 0  // 每列最小宽度
       , lastWidth = 0    // 最终计算的列宽
@@ -262,10 +264,9 @@ class Table extends React.Component {
       thMinItem = thMinWidth[i]
 
       //  对于 像 checkbox  和 expand 这种列  我没有获取 最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
-      minWidth = thMinItem ? ((tdMinWidth && tdMinWidth[i] && tdMinWidth[i] > thMinItem + 20) ? tdMinWidth[i] : thMinItem + 20) : oldWidth
-      lastWidth = oldWidth
+      lastWidth = minWidth = (!thMinItem || thMinItem < oldWidth) ? oldWidth : thMinItem
 
-      if (diff > 0) {   // 实际 大于 计算  ==>> 自动扩展 列宽
+      if (diff > 0) {   // 需要自动扩展 列宽
 
         if (hasZero) { // 存在 没有设置宽度的 列  ==>>  将多余的平均分配
           if (oldWidth === 0) {
@@ -278,19 +279,14 @@ class Table extends React.Component {
           }
         }
 
-        if (lastWidth > oldWidth) {
-          totalWidth += lastWidth - oldWidth
+        // 最小宽度
+        if (lastWidth < minWidth) {
+          lastWidth = minWidth
         }
 
       }
 
-      // 最小宽度
-      if (lastWidth < minWidth) {
 
-        totalWidth += minWidth - lastWidth
-
-        lastWidth = minWidth
-      }
 
       col = columns[i].fixed
 
@@ -306,7 +302,7 @@ class Table extends React.Component {
 
     }) // End Map
 
-    this.analyXscroll(containerWidth - totalWidth)
+    this.analyXscroll(containerWidth - leftW - rightW - plainW)
 
     this.tableWidth = { left: leftW, right: rightW, plain: plainW }
 
@@ -316,13 +312,7 @@ class Table extends React.Component {
   // 按照每列中最大宽度的td设置列宽
   resizeColToMax(index, newWidth) {
 
-    if (!this.tdMinWidth) {
-      this.tdMinWidth = []
-    }
-
-    const col = this.tdMinWidth[index]
-
-    this.tdMinWidth[index] = !col ? newWidth : col > newWidth ? col : newWidth
+    this.widthList[index] = newWidth
 
   }
   // 判断有没有竖直方向滚动条
@@ -456,11 +446,11 @@ class Table extends React.Component {
       , L_W = TW.left
       , R_W = TW.right
 
-    // , fixedBottomTable = this.renderTable(plain, 0, fixedRows)
+      // , fixedBottomTable = this.renderTable(plain, 0, fixedRows)
 
-    const B_H = fixedRows ? 50 : 0
+      , B_H = fixedRows ? 50 : 0
 
-    const fixedTableHeight = (hasFixed && scrollY) ? (scrollY - (this.xScrollBar || 0) - B_H) + 'px' : 'auto'
+      , fixedTableHeight = (hasFixed && scrollY) ? (scrollY - (this.xScrollBar || 0) - B_H) + 'px' : 'auto'
 
     return (
       <div className={'u-table__container ' + (this.props.className || '')} ref={el => { this.container = el }}>

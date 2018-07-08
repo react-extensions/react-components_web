@@ -79,6 +79,7 @@ class App extends Component {
       
       {
         type: 'checkbox',
+        fixed: 'left'
       },
       {
         type: 'expand',
@@ -92,6 +93,8 @@ class App extends Component {
             </ul>
           </div>
         ),
+        fixed: 'left'
+
       },
       {
         prop: 1,
