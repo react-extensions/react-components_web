@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import './App.scss'
 
 import store from './redux/store-2'
-
+import Middleware from './context/middleware'
+import Context from './context'
 
 class App extends Component {
   constructor() {
@@ -29,8 +30,7 @@ class App extends Component {
     
     return (
       <div>
-        <h2>
-          todos <br/>
+        <h1>todos </h1>
           <ul>
             {
               todos.map((item, i) => {
@@ -38,13 +38,13 @@ class App extends Component {
               })
             }
           </ul>
-        
-      </h2>
-      
       <button type='button' onClick={this.addTodo.bind(this)}>ADD_TODO</button>&nbsp;&nbsp;&nbsp;&nbsp;
       <button type='button' onClick={this.toggleTodo.bind(this)}>TOGGLE_TODO</button>&nbsp;&nbsp;&nbsp;&nbsp;
-  
-  
+      <hr/>
+      <h1>context</h1>
+      <Context.Provider value = {this}>
+        <Middleware/>
+      </Context.Provider>
     </div>
     )
   }
