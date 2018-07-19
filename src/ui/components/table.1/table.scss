@@ -1,16 +1,16 @@
-  @import '../../style/animation.scss';
+@import '../../style/animation.scss';
 
-  $row-height: 50px;  // 表格行高
-
+  $row-height: 50px; // 表格行高
   /* 主体 */
 
-  .u-table__wrap {
+  .u-table__container {
     position: relative;
     background: #fff;
     overflow: hidden;
     table {
       border-spacing: 0px;
       table-layout: fixed;
+      width:100%;
     }
     .iconfont {
       cursor: pointer;
@@ -23,37 +23,63 @@
   }
 
   /* 布局 */
+ 
+ col{
+   transition: width ease .3s;
+ }
 
-  .plain__table {
-    overflow-x: auto;
-    table {
-      width: 100%;
-    }
-  }
-
-  .fixed-left__table {
+  .u-fixed-left__table,
+  .u-fixed-right__table {
     position: absolute;
     top: 0;
-    z-index: 11;
+    left: 0;
+    z-index: 26;
     background-color: #fff;
     transition: box-shadow ease-out .4s;
     &.shadow {
       box-shadow: 0 -3px 10px 0 #ccc;
     }
-    .table-tbody {
+    .u-table-body {
       overflow: hidden;
+      transition: height ease .3s;
     }
   }
 
-.fixed-bottom__table{
-  position: absolute;
-  left:0;right:0;
-  z-index: 10;
-  height: $row-height;
-  background:burlywood;
+  .u-fixed-right__table {
+    right: 0;
+    left: auto;
+  }
 
-}
-
+  .u-fixed-bottom__table {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    height: $row-height;
+    background:#fff;
+    box-shadow: 0 0 10px 0 rgba(204,204,204, 0.5);
+    .u-plain__table{
+      overflow-x:hidden;
+    }
+    .u-fixed-left__table.shadow{
+      box-shadow: 0 0 10px 0 rgba(204,204,204, 0.5);
+    }
+  }
+  .u-body__track {
+    overflow: auto;
+  }
+  .u-table-body{
+    min-height: 1px;
+  }
+  .u-table-header,
+  .u-header__track {
+    overflow-x: hidden;
+    transition: box-shadow ease-out .4s;
+    &.shadow {
+      box-shadow: 0 0px 10px 0 #ccc;
+      position: relative;
+    }
+  }
 
   /* 标记线 */
 
@@ -68,47 +94,37 @@
 
   /* 细节 */
 
-  .table-thead {
-    overflow: hidden;
-  }
-
-  .table-tbody {
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: height ease .3s;
-  }
-
-  .th {
+  .u-th {
     background: #F5F5F5;
     border-top: 1px solid #e9e9e9;
     border-bottom: 1px solid #e9e9e9;
     position: relative;
   }
 
-  .td {
+  .u-td {
     border-bottom: 1px solid #e9e9e9;
-    .turn-right {
+    overflow: hidden;
+    .u-turn-right {
       transform: rotateZ(-90deg);
     }
   }
 
-  .th,
-  .td {
+  .u-th,
+  .u-td {
     height: $row-height;
     text-align: center;
     vertical-align: middle;
-    overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .th-content,
-  .td-content {
+  .u-th-content,
+  .u-td-content {
     padding: 0 5px;
     white-space: nowrap;
     display: inline-block;
   }
 
-  .tr {
+  .u-tr {
     transition: all ease .3s;
     &.darken {
       background: #fafafa;
@@ -123,18 +139,29 @@
 
   /* 用于调整表格列宽 */
 
-  .th-border {
+  .u-th-border {
+    box-sizing: content-box;
     display: block;
-    width: 3px;
+    width: 1px;
+    border-right:5px solid #F5F5F5;
+    border-left:5px solid #F5F5F5;
+    // border-color:#F5F5F5;
     height: 60%;
-    background: transparent;
+    background: #CCC;
     position: absolute;
     right: 0;
     top: 50%;
-    transform: translateY(-50%);
-    border-right: 1px dashed #ddd;
+    z-index: 20;
+    transform: translate(50%, -50%);
     cursor: col-resize;
     user-select: none;
+    transition: ease all .3s;
+
+    &:hover{
+      // width: 4px;
+      background: #1890ff;
+
+    }
   }
 
   /* 可扩展 tr */

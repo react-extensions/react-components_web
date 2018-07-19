@@ -7,13 +7,14 @@ import Row from './row'
  * @param rows[Array]    {表格数据}
  * @param tbodyHeight     {tbody高度}
  * @param zebra[Boolean]  {表格行斑马线显示}
+ * @param fixedRows
  * @param columns = [
  *      {
  *          filter: function () {}  // 对表格中的数据进行操作, 参数为表格中的数据, 返回值将被显示
  *      },
  *     {
  *        type: 'index',
- *        fixed: true,     // 让此列固定不左右滚动
+ *        fixed: 'left || right',     // 让此列固定不左右滚动
  *     },
  *     {
  *        type: 'checkbox' // 如果加了这个, 则此列 会渲染成多选按钮
@@ -30,6 +31,7 @@ import Row from './row'
  * ]
  * 
  */
+
 class Table extends React.Component {
   constructor(props) {
     super(props)
@@ -38,21 +40,26 @@ class Table extends React.Component {
       signOffset: 0,  // 调整表格列宽时, 指示器样式
       leftShadow: false,
       topShadow: false,
-      checkboxStatus: -1,
+      syncData: { check: {} },
+      checkStatus: -1,
     }
 
     this.tableWidth = { plain: 0, left: 0, right: 0 }
     this.thMinWidth = []
     this.checkedList = []
-    this.init()
+    this.checkState = -1
+    this.columns = {}
+    this.widthList = []
+
+    this.analyseCols()
     this.moveSign = this.moveSign.bind(this)
     this.resizeCol = this.resizeCol.bind(this)
     this.checkedRow = this.checkedRow.bind(this)
     this.checkedAll = this.checkedAll.bind(this)
-    this.resizeColToMax = this.resizeColToMax.bind(this)
+    this.collectTdWidth = this.collectTdWidth.bind(this)
 
   }
-  init() {/* 数据预处理 */
+  analyseCols() {/* 数据预处理 */
 
     let colWidth = 0,
       col = null
@@ -68,11 +75,16 @@ class Table extends React.Component {
         case 'checkbox':
         case 'expand':
         case 'index':
+        case 'radio':
           col.cannotExpand = true
           colWidth = col.width || 40
+          this.checkState = (col.type === 'checkbox' ? 1 : 2)
           break;
         default:
           colWidth = col.width || 0
+          if (col.width) {
+            col.cannotExpand = true
+          }
           break;
       }
       col.__i__ = i
@@ -91,24 +103,45 @@ class Table extends React.Component {
 
       widthList.push(colWidth)
     }
+    const obj = { plain: plain }
 
-    this.columns = { fixedLeft, plain, fixedRight }
+    if (fixedLeft.length) {
+      obj.fixedLeft = fixedLeft
+    }
+    if (fixedRight.length) {
+      obj.fixedRight = fixedRight
+    }
+
+    this.columns = obj
 
     this.widthList = widthList
   }
+
   /* ------------------- */
+  /* ------------------- */
+  /* ------------------- */
+  /* --->> Row相关 <<--- */
+  /* ------------------- */
+
   /* --->> 多选表格 <<--- */
-  /* ------------------- */
   // 全部选中, 不选中
   checkedAll() {
     const { rows, onSelectRowChange } = this.props
-    const bool = this.state.checkboxStatus === 1
-    this.setState({ checkboxStatus: bool ? -1 : 1 })
+    const bool = this.state.checkStatus === 1
+
+    this.setState({ checkStatus: bool ? -1 : 1 })
+
     this.checkedList = bool || (!rows || rows.length === 0) ? [] : [...rows]
     onSelectRowChange && onSelectRowChange(this.checkedList)
   }
   // 单行选中, 不选中
-  checkedRow(row, isChecked, rowIndex) {
+  checkedRow(row, isChecked, rowIndex, s) {
+    const emit = this.props.onSelectRowChange
+
+    if (s === 2) {
+      emit(row)
+      return
+    }
 
     const oldList = this.checkedList
 
@@ -119,10 +152,10 @@ class Table extends React.Component {
       if (!oldList[i]) continue;
       arr.push(oldList[i])
     }
-    const { rows, onSelectRowChange } = this.props
+    const rows = this.props.rows
       , len = arr.length
       , max = rows.length
-      , status = this.state.checkboxStatus
+      , status = this.state.checkStatus
 
     let state = 3
 
@@ -134,13 +167,23 @@ class Table extends React.Component {
 
     (len < max && len > 0 && max !== 1 && status !== 0) && (state = 0);
 
-    state !== 3 && this.setState({ checkboxStatus: state })
+    state !== 3 && this.setState({ checkStatus: state })
 
-    onSelectRowChange && onSelectRowChange(arr)
+    emit && emit(arr)
   }
+  /* -->> 同步表格行 <<-- */
+  syncRow(type, syncData) {
+    this.setState(prev => (
+      { syncData: Object.assign({}, prev.syncData, { [type]: syncData }) }
+    ))
+  }
+  /* ------------------- */
+  /*->>    同步滚动    <<-*/
+  /* ------------------- */
   syncScroll(e) {
     const left = e.currentTarget.scrollLeft
     this.headerTrack.scrollLeft = left
+    this.bottomTable && (this.bottomTable.scrollLeft = left)
 
     const top = e.currentTarget.scrollTop
     this.leftTbody && (this.leftTbody.scrollTop = top)
@@ -209,16 +252,7 @@ class Table extends React.Component {
 
     this.setState({ signOffset: 0 })
   }
-  /* ------------------- */
-  /* -->> 同步表格行 <<-- */
-  /* ------------------- */
-  syncRow(type, rowIndex, colIndex) {
-    if (type === 'hover') {
-      this.setState({ syncHoverRow: rowIndex })
-    } else {
-      this.setState({ syncExpandRow: { rowIndex, colIndex } })
-    }
-  }
+
 
   // 根据用户设置,计算表格列宽 及 总宽度
   computeColWidth() {
@@ -310,10 +344,12 @@ class Table extends React.Component {
   }
 
   // 按照每列中最大宽度的td设置列宽
-  resizeColToMax(index, newWidth) {
-
+  collectTdWidth(index, newWidth) {
     this.widthList[index] = newWidth
-
+  }
+  collectThWidth(index, el) {
+    if (!el) return;
+    this.thMinWidth[index] = el.offsetWidth + 20
   }
   // 判断有没有竖直方向滚动条
   analyseScroll() {
@@ -345,19 +381,27 @@ class Table extends React.Component {
     // rows 数据更新后, 重新设置col宽度
     if (prevP.rows !== this.props.rows) {
       this._initStructure()
+
     }
 
 
   }
-  componentWillReceiveProps(nextP) {
+  UNSAFE_componentWillReceiveProps(nextP) {
     // 更新了 表头数据, 重新获取col宽
     if (nextP.columns !== this.props.columns) {
       this.initialized = false
     }
+
+    if (nextP.rows !== this.props.rows) {
+      this.setState({
+        syncData: { check: {} },
+        checkStatus: -1,
+      })
+    }
   }
 
   renderHeader(cols, columns) {
-    const status = this.state.checkboxStatus
+    const status = this.state.checkStatus
     return (
       <table border='0' cellSpacing='0' cellPadding={0} >
         {columns}
@@ -369,8 +413,8 @@ class Table extends React.Component {
                   <th className={'u-th'} key={'u-th' + i} >
                     {
                       th.type === 'checkbox' ? <Icon type={status === 0 ? 'half-checked' : status > 0 ? 'check-fill' : 'check'} onClick={this.checkedAll} />
-                        : (th.type === 'expand' || th.type === 'index') ? null
-                          : <span ref={this.initialized ? null : el => { if (!el) return; this.thMinWidth[th.__i__] = el.offsetWidth + 20 }} className='u-th-content' >
+                        : (th.type === 'expand' || th.type === 'radio' || th.type === 'index') ? '#'
+                          : <span ref={this.collectThWidth.bind(this, th.__i__)} className='u-th-content' >
                             {th.label}
                             <i className='u-th-border' onMouseDown={e => this.prepareResizeCol(e, th.__i__, th.fixed || 'plain')}></i>
                           </span>
@@ -385,84 +429,100 @@ class Table extends React.Component {
     )
   }
   renderBody(cols, columns, tType, needSync) {
-    const { rows, zebra, emptyTip } = this.props
-    const { syncHoverRow, syncExpandRow, checkboxStatus } = this.state
-
+    const PROPS = this.props
+      , { zebra, emptyTip, loading } = PROPS
+      , { syncData, checkStatus } = this.state
+    let data = tType === -2 ? PROPS.fixedRows : PROPS.rows
     return (
-      (rows && rows.length > 0) ? (
-        <table border='0' cellSpacing='0' cellPadding={0} >
-          {columns}
-          <tbody>
-            {rows.map((tr, i) => (
-              <Row
-                key={'u-tr' + i}
-                rowIndex={i}
-                isFixed={tType !== 0}
-                columns={cols}
-                bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                tr={tr}
-                checkboxStatus={checkboxStatus}
-                widthList={this.widthList}
-                syncHoverRow={syncHoverRow}
-                syncExpandRow={syncExpandRow}
-                resizeColToMax={this.resizeColToMax}
-                syncRow={needSync ? this.syncRow.bind(this) : null}
-                onChecked={this.checkedRow}
-              />
-            ))}
-          </tbody>
-        </table>
-      ) : tType === 0 ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
+
+      loading ? tType === 0 ? <Icon type='loading' /> : null :
+        (data && data.length > 0) ? (
+          <table border='0' cellSpacing='0' cellPadding={0} >
+            {columns}
+            <tbody>
+              {data.map((tr, i) => (
+                <Row
+                  key={'u-tr' + i}
+                  tr={tr}
+                  rowIndex={i}
+                  checkState={this.checkState || 0}
+                  columns={cols}
+                  bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
+                  isFixed={tType !== 0}
+                  isBottom={tType === -2}
+                  checkStatus={checkStatus}
+                  widthList={this.widthList}
+                  collectTdWidth={this.collectTdWidth}
+                  syncData={syncData}
+                  syncRow={needSync ? this.syncRow.bind(this) : null}
+                  onChecked={this.checkedRow}
+                />
+              ))}
+            </tbody>
+          </table>
+        ) : tType === 0 ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
+
     )
   }
-  renderTable(cols, tType, needSync) {
+  renderColumns(cols) {
     const list = this.widthList
-    const columns = (
+    return (
       <colgroup>
         {cols.map(item => (<col key={item.__i__} style={{ width: list[item.__i__] || 'auto' }}></col>))}
       </colgroup>
     )
+  }
+  renderTable(cols, tType, needSync) {
+    const columns = this.renderColumns(cols)
     return {
-      header: this.renderHeader(cols, columns, tType),
+      header: this.renderHeader(cols, columns, tType, needSync),
       body: this.renderBody(cols, columns, tType, needSync)
     }
   }
+  renderBottom() {
+    const { fixedLeft, fixedRight, plain } = this.columns
+      , plainT = this.renderBody(plain, this.renderColumns(plain), -2, false)
 
+    let left = null
+      , right = null
+    if (fixedLeft) {
+      left = this.renderBody(fixedLeft, this.renderColumns(fixedLeft), -2, false)
+    }
+    if (fixedRight) {
+      right = this.renderBody(fixedRight, this.renderColumns(fixedRight), -2, false)
+    }
+    return { plain: plainT, left, right }
+  }
   render() {
     // console.log('render')
     const
       { fixedLeft, fixedRight, plain } = this.columns
       , { fixedRows, scrollY } = this.props
-      , { topShadow, leftShadow, signOffset } = this.state
+      , { topShadow, leftShadow, rightShadow, signOffset } = this.state
 
-      , hasFixed = fixedLeft.length || fixedRight.length
+      , hasFixed = fixedLeft || fixedRight
 
       , plainTable = this.renderTable(plain, 0, hasFixed)
-      , leftTable = fixedLeft.length > 0 && this.renderTable(fixedLeft, -1, hasFixed)
-      , rightTable = fixedRight.length > 0 && this.renderTable(fixedRight, 1, hasFixed)
+      , leftTable = fixedLeft && this.renderTable(fixedLeft, -1, hasFixed)
+      , rightTable = fixedRight && this.renderTable(fixedRight, 1, hasFixed)
 
       , TW = this.tableWidth
       , P_W = TW.plain
       , L_W = TW.left
       , R_W = TW.right
-
-      // , fixedBottomTable = this.renderTable(plain, 0, fixedRows)
-
       , B_H = fixedRows ? 50 : 0
-
       , fixedTableHeight = (hasFixed && scrollY) ? (scrollY - (this.xScrollBar || 0) - B_H) + 'px' : 'auto'
+      , bottomTable = fixedRows ? this.renderBottom() : null
 
     return (
       <div className={'u-table__container ' + (this.props.className || '')} ref={el => { this.container = el }}>
         <div className="resize-col-sign" style={{ display: signOffset ? 'block' : 'none', left: signOffset }}></div>
-        <div className='u-plain__table' >
+        <div className='u-plain__table'>
           <div className={'u-header__track ' + (topShadow ? 'shadow ' : '')}
             style={{ padding: `0 ${R_W}px 0 ${L_W}px`, overflowY: this.yScrollBar ? 'scroll' : 'hiddren' }}
             ref={el => this.headerTrack = el}
           >
-            <div className="u-table-header" style={{ width: P_W && (P_W + 'px') }}>
-              {plainTable.header}
-            </div>
+            <div className="u-table-header" style={{ width: P_W && (P_W + 'px') }}>{plainTable.header}</div>
           </div>
 
           <div className='u-body__track'
@@ -470,17 +530,13 @@ class Table extends React.Component {
             ref={el => this.trackEl = el}
             onScroll={e => this.syncScroll(e)}
           >
-            <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }} >
-              {plainTable.body}
-            </div>
+            <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }}>{plainTable.body}</div>
           </div>
         </div>
 
         {leftTable &&
           <div className={'u-fixed-left__table ' + (leftShadow ? 'shadow ' : '')} style={{ width: L_W && (L_W + 'px') }}>
-            <div className={'u-table-header ' + (topShadow ? 'shadow ' : '')}>
-              {leftTable.header}
-            </div>
+            <div className={'u-table-header ' + (topShadow ? 'shadow ' : '')}>{leftTable.header}</div>
             <div className="u-table-body"
               style={{ height: fixedTableHeight }}
               ref={el => this.leftTbody = el}
@@ -490,10 +546,8 @@ class Table extends React.Component {
           </div>
         }
         {rightTable &&
-          <div className='u-fixed-right__table' >
-            <div className="u-table-header">
-              {rightTable.header}
-            </div>
+          <div className={'u-fixed-right__table ' + (rightShadow ? 'shadow ' : '')} style={{ width: R_W && (R_W + 'px'), right: (this.yScrollBar || 0) + 'px' }}>
+            <div className={'u-table-header ' + (topShadow ? 'shadow ' : '')}>{rightTable.header}</div>
             <div className="u-table-body"
               style={{ height: fixedTableHeight }}
               ref={el => this.rightTbody = el}
@@ -502,8 +556,24 @@ class Table extends React.Component {
             </div>
           </div>
         }
-        {
-          // <div className='u-fixed-bottom__table' style={null}></div>
+        {bottomTable &&
+          <div className='u-fixed-bottom__table' style={{ bottom: (this.xScrollBar || 0) + 'px' }}>
+            <div className='u-plain__table'
+              style={{ padding: `0 ${R_W}px 0 ${L_W}px`, overflowY: this.yScrollBar ? 'scroll' : 'hiddren' }}
+              ref={el => this.bottomTable = el}
+            >
+              <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }} >
+                {bottomTable.plain}
+              </div>
+            </div>
+
+            {bottomTable.left &&
+              <div className={'u-fixed-left__table ' + (leftShadow ? 'shadow ' : '')} style={{ width: L_W && (L_W + 'px') }}>
+                <div className="u-table-body">{bottomTable.left}</div>
+              </div>
+            }
+
+          </div>
         }
       </div>
     )

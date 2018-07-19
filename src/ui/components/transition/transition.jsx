@@ -11,6 +11,7 @@ class Transition extends Component {
     }
 
   }
+ 
   getDuration() {
 
     const elem = this.el
@@ -47,7 +48,10 @@ class Transition extends Component {
   }
 
   componentWillReceiveProps(nextP) {
+    // const nextC = nextP.children
+
     this.isOn = nextP.children && !this.props.children
+
     this.isOff = !this.isOn && (!nextP.children && this.props.children)
 
     // 显示
