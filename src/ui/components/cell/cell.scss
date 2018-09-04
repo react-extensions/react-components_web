@@ -12,6 +12,7 @@
 }
 
 .cell-title{
+  color: rgba(0,0,0,0.65);
   float: left;
   white-space: nowrap;
   padding:0 6px;
@@ -21,4 +22,5 @@
 .cell-value{
   display: table-cell;
   vertical-align: middle;
+  width: 100%;
 }

@@ -1,15 +1,35 @@
 import React from 'react'
-import('./cell.scss')
+import './cell.scss'
 
-export default class Select extends React.Component {
+ class Cell extends React.Component {
   render() {
-   const {title, value, className} = this.props
+    const props = this.props
+      , { title, value, className, tips, titleWidth, titleAlign } = props
+
     return (
-      <div className = {'cell ' + (className || '')}> 
-        <div className="cell-title">{title}</div>
-        <div className="cell-value">{value}</div>
+      <div className={'cell ' + (className || '')}>
+        {
+          title && (
+            <div className="cell-title"
+              title={tips && title}
+              style={{
+                width: titleWidth,
+                textAlign: titleAlign
+              }}
+            >
+              {title}
+            </div>
+          )
+        }
+        {value && <div className="cell-value">{value}</div>}
       </div>
     )
   }
 }
 
+Cell.defaultProps = {
+  titleWidth: null,
+  textAlign: 'left'
+}
+
+export default Cell

@@ -42,8 +42,6 @@ class Table extends React.Component {
       topShadow: false,
       syncData: { check: {} },
       checkStatus: -1,
-      fixedBottomHeight: 0,
-      sortMap: []
     }
 
     this.tableWidth = { plain: 0, left: 0, right: 0 }
@@ -52,16 +50,13 @@ class Table extends React.Component {
     this.checkState = -1   // -1 全不选中  0 部分  1全选
     this.columns = {}
     this.widthList = []
-    this.sortQueue = []
 
     this.analyseCols()
     this.moveSign = this.moveSign.bind(this)
     this.resizeCol = this.resizeCol.bind(this)
     this.checkedRow = this.checkedRow.bind(this)
-    this.syncScroll = this.syncScroll.bind(this)
     this.checkedAll = this.checkedAll.bind(this)
     this.collectTdWidth = this.collectTdWidth.bind(this)
-    this.fixedBottomHeight = this.fixedBottomHeight.bind(this)
 
   }
   analyseCols() {/* 数据预处理 */
@@ -82,7 +77,7 @@ class Table extends React.Component {
         case 'index':
         case 'radio':
           col.cannotExpand = true
-          colWidth = col.width || 50
+          colWidth = col.width || 40
           this.checkState = (col.type === 'checkbox' ? 1 : 2)
           break;
         default:
@@ -188,9 +183,9 @@ class Table extends React.Component {
 
     const { topShadow, leftShadow } = this.state
 
-      ; (topShadow !== (top > 0)) && this.setState({ topShadow: !topShadow })
+    ;(topShadow !== (top > 0)) && this.setState({ topShadow: !topShadow })
 
-      ; (leftShadow !== (left > 0)) && this.setState({ leftShadow: !leftShadow })
+    ;(leftShadow !== (left > 0)) && this.setState({ leftShadow: !leftShadow })
 
   }
   /* ------------------- */
@@ -198,7 +193,7 @@ class Table extends React.Component {
   /* ------------------- */
   getOffsetLeft(e) {
     const C = this.container
-      , P = C.getBoundingClientRect()
+    , P = C.getBoundingClientRect()
     return e.clientX - P.left + C.scrollLeft
   }
   prepareResizeCol(e, index, type) {
@@ -345,12 +340,6 @@ class Table extends React.Component {
 
     this.forceUpdate()
   }
-  fixedBottomHeight(el) {
-    if (!el) return
-    this.setState({
-      fixedBottomHeight: el.clientHeight
-    })
-  }
 
   // 按照每列中最大宽度的td设置列宽
   collectTdWidth(index, newWidth) {
@@ -404,27 +393,9 @@ class Table extends React.Component {
     }
 
   }
-  //* 表格排序
-  sortData(key) {
-    const map = Object.assign({}, this.state.sortMap)
-    const queue = this.sortQueue
 
-    if (map[key]) {
-      map[key] = - map[key]
-      let index = queue.indexOf(key)
-      index > 0 && queue.splice(index, 1)
-    } else {
-      map[key] = 1
-
-    }
-
-    queue.unshift(key)
-    this.setState({ sortMap: map })
-
-  }
   renderHeader(cols, columns) {
-    const state = this.state
-    const { status, sortMap } = state
+    const status = this.state.checkStatus
     return (
       <table border='0' cellSpacing='0' cellPadding={0} >
         {columns}
@@ -432,33 +403,16 @@ class Table extends React.Component {
           <tr>
             {
               cols.map((th, i) => {
-                const textAlign = th.type ? ' center' : (th.align ? (' ' + th.align) : '')
                 return (
-                  <th className={'u-th' + textAlign} key={i} >
-                    {/* 如果不加这一层div, 在ie中, th td内元素的绝对定位会出问题(ie中应该不能将td th作为绝对定位的参照节点, 设置position:reletive无效) */}
+                  <th className={'u-th'} key={'u-th' + i} >
                     <div className='u-th-content__wrap'>
                       {
                         th.type === 'checkbox' ? <Icon type={status === 0 ? 'half-checked' : status > 0 ? 'check-fill' : 'check'} onClick={this.checkedAll} />
-                          : (th.type === 'expand' || th.type === 'radio') ? null
-                            : th.type === 'index' ? '#'
-                              : (<React.Fragment>
-                                <span
-                                  ref={this.collectThWidth.bind(this, th.__i__)}
-                                  className='u-th-content' >
-                                  {th.label}
-                                  {
-                                    th.needSort && (
-                                      <Icon
-                                        type='down-fill'
-                                        className={'sort-sign ' + (sortMap[th.prop] ? (sortMap[th.prop] > 0 ? 'forward' : 'reverse'): 'un-active')}
-                                        onClick={this.sortData.bind(this, th.prop)} />
-                                    )
-                                  }
-                                </span>
-                                <i
-                                  className='u-th-border'
-                                  onMouseDown={e => this.prepareResizeCol(e, th.__i__, th.fixed || 'plain')}>
-                                </i>
+                        : (th.type === 'expand' || th.type === 'radio') ? null
+                          : th.type === 'index' ? '#'
+                            : (<React.Fragment>
+                                <span ref={this.collectThWidth.bind(this, th.__i__)} className='u-th-content' >{th.label}</span>
+                                <i className='u-th-border' onMouseDown={e => this.prepareResizeCol(e, th.__i__, th.fixed || 'plain')}></i>
                               </React.Fragment>)
                       }
                     </div>
@@ -471,42 +425,19 @@ class Table extends React.Component {
       </table>
     )
   }
-  sortRows(rows) {
-    // 如果排序规则没变, 表格数据没变, 且有 已经排序过的 rows数据, 则直接用已经排序过的
-
-    if (!this.sortedRows || this.rows !== this.props.rows || this.sortMap !== this.state.sortMap) {
-      this.rows = this.props.rows
-
-      this.sortMap = this.state.sortMap
-
-      const firstMatch = this.sortQueue[0]
-
-      const rule = this.sortMap[firstMatch]
-
-      this.sortedRows = rows.sort((p, n) => {
-        return (n[firstMatch] - p[firstMatch]) * rule
-      })
-    }
-
-    return this.sortedRows
-  }
   renderBody(cols, columns, tType, needSync) {
     const PROPS = this.props
       , { zebra, emptyTip, loading } = PROPS
       , { syncData, checkStatus } = this.state
-    let rows = tType === -2 ? PROPS.fixedRows : PROPS.rows
-    // 表格排序
-    if (this.sortQueue.length && rows && rows.length > 0) {
-      rows = this.sortRows(rows)
-    }
-
+    let data = tType === -2 ? PROPS.fixedRows : PROPS.rows
     return (
+
       loading ? tType === 0 ? <Icon type='loading' /> : null :
-        (rows && rows.length > 0) ? (
+        (data && data.length > 0) ? (
           <table border='0' cellSpacing='0' cellPadding={0} >
             {columns}
             <tbody>
-              {rows.map((tr, i) => (
+              {data.map((tr, i) => (
                 <Row
                   key={'u-tr' + i}
                   tr={tr}
@@ -522,7 +453,6 @@ class Table extends React.Component {
                   syncData={syncData}
                   syncRow={needSync ? this.syncRow.bind(this) : null}
                   onChecked={this.checkedRow}
-                  onRowClick={this.props.onRowClick}
                 />
               ))}
             </tbody>
@@ -561,12 +491,11 @@ class Table extends React.Component {
     return { plain: plainT, left, right }
   }
   render() {
-    const COLUMNS = this.columns,
-      PROPS = this.props,
-      STATE = this.state,
-      { fixedLeft, fixedRight, plain } = COLUMNS
-      , { fixedRows, scrollY } = PROPS
-      , { topShadow, leftShadow, rightShadow, signOffset, fixedBottomHeight } = STATE
+    // console.log('render')
+    const
+      { fixedLeft, fixedRight, plain } = this.columns
+      , { fixedRows, scrollY } = this.props
+      , { topShadow, leftShadow, rightShadow, signOffset } = this.state
 
       , hasFixed = fixedLeft || fixedRight
 
@@ -578,9 +507,9 @@ class Table extends React.Component {
       , P_W = TW.plain
       , L_W = TW.left
       , R_W = TW.right
-      , B_H = fixedRows ? fixedBottomHeight : 0
-      , bottomTable = fixedRows ? this.renderBottom() : null
+      , B_H = fixedRows ? 50 : 0
       , fixedTableHeight = (hasFixed && scrollY) ? (scrollY - (this.xScrollBar || 0) - B_H) + 'px' : 'auto'
+      , bottomTable = fixedRows ? this.renderBottom() : null
 
     return (
       <div className={'u-table__container ' + (this.props.className || '')} ref={el => { this.container = el }}>
@@ -594,14 +523,11 @@ class Table extends React.Component {
           </div>
 
           <div className='u-body__track'
-            style={{ height: (scrollY || 'auto') + 'px', padding: `0 ${R_W}px 0 ${L_W}px` }}
+            style={{ height: (scrollY - B_H || 'auto') + 'px', padding: `0 ${R_W}px 0 ${L_W}px` }}
             ref={el => this.trackEl = el}
-            onScroll={this.syncScroll}
+            onScroll={e => this.syncScroll(e)}
           >
             <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }}>{plainTable.body}</div>
-            {/* 外层(track)的padding-bottom 在 ie中 无效, 需要使用这种方法*/}
-            {/* padding-right也无效(⊙o⊙)？ */}
-            {B_H > 0 && <div style={{ height: B_H }}></div>}
           </div>
         </div>
 
@@ -630,7 +556,7 @@ class Table extends React.Component {
         {bottomTable &&
           <div className='u-fixed-bottom__table' style={{ bottom: (this.xScrollBar || 0), right: (this.yScrollBar || 0) }}>
             <div className='u-plain__table'
-              style={{ padding: `0 ${R_W}px 0 ${L_W}px` }}
+              style={{ padding: `0 ${R_W}px 0 ${L_W}px`}}
               ref={el => this.bottomTable = el}
             >
               <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }} >
@@ -639,9 +565,7 @@ class Table extends React.Component {
             </div>
 
             {bottomTable.left &&
-              <div className={'u-fixed-left__table ' + (leftShadow ? 'shadow ' : '')}
-                ref={this.fixedBottomHeight}
-                style={{ width: L_W && (L_W + 'px') }}>
+              <div className={'u-fixed-left__table ' + (leftShadow ? 'shadow ' : '')} style={{ width: L_W && (L_W + 'px') }}>
                 <div className="u-table-body">{bottomTable.left}</div>
               </div>
             }

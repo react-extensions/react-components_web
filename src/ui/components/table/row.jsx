@@ -1,5 +1,6 @@
 import React from 'react'
 import Icon from '../icon/icon'
+import ExpandRow from './expand-row'
 /**
  * 有 固定列 (有没有 syncRow)  需同步 ==>>>>>
  * hover  同步
@@ -12,24 +13,42 @@ class Row extends React.Component {
     this.state = {
       checked: false,
       collapse: true,
-      colIndex: 0,
-      hoverIndex: -1
+      expandContent: null,
+      hoverIndex: -1,
+      expandTrHeight: 0
     }
+    this.checked = this.checked.bind(this)
+    this.clickRow = this.clickRow.bind(this)
+    // this.collectWidth = this.collectWidth.bind(this)
+
     this.tdWidthList = []
+
+    if (props.syncRow) {
+      this.expandTr = React.createRef()
+    }
+
+  }
+  clickRow(e){
+    const props = this.props
+    , {checkState, onRowClick, tr, rowIndex} = props
+    if(checkState !== 0) {
+      this.checked(e)
+    }
+    const fn = onRowClick
+    fn && fn(e, tr, rowIndex)
+
   }
   // 具有多选功能的表格
-  checked(tr, rowIndex, e) {
+  checked(e) {
     e && e.stopPropagation()
 
     const bool = !this.state.checked
-    /* // 点击行, 只允许选中 不能取消
-    if(type === 1 && !bool) return */
 
-    const { onChecked, syncRow, checkState } = this.props
+    const { onChecked, syncRow, tr, rowIndex } = this.props
     // 发送数据给table
-    onChecked(tr, bool, rowIndex, checkState)
+    onChecked(tr, bool, rowIndex)
 
-    if (syncRow) {
+    if (syncRow) {  // 只有 有固定列的时候, 才会有 props.syncRow
       syncRow('check', { index: rowIndex, checked: bool })
     } else {
       this.setState({ checked: bool })
@@ -37,14 +56,20 @@ class Row extends React.Component {
 
   }
   // 具有扩展功能的表格
-  expand(colIndex) {
+  expand(content, e) {
+    e.stopPropagation()
     const collapse = this.state.collapse
-    const { rowIndex } = this.props
-    this.setState({
-      collapse: !collapse,
-      colIndex: colIndex
-    });
-    // this.syncRow('expand', collapse ? rowIndex : -1, collapse ? colIndex : false)
+      , { rowIndex, syncRow, isFixed } = this.props
+
+    if (syncRow && isFixed) {
+      syncRow('expand', { index: collapse ? rowIndex : -1, content })
+    } else {
+      this.setState({
+        collapse: !collapse,
+        expandContent: content
+      });
+    }
+
   }
 
   // 鼠标移入样式
@@ -59,7 +84,10 @@ class Row extends React.Component {
     }
 
   }
-
+  collectWidth(j, el) {
+    if (!el) return;
+    this.tdWidthList[j] = el.offsetWidth
+  }
 
   // 将列宽按照最宽设置
   componentDidMount() {
@@ -96,18 +124,21 @@ class Row extends React.Component {
       , O_SYNC_CHECK = O_P.syncData.check || {}
       , N_SYNC_CHECK = N_P.syncData.check || {}
 
+      , O_SYNC_EXPAND = O_P.syncData.expand || {}
+      , N_SYNC_EXPAND = N_P.syncData.expand || {}
 
 
-    function jude(o, n, c) {
+    function judge(o, n, c) {
       return o !== n && (o === c || n === c)
     }
     // 控制一下性能
-    // 同步表格行数据 
+    // 同步表格行数据
 
-    if (jude(O_P.syncData.hover, N_P.syncData.hover, rowIndex)) {
+    /* HOVER */
+    if (judge(O_P.syncData.hover, N_P.syncData.hover, rowIndex)) {
       this.setState({ hoverIndex: N_P.syncData.hover })
     }
-
+    /* CHECK */
     if (checkState === 1) { // 多选
 
       if (N_STATUS !== O_STATUS) { // table全选
@@ -117,17 +148,25 @@ class Row extends React.Component {
           this.setState({ checked: false })
         }
       }
-      
+
       if (N_STATUS !== 1 && N_STATUS !== -1 && rowIndex === N_SYNC_CHECK.index) {
         this.setState({ checked: N_SYNC_CHECK.checked })
       }
 
     } else if (checkState === 2) {  // 单选
-      if (jude(O_SYNC_CHECK.index, N_SYNC_CHECK.index, rowIndex)) {
+      if (judge(O_SYNC_CHECK.index, N_SYNC_CHECK.index, rowIndex)) {
         this.setState({ checked: N_SYNC_CHECK.index === rowIndex })
       }
     }
 
+    /* EXPAND */
+    if (judge(O_SYNC_EXPAND.index, N_SYNC_EXPAND.index, rowIndex)) {
+      this.setState({ expandContent: N_SYNC_EXPAND.content, collapse: !(N_SYNC_EXPAND.index === rowIndex) })
+    }
+    // 同步此行高度
+    if (N_SYNC_EXPAND.index === rowIndex && N_P.syncData.expandTrHeight !== this.state.expandTrHeight) {
+      N_P.isFixed && this.setState({ expandTrHeight: N_P.syncData.expandTrHeight })
+    }
 
   }
   shouldComponentUpdate(N_P, N_S) {
@@ -139,71 +178,79 @@ class Row extends React.Component {
       || O_P.rowIndex !== N_P.rowIndex
       || N_S.checked !== O_S.checked
       || N_S.hoverIndex !== O_S.hoverIndex
+      || N_S.collapse !== O_S.collapse
+      || N_S.expandTrHeight !== O_S.expandTrHeight
+  }
+  componentDidUpdate(prevP, prevS) {
+    const syncRow = prevP.syncRow
+    if (prevS.collapse !== this.state.collapse && prevS.collapse && syncRow && !prevP.isFixed) {
+      //this.expandTr.current.clientHeight  在ie9中获取不到值
+      //.getBoundingClientRect().height    在普通浏览器中又获取不到值
+      const el = this.expandTr.current
+      const height = /MSIE 9/i.test(window.navigator.userAgent) ? el.getBoundingClientRect().height : el.clientHeight
+      syncRow('expandTrHeight', height)
+    }
+  }
+
+  renderTdContentWrap(th, j, child) {
+    return (
+      <div className={'u-td-content' + (th.width ? ' fill' : '')} ref={this.collectWidth.bind(this, j)}>
+        {child}
+      </div>
+    )
+  }
+  renderTdContent(th, j) {
+    const { columns, tr, rowIndex, isBottom } = this.props//  syncExpandRow, isFixed, 
+    const { checked, collapse } = this.state
+
+    return isBottom
+      ? this.renderTdContentWrap(th, j, tr[th.type || th.prop] || null)
+      : (th.type === 'checkbox' || th.type === 'radio')
+        ? (<Icon type={checked ? 'check-fill' : 'check'} onClick={this.checked} />)
+        : th.type === 'expand'
+          ? (<Icon type='down-fill'
+            className={collapse ? ' u-turn-right' : ''}
+            onClick={this.expand.bind(this, columns[th.__i__].content)} />)
+          : th.type === 'index'
+            ? rowIndex + 1
+            : (tr[th.prop] || tr[th.prop] === 0 || th.filter) && this.renderTdContentWrap(th, j, th.filter ? th.filter(tr[th.prop], Object.assign({}, tr), rowIndex) : tr[th.prop])
 
   }
+  mapRow() {
+
+    return (
+      this.props.columns.map((th, j) => {
+        const textAlign = th.type ? ' center' : (th.align ? (' '+ th.align) : '')
+          return(<td key={j} className={'u-td'+ textAlign}>{this.renderTdContent(th, j)}</td>)
+      })
+    )
+  }
   render() {
-    const { columns, tr, bgColor, rowIndex, isBottom, checkState } = this.props//  syncExpandRow, isFixed, 
+    const { columns, tr, bgColor, rowIndex, isBottom,  isFixed, } = this.props//  syncExpandRow, isFixed, 
     if (!tr) return null
 
-    const { checked, collapse, hoverIndex, } = this.state //colIndex, 
+    const { collapse, hoverIndex, expandContent, expandTrHeight, checked } = this.state
 
-      , selfTr = Object.assign({}, tr)
-
-    return isBottom ?
-      (
-        <tr className={'u-tr'}>
-          {
-            columns.map((th, j) => {
-              return (
-                <td key={'u-td' + j} className='u-td'>
-                  <div className='u-td-content' ref={el => { if (!el) return; this.tdWidthList[j] = el.offsetWidth }}>
-                    {tr[th.type || th.prop] || null}
-                  </div>
-                </td>
-              )
-            })
-          }
-        </tr>
-      ) :
-      (
+    return isBottom
+      ? (<tr className={'u-tr'}>{this.mapRow()}</tr>)
+      : (
         <React.Fragment>
-          <tr className={'u-tr ' + (bgColor || '') + (hoverIndex === rowIndex ? ' hover' : '')}
+          <tr className={'u-tr ' + (bgColor || '') + ((hoverIndex === rowIndex || checked) ? ' hover' : '')}
             onMouseEnter={() => this.toggleRowBG(1)}
             onMouseLeave={() => this.toggleRowBG(-1)}
-            onClick={checkState !== 0 ? this.checked.bind(this, selfTr, rowIndex) : null}
+            onClick={this.clickRow}
           >
-            {
-              columns.map((th, j) => {
-                return (
-
-                  <td key={'u-td' + j} className='u-td'>
-                    {
-                      (th.type === 'checkbox' || th.type === 'radio') ? (<Icon type={checked ? 'check-fill' : 'check'} onClick={e => this.checked(selfTr, rowIndex, e)} />)
-                        : th.type === 'expand' ? (<Icon type='down-fill' className={collapse ? 'u-turn-right' : ''} onClick={this.expand.bind(this, th.__i__)} />)
-                          : th.type === 'index' ? rowIndex + 1
-                            : (
-                              (tr[th.prop] || tr[th.prop] === 0 || th.filter) && (
-                                <div className='u-td-content' ref={el => { if (!el) return; this.tdWidthList[j] = el.offsetWidth }}>
-                                  {th.filter ? th.filter(tr[th.prop], selfTr, rowIndex) : tr[th.prop]}
-                                </div>
-                              )
-                            )
-                    }
-                  </td>
-                )
-              })
-            }
+            {this.mapRow()}
           </tr>
-          {/* {
-          (!isFixed && (!collapse || (syncExpandRow.colIndex && syncExpandRow.rowIndex === rowIndex))) && (
-            <tr className='expand-tr'>
-              <td colSpan={columns.length}
-                className='expand-td'>
-                {columns[colIndex || syncExpandRow.colIndex].content}
-              </td>
-            </tr>
-          )
-        } */}
+          {
+            !collapse && (
+              <tr className='expand-tr' ref={this.expandTr} style={isFixed ? { height: expandTrHeight } : null}>
+                <td colSpan={columns.length} className='expand-td'>
+                  {!isFixed ? <ExpandRow content={expandContent} tr={tr} /> : null}
+                </td>
+              </tr>
+            )
+          }
         </React.Fragment>
       )
 
