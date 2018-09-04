@@ -4,9 +4,9 @@ import './iconfont.css'
 class Icon extends Component {
   
   render() {
-    const {type, className, onClick} = this.props
+    const {type, className, onClick, style} = this.props
 
-    return (<i className={'iconfont '+ (className || '') + (' icon-'+ type)} onClick={onClick}></i>)
+    return (<i style = {style} className={'iconfont '+ (className || '') + (' icon-'+ type)} onClick={onClick}></i>)
   }
 }
 

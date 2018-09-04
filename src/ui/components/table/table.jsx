@@ -43,7 +43,7 @@ class Table extends React.Component {
       syncData: { check: {} },
       checkStatus: -1,
       fixedBottomHeight: 0,
-      sortMap: []
+      sortMap: { current: '', direction: 1 }
     }
 
     this.tableWidth = { plain: 0, left: 0, right: 0 }
@@ -52,7 +52,6 @@ class Table extends React.Component {
     this.checkState = -1   // -1 全不选中  0 部分  1全选
     this.columns = {}
     this.widthList = []
-    this.sortQueue = []
 
     this.analyseCols()
     this.moveSign = this.moveSign.bind(this)
@@ -225,16 +224,16 @@ class Table extends React.Component {
     if (!offset) return
 
     const data = this.resizeData
-      , oldWidth = this.widthList[data.index]
-      // 根据每列的表头, 设置最小宽度
-      , minWidth = this.thMinWidth[data.index]
+    const oldWidth = this.widthList[data.index]
+    // 根据每列的表头, 设置最小宽度
+    const minWidth = this.thMinWidth[data.index]
 
     let newWidth = oldWidth + offset - data.offset
 
     newWidth < minWidth && (newWidth = minWidth)
 
     const { left, right, plain } = this.tableWidth
-      , containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)// 容器宽度
+    const containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)// 容器宽度
     //位移差, 调整了的宽度
     let diff = newWidth - oldWidth
     //                   容器宽度 - 新的总宽度
@@ -261,12 +260,12 @@ class Table extends React.Component {
   computeColWidth() {
 
     const containerWidth = parseFloat(this.container.clientWidth) - this.yScrollBar || 0
-      , { columns } = this.props
-      , widthList = this.widthList
+    const { columns } = this.props
+    const widthList = this.widthList
 
     let totalWidth = 0
-      , hasZero = 0
-      , cannotExpand = { width: 0 }
+    let hasZero = 0
+    let cannotExpand = { width: 0 }
 
       ; (function () {
         let item = 0
@@ -306,20 +305,18 @@ class Table extends React.Component {
       if (diff > 0) {   // 需要自动扩展 列宽
 
         if (hasZero) { // 存在 没有设置宽度的 列  ==>>  将多余的平均分配
-          if (oldWidth === 0) {
-            lastWidth = diff / hasZero
-          }
-        } else {     // 不存在 没有设置宽度的列  ==>>  除了不允许扩展的列, 其他均匀分配 多出的
 
-          if (!cannotExpand[i]) {
-            lastWidth = oldWidth + diff * (oldWidth / (totalWidth - cannotExpand.width))
-          }
+          oldWidth === 0 && (lastWidth = diff / hasZero);
+
+        } 
+        else {     // 不存在 没有设置宽度的列  ==>>  除了不允许扩展的列, 其他均匀分配 多出的
+
+          !cannotExpand[i] && (lastWidth = oldWidth + diff * (oldWidth / (totalWidth - cannotExpand.width)));
+
         }
 
         // 最小宽度
-        if (lastWidth < minWidth) {
-          lastWidth = minWidth
-        }
+        lastWidth < minWidth && (lastWidth = minWidth)
 
       }
 
@@ -329,9 +326,11 @@ class Table extends React.Component {
 
       if (col === 'left') {
         leftW += lastWidth
-      } else if (col === 'right') {
+      } 
+      else if (col === 'right') {
         rightW += lastWidth
-      } else {
+      } 
+      else {
         plainW += lastWidth
       }
 
@@ -406,21 +405,9 @@ class Table extends React.Component {
   }
   //* 表格排序
   sortData(key) {
-    const map = Object.assign({}, this.state.sortMap)
-    const queue = this.sortQueue
-
-    if (map[key]) {
-      map[key] = - map[key]
-      let index = queue.indexOf(key)
-      index > 0 && queue.splice(index, 1)
-    } else {
-      map[key] = 1
-
-    }
-
-    queue.unshift(key)
-    this.setState({ sortMap: map })
-
+    const map = this.state.sortMap
+    const newState = { sortMap: { current: key, direction: map.current === key ? -map.direction : 1 } }
+    this.setState(newState)
   }
   renderHeader(cols, columns) {
     const state = this.state
@@ -448,10 +435,13 @@ class Table extends React.Component {
                                   {th.label}
                                   {
                                     th.needSort && (
-                                      <Icon
-                                        type='down-fill'
-                                        className={'sort-sign ' + (sortMap[th.prop] ? (sortMap[th.prop] > 0 ? 'forward' : 'reverse'): 'un-active')}
-                                        onClick={this.sortData.bind(this, th.prop)} />
+                                      <span
+                                        onClick={this.sortData.bind(this, th.prop)}
+                                        className={'sort-sign ' + (sortMap.current === th.prop ? (sortMap.direction > 0 ? 'forward' : 'reverse') : 'un-active')}
+                                      >
+                                        <Icon type='down-fill' className='up-arrow' />
+                                        <Icon type='down-fill' className='down-arrow' />
+                                      </span>
                                     )
                                   }
                                 </span>
@@ -475,16 +465,15 @@ class Table extends React.Component {
     // 如果排序规则没变, 表格数据没变, 且有 已经排序过的 rows数据, 则直接用已经排序过的
 
     if (!this.sortedRows || this.rows !== this.props.rows || this.sortMap !== this.state.sortMap) {
+      // 缓存上次状态
       this.rows = this.props.rows
-
       this.sortMap = this.state.sortMap
 
-      const firstMatch = this.sortQueue[0]
-
-      const rule = this.sortMap[firstMatch]
+      const match = this.sortMap.current
+      const rule = this.sortMap.direction
 
       this.sortedRows = rows.sort((p, n) => {
-        return (n[firstMatch] - p[firstMatch]) * rule
+        return (n[match] - p[match]) * rule
       })
     }
 
@@ -493,10 +482,10 @@ class Table extends React.Component {
   renderBody(cols, columns, tType, needSync) {
     const PROPS = this.props
       , { zebra, emptyTip, loading } = PROPS
-      , { syncData, checkStatus } = this.state
+      , { syncData, checkStatus, sortMap } = this.state
     let rows = tType === -2 ? PROPS.fixedRows : PROPS.rows
     // 表格排序
-    if (this.sortQueue.length && rows && rows.length > 0) {
+    if (sortMap.current && rows && rows.length > 0 && tType === 0) {
       rows = this.sortRows(rows)
     }
 

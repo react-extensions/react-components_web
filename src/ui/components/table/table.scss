@@ -123,20 +123,35 @@ col {
 
 /* 排序 */
 .sort-sign {
-  margin-left: 4px;
+  margin-left: 8px;
   vertical-align: baseline !important;
-  font-size: 13px !important;
-  color: #5faff9;
+  color: #999;
+  position: relative;
+  &:hover{
+    color:#A3D8FF;
+  }
 
-  &.reverse {
+  .icon-down-fill {
+    font-size: 12px !important;
+    line-height: 0.9;
+  }
+
+  .up-arrow {
     transform: rotateX(180deg)
   }
-  
-  &.un-active{
-    color:#ccc;
+
+  .down-arrow {
+    position: absolute;
+    top: 9px;
+    left: 0;
+    vertical-align: middle;
+  }
+
+  &.reverse .up-arrow,
+  &.forward .down-arrow {
+    color: #20a0ff !important;
   }
 }
-
 
 /* 细节 */
 .u-th-content__wrap {
