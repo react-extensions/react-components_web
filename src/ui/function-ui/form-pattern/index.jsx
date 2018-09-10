@@ -15,10 +15,8 @@ const extendFunc = function (Component, options) {
   class FormPattern extends React.PureComponent {
     constructor(props) {
       super(props)
-
       this.state = {
         value: props.value,     //* form 的值
-        proxyProps: this.proxyProps(props),  //* 代理后的 props
         tip: null                            //* form 验证提示
       }
 
@@ -26,19 +24,7 @@ const extendFunc = function (Component, options) {
       this.handleBlur = this.handleBlur.bind(this)
       this.handleChange = this.handleChange.bind(this)
     }
-    /**
-     * 
-     * @function
-     *    代理props
-     */
-    proxyProps(props) {
-      const subProps = Object.assign({}, props)
-      delete subProps.value
-      delete subProps.onChange
-      delete subProps.onBlur
-      // delete subProps.onFocus
-      return subProps
-    }
+    
 
     /**
      * 
@@ -47,13 +33,11 @@ const extendFunc = function (Component, options) {
      * 监听父组件 数据变化, 
      */
     UNSAFE_componentWillReceiveProps(nextP) {
-      const newState = { proxyProps: this.proxyProps(nextP) }
 
       if (nextP.value !== this.props.value) {
-        newState.value = nextP.value
+        this.setState({value: nextP.value})
       }
 
-      this.setState(newState)
     }
 
 
@@ -179,13 +163,15 @@ const extendFunc = function (Component, options) {
 
     render() {
       const state = this.state
+
+
       return (
         <div className={'input-pattern-wrap' + (state.tip ? (' ' + state.tip.type):'')}>
           <Component
+            {...this.props}
             value={state.value}
             onChange={this.handleChange}
             onBlur={this.handleBlur}
-            {...state.proxyProps}
           />
           {state.tip &&
             (<span className={'input-tip ' + state.tip.type}>{state.tip.text}</span>)

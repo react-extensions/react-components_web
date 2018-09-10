@@ -1,5 +1,5 @@
 import React from 'react'
-import './cell.scss'
+import './cell.less'
 
  class Cell extends React.Component {
   render() {

@@ -156,7 +156,7 @@ module.exports = merge(baseConf, {
           // In production, we use a plugin to extract that CSS to a file, but
           // in development "style" loader enables hot editing of CSS.
           {
-            test: /\.(css|scss)$/,
+            test: /\.(css|less)$/,
             use: [
               require.resolve('style-loader'),
               {
@@ -185,7 +185,7 @@ module.exports = merge(baseConf, {
                   ],
                 },
               },
-              require.resolve('sass-loader')
+              require.resolve('less-loader')
             ],
           },
           // "file" loader makes sure those assets get served by WebpackDevServer.
