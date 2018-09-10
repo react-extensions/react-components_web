@@ -1,0 +1,58 @@
+/* 隐藏input */
+.upload-input {
+  appearance: none;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.input-label {
+  display: inline-block;
+  border: 1px dashed #ccc;
+  font-size: 22px;
+  min-width: 100px;
+  text-align: center;
+  cursor: pointer;
+  background: #f1f1f1;
+  color: #999;
+  margin: 0;
+  
+}
+
+
+/* 文件预览 */
+.preview-file-wrap{
+  position: relative;
+  padding-right: 22px;
+  overflow: hidden;
+}
+.preview-file-wrap .file-name{
+  padding: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  background:#ccc;
+  font-size: 16px;
+ white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.preview-file-wrap .remove-file-btn{
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  margin-left: 4px;
+
+  display: block;
+  border-radius: 50%;
+  width: 18px;
+  height:18px;
+  line-height:1;
+
+  margin-top: -9px;
+  font-size: 16px;
+  text-align: center;
+  overflow: hidden;
+  background:#ff0000;
+  color:#fff;
+
+  cursor: pointer;
+}

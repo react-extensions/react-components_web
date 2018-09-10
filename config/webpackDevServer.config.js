@@ -80,7 +80,12 @@ module.exports = function(proxy, allowedHost) {
       disableDotRule: true,
     },
     public: allowedHost,
-    proxy,
+    proxy:{
+      '/ybs': {
+        target: 'http://172.30.5.40:8090',
+        "changeOrigin": true
+    }
+    },
     before(app) {
       // This lets us open files from the runtime error overlay.
       app.use(errorOverlayMiddleware());

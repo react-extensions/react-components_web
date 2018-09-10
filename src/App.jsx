@@ -1,51 +1,72 @@
 import React, { Component } from 'react';
 import './App.scss'
+import { Cell , Input} from '@ui'
+import ImgUpload from './file-upload/w3c-img'
+import FileUpload from './file-upload/w3c-file'
+import Pattern from '@ui/function-ui/form-pattern'
+// import Input from '@ui/components/input/plain-input.jsx'
 
-import store from './redux/store-2'
-import Middleware from './context/middleware'
-import Context from './context'
 
 class App extends Component {
   constructor() {
     super()
-    this.state = {
-      todos: store.getState().todos,
-    }
+    console.log(Input.name)
+  }
+  getImg(file) {
+    console.log(file)
+  }
 
-    store.subscribe(() => {
-      this.setState({
-        todos: store.getState().todos,
-      })
-    })
+  getFile(file) {
+    console.log(file)
+  }
+  inputFocus(e) {
+    console.log(e.nativeEvent)
 
   }
-  addTodo() {
-    store.dispatch({type: 'ADD_TODO', text: '回家 9: 00'})
-  }
-  toggleTodo() {
-    store.dispatch({type: 'TOGGLE_TODO', index: 2})
+  inputChange(e) {
+    console.log(e.nativeEvent)
   }
   render() {
-    const { todos } = this.state
-    
+    const PatternInput = Pattern(Input, {
+      required: true,
+      filter: v => v.replace(/\D/g, ''),
+      pattern: v=> {
+        // console.log(/\D/g.test(v), v)
+        return /\d/g.test(v)
+      },
+
+      tip: {
+        error: '没有数字',
+        // success: 'crract'
+        required: 'bixu'
+      }
+    })
+
     return (
       <div>
-        <h1>todos </h1>
-          <ul>
-            {
-              todos.map((item, i) => {
-                return <li key={i} style ={{color: item.completed ? 'green' : 'yellow'}}>{item.text} </li>
-              })
-            }
-          </ul>
-      <button type='button' onClick={this.addTodo.bind(this)}>ADD_TODO</button>&nbsp;&nbsp;&nbsp;&nbsp;
-      <button type='button' onClick={this.toggleTodo.bind(this)}>TOGGLE_TODO</button>&nbsp;&nbsp;&nbsp;&nbsp;
-      <hr/>
-      <h1>context</h1>
-      <Context.Provider value = {this}>
-        <Middleware/>
-      </Context.Provider>
-    </div>
+        <Cell title='姓名' value={
+          <input type='text'/>
+        }/>
+        <Cell title='年龄' value={
+          <input type='text'/>
+        }/>
+        <Cell title='图片' value= {
+        <ImgUpload onChange={this.getImg.bind(this)}/>
+        } />
+
+        <Cell title='文件 1' value = {
+          <FileUpload onChange={this.getFile.bind(this)} />
+        } />
+         <Cell title='文件 2' value = {
+          <FileUpload onChange={this.getFile.bind(this)} />
+        } />
+        <div style={{width: 300}}>
+
+          <PatternInput/>
+
+        </div>
+
+      </div>
     )
   }
 }

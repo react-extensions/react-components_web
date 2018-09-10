@@ -52,7 +52,8 @@
   },
   "devDependencies": {
     "node-sass": "^4.8.3",
-    "sass-loader": "^7.0.1"
+    "sass-loader": "^7.0.1",
+    "webpack-merge": "^4.1.4"
   },
   "jest": {
     "collectCoverageFrom": [

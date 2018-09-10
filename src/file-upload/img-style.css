@@ -1,0 +1,70 @@
+/* 外层样式 */
+.img-upload .preview-img-wrap,
+.img-upload .upload-box,
+.img-upload .input-label {
+  display: inline-block;
+  overflow: hidden;
+  width: 200px;
+  height: 200px;
+  line-height: 200px;
+  border-radius: 6px;
+  box-sizing: border-box;
+  position: relative;
+  font-size: 0;
+  margin: 0 10px;
+}
+
+/* ----------- */
+/* 图片上传区域 */
+/* ----------- */
+.img-upload .upload-box {
+  font-size: 0;
+  line-height: 0;
+}
+
+.img-upload .input-label {
+  display: block;
+  border: 1px dashed #ccc;
+  font-size: 42px;
+  text-align: center;
+  cursor: pointer;
+  background: #f1f1f1;
+  color: #999;
+  margin: 0;
+}
+
+/* --------- */
+/* 图片预览区 */
+/* --------- */
+.img-upload .preview-img-wrap {
+  background: #ccc;
+}
+
+.img-upload .preview-img {
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.img-upload .remove-img-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  display: block;
+  border-radius: 0 0 0 50%;
+  background: #ff1800;
+  color: #fff;
+  text-align: center;
+  line-height: 1;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.img-upload .file-name {
+  min-height: 16px;
+  margin: 5px 0 0;
+  font-size: 14px;
+}

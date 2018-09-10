@@ -308,7 +308,7 @@ class Table extends React.Component {
 
           oldWidth === 0 && (lastWidth = diff / hasZero);
 
-        } 
+        }
         else {     // 不存在 没有设置宽度的列  ==>>  除了不允许扩展的列, 其他均匀分配 多出的
 
           !cannotExpand[i] && (lastWidth = oldWidth + diff * (oldWidth / (totalWidth - cannotExpand.width)));
@@ -326,10 +326,10 @@ class Table extends React.Component {
 
       if (col === 'left') {
         leftW += lastWidth
-      } 
+      }
       else if (col === 'right') {
         rightW += lastWidth
-      } 
+      }
       else {
         plainW += lastWidth
       }
@@ -537,10 +537,10 @@ class Table extends React.Component {
   }
   renderBottom() {
     const { fixedLeft, fixedRight, plain } = this.columns
-      , plainT = this.renderBody(plain, this.renderColumns(plain), -2, false)
+    const plainT = this.renderBody(plain, this.renderColumns(plain), -2, false)
 
     let left = null
-      , right = null
+    let right = null
     if (fixedLeft) {
       left = this.renderBody(fixedLeft, this.renderColumns(fixedLeft), -2, false)
     }
