@@ -411,7 +411,7 @@ class Table extends React.Component {
   }
   renderHeader(cols, columns) {
     const state = this.state
-    const { status, sortMap } = state
+    const { checkStatus, sortMap } = state
     return (
       <table border='0' cellSpacing='0' cellPadding={0} >
         {columns}
@@ -425,7 +425,7 @@ class Table extends React.Component {
                     {/* 如果不加这一层div, 在ie中, th td内元素的绝对定位会出问题(ie中应该不能将td th作为绝对定位的参照节点, 设置position:reletive无效) */}
                     <div className='u-th-content__wrap'>
                       {
-                        th.type === 'checkbox' ? <Icon type={status === 0 ? 'half-checked' : status > 0 ? 'check-fill' : 'check'} onClick={this.checkedAll} />
+                        th.type === 'checkbox' ? <Icon type={checkStatus === 0 ? 'half-checked' : checkStatus > 0 ? 'check-fill' : 'check'} onClick={this.checkedAll} />
                           : (th.type === 'expand' || th.type === 'radio') ? null
                             : th.type === 'index' ? '#'
                               : (<React.Fragment>
@@ -576,7 +576,7 @@ class Table extends React.Component {
         <div className="resize-col-sign" style={{ display: signOffset ? 'block' : 'none', left: signOffset }}></div>
         <div className='u-plain__table'>
           <div className={'u-header__track ' + (topShadow ? 'shadow ' : '')}
-            style={{ padding: `0 ${R_W}px 0 ${L_W}px`, overflowY: this.yScrollBar ? 'scroll' : 'hiddren' }}
+            style={{ padding: `0 ${R_W}px 0 ${L_W}px`, overflowY: this.yScrollBar ? 'scroll' : 'hidden' }}
             ref={el => this.headerTrack = el}
           >
             <div className="u-table-header" style={{ width: P_W && (P_W + 'px') }}>{plainTable.header}</div>

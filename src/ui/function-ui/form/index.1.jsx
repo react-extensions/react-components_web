@@ -1,188 +1,226 @@
-import React from 'react';
+import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import './style.css'
+import './style.less'
 
-import ExtendFunc from './form-pattern'
+import Pattern from '../form-pattern/index'
+import { Input, Cell } from '@ui'
 
-import { Cell, Input as I } from '../../index'
-
-/* const Input = ExtendFunc(I, {
-  
-}) */
 
 
 /**
- * @prop {array} renderList 用于渲染   [{label: '', prop: '', type: '', col: 2 , defaultValue: '', options: [], disabled: bool, format: ()=>()}]
+ * @prop {array} renderList 用于渲染   [{ label: '', name: '', type: '', col: 2 , defaultValue: '', options: [], disabled: bool, format: ()=>()}]
  * @prop {obj} value 
  * @prop {func} onChange  
- * @prop {obj} defaultValue  默认值, 对象格式
- * 
  * 
  */
+class Form extends Component {
+    constructor(props) {
+        super(props)
+        //this.renderList = [] 用于存储pattern表单的列表
+        // this.formVal = {}
+        //this.depQueue [] 表单控件依赖表
+        this.childPatternQueue = []
+        this.getChildPatternApi = this.getChildPatternApi.bind(this)
+        this.init(props)
 
-class Form extends React.PureComponent {
-  constructor(props) {
-    super(props)
+    }
+    /**
+     * @function hook 发送调用Form组件内部 patternFormItem函数
+     *  1. 父组件中接收 发出去的函数, 在准备提交时, 调用进行表单验证, 如果返回false, 则取消提交
+     */
+    componentDidMount() {
+      const emit = this.props.emitFormCheck
+      emit && emit(this.patternFormItem.bind(this))
+    }
+    /**
+     * @function patternFormItem 强制form表单控件 进行验证, 由外部触发
+     * 
+     */
+    patternFormItem() {
+        const list = this.childPatternQueue
+        let result = true
+        for (let i = 0, len = list.length; i < len; i++) {
+            result = list[i]()
+            if (!result) return false
+        }
+        return result
+    }
+    /**
+     * @function init 初始化
+     * 
+     * @param {array<renderList>} list 
+     */
+    init(props) {
+        this.renderList = []
+        this.depQueue = []
+        const formVal = this.formVal = {}
+        const list = props.renderList
+        let item = null
+        if (!list.length) return
 
-    this.formVal = {}
-
-    // 表单控件依赖列表
-    this.depQueue = []
-
-    this.init()
-    this.initDep()
-
-
-    this.handleInput = this.handleInput.bind(this)
-
-  }
-  init() {
-    const formVal = this.formVal
-      , props = this.props
-      , list = props.renderList
-
-    let i = list.length
-    let item = null
-    let dep = null
-    let type = null
-
-    while (i--) {
-      item = list[i]
-      type = item.type
-
-      
-
-      formVal[item.prop] = item.defaultValue || ''
-
-      dep = item.dependence
-
-      //  收集 归类 依赖项
-      if (!dep) continue
-
-      const prop = dep.prop
-      
-      if (typeof prop === 'string') {
-
-        !this.depQueue[prop] && (this.depQueue[prop] = [])
-
-        this.depQueue[prop].push([item.prop, dep.handle])
-
-      } else {
-
-        for (let i = 0, len = prop.length; i < len; i++) {
-          !this.depQueue[prop[i]] && (this.depQueue[prop[i]] = [])
-
-          this.depQueue[prop[i]].push([item.prop, dep.handle])
+        for (let i = 0, len = list.length; i < len; i++) {
+            item = list[i]
+            this.initRenderList(item)
+            formVal[item.name] = item.defaultValue || null
+            this.collectDep(item.dependence, item.name)
         }
 
-      }
-
-
-    }
-
-    if (props.value || props.defaultValue) {
-      this.formVal = Object.assign({}, this.formVal, props.value || props.defaultValue)
-    }
-  }
-  initDep() {
-    const formVal = this.formVal
-      , props = this.props
-      , list = props.renderList
-
-    let item = null
-    let dep = null
-    let prop = null
-
-    for (let i = 0, len = list.length; i < len; i++) {
-      item = list[i]
-      dep = item.dependence
-      if (!dep || !dep.shouldInit) continue
-      prop = dep.prop
-      let fistProp = typeof prop === 'string' ? prop : prop[0]
-      formVal[item.prop] = dep.handle(formVal[fistProp], fistProp, formVal)
-
-    }
-  }
-  UNSAFE_componentWillReceiveProps(nextP) {
-
-    if (nextP.value !== this.props.value) {
-      this.formVal = Object.assign({}, nextP.value)
-      this.forceUpdate()
-    }
-  }
-  handleInput(item, v) {
-    this.proxy(item, v.target.value)
-  }
-
-  // 处理表单值的修改
-  proxy(item, v) {
-    const key = item.prop
-
-    v = item.filter ? item.filter(v) : v
-
-    this.formVal[key] = v
-
-    // 根据依赖来控制其他项
-    const queue = this.depQueue[key]
-    queue && queue.map(item => {
-      this.formVal[item[0]] = item[1](v, key, this.formVal)
-    })
-
-    this.emit()
-  }
-  // 触发组件更新, 同时发送数据
-  emit() {
-    this.forceUpdate()
-    this.props.onChange(Object.assign({}, this.formVal))
-  }
-  render() {
-    const FORM = this.formVal
-      , props = this.props
-
-    return (
-      <div className='form-plugin'>
-        {
-          props.renderList.map((item, i) => (
-            <Cell
-              className={item.col === 2 ? 'col-2' : ''}
-              title={item.title || item.label}
-              key={item.prop}
-              titleWidth={props.titleWidth}
-              titleAlign={props.titleAlign || 'right'}
-              value={
-                <React.Fragment>
-                  {
-                    typeof item.type === 'function'
-                      ? item.type()
-                      : item.type === 'input'
-                        ? (<Input type='text'
-                          placeholder={item.placeholder || ''}
-                          value={FORM[item.prop]}
-                          disabled={typeof item.disabled === 'function' ? item.disabled() : item.disabled}
-                          onChange={this.handleInput.bind(this, item)}
-                        />)
-                        : null
-                  }
-                  {item.extendRender && item.extendRender()}
-                </React.Fragment>
-              } />
-          ))
+        if (props.value || props.defaultValue) {
+            this.formVal = Object.assign({}, this.formVal, props.value || props.defaultValue)
         }
+    }
 
-      </div>
-    );
-  }
+    /**
+     * @function initRenderList 根据item.type 选择不同的表单控件, 进一步封装, 并生成一个表单列表用于渲染
+     * 
+     * @param {object} item 
+     */
+    initRenderList(item) {
+        const compList = this.renderList
+        const type = item.type
+        if(typeof type === 'string') {
+          switch (type) {
+            case 'input':
+                compList.push(Pattern(Input, item.rules, this.returnRealValue(type, item.filter)))
+                break;
+            // case 'select':
+                // Comp = Pattern(Select,)
+                // break;
+            default:
+              break;
+          }
+        }
+        else {
+          const output = item.outputFilter
+          compList.push(item.needPattern ? Pattern(type, item.rules, this.returnRealValue(type, item.filter), typeof output === 'function' ? output : null) : type)
+        }
+        
+    }
+    returnRealValue(type, filter) {
+        return function (e, ...args) {
+          // 1. 优先用自己定义的 数据获取
+            if (filter && typeof filter === 'function') return filter(e, ...args)
+
+            switch (type) {
+                case 'input':
+                    return e.target.value
+                default:
+                    return e
+            }
+        }
+    }
+    /**
+     * @function collectDep 收集表单控件之间的互相依赖
+     * 
+     * @param {*} dep 
+     */
+    collectDep(dep, selfName) {
+        if (!dep) return
+        let names = dep.names
+        typeof names === 'string' && (names = [names])
+        if (!Array.isArray(names)) return
+        let name = null
+        for (let i = 0, len = names.length; i < len; i++) {
+            name = names[i]
+            !this.depQueue[name] && (this.depQueue[name] = [])
+
+            this.depQueue[name].push([selfName, dep.handle])
+        }
+    }
+    /**
+     * @function hook 动态更新
+     * 
+     * @param {props} nextP 
+     */
+    UNSAFE_componentWillReceiveProps(nextP) {
+        if (nextP.value !== this.props.value) {
+            this.formVal = Object.assign({}, nextP.value)
+            this.shouldChildCleanState = +new Date()
+            this.forceUpdate()
+        }
+        // 
+        nextP.renderList !== this.props.renderList && this.init(nextP)
+    }
+  
+
+    /**
+     * @function handleChange 接收来自Pattern组件的值, 已经 处理过, 直接接收就可以了
+     * 
+     * @param {*} item 
+     * @param {*} v 
+     */
+    handleChange(item, value) {
+        const key = item.name
+        this.formVal[key] = value
+
+        // 根据依赖来控制其他项
+        const queue = this.depQueue[key]
+        
+        queue && queue.forEach(item => {this.formVal[item[0]] = item[1](value, key, this.formVal)})
+
+        // 触发组件更新, 同时发送数据
+        this.forceUpdate()
+        this.props.onChange(Object.assign({}, this.formVal))
+    }
+    /**
+     * 
+     * @param {Component} Comp 
+     * @param {*} item 
+     */
+    renderFormItem(Comp, item) {
+        const {
+          name,
+          label,
+          type,
+          filter,
+          rules,
+          disabled,
+          needPattern,
+          ...props
+        } = item
+
+        return <Comp
+          {...props}
+            shouldCleanState={this.shouldChildCleanState}
+            emitChildApi={this.getChildPatternApi}
+            onChange={this.handleChange.bind(this, item)}
+            disabled={item.disabled ? (typeof item.disabled === 'function' ? item.disabled() : item.disabled) : false}
+            value={this.formVal[item.name]}
+        />
+    }
+    /**
+     * @function getChildPatternApi 接收form表单控件 发送的 验证 函数, 并存储
+     */
+    getChildPatternApi(fn) {
+        this.childPatternQueue.push(fn)
+    }
+
+    render() {
+        const renderList = this.props.renderList
+        if (!renderList.length) return
+        return (
+            <div className='form-plugin'>
+                {
+                    renderList.map((item, i) => (
+                        <Cell key={item.name} title={item.label} value={
+                            <React.Fragment>
+                                {this.renderFormItem(this.renderList[i], item)}
+                                {item.extendRender && item.extendRender()}
+                            </React.Fragment>
+                        } />
+                    ))
+                }
+            </div>
+        )
+    }
 }
 
 Form.defaultProps = {
-  defaultValue: null,
-  onChange: () => { },
-  renderList: []
+    onChange: () => { },
+    emitSubmitCheck: () => { },
+    renderList: []
 }
-
 Form.propTypes = {
-  defaultValue: PropTypes.object,
-  renderList: PropTypes.array
+    renderList: PropTypes.array
 }
-
 export default Form
