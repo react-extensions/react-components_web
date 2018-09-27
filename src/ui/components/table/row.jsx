@@ -31,7 +31,8 @@ class Row extends React.Component {
   clickRow(e){
     const props = this.props
     , {checkState, onRowClick, tr, rowIndex} = props
-    if(checkState !== 0) {
+    // 如果表格为 checkbox 或 radio， 则点击行时， 选中改行
+    if(checkState) {
       this.checked(e)
     }
     const fn = onRowClick
@@ -109,7 +110,7 @@ class Row extends React.Component {
       }
     }
 
-    this.initialized = true
+    // this.initialized = true
 
   }
 
@@ -128,14 +129,14 @@ class Row extends React.Component {
       , N_SYNC_EXPAND = N_P.syncData.expand || {}
 
 
-    function judge(o, n, c) {
+    function diff(o, n, c) {
       return o !== n && (o === c || n === c)
     }
     // 控制一下性能
     // 同步表格行数据
 
     /* HOVER */
-    if (judge(O_P.syncData.hover, N_P.syncData.hover, rowIndex)) {
+    if (diff(O_P.syncData.hover, N_P.syncData.hover, rowIndex)) {
       this.setState({ hoverIndex: N_P.syncData.hover })
     }
     /* CHECK */
@@ -154,13 +155,13 @@ class Row extends React.Component {
       }
 
     } else if (checkState === 2) {  // 单选
-      if (judge(O_SYNC_CHECK.index, N_SYNC_CHECK.index, rowIndex)) {
+      if (diff(O_SYNC_CHECK.index, N_SYNC_CHECK.index, rowIndex)) {
         this.setState({ checked: N_SYNC_CHECK.index === rowIndex })
       }
     }
 
     /* EXPAND */
-    if (judge(O_SYNC_EXPAND.index, N_SYNC_EXPAND.index, rowIndex)) {
+    if (diff(O_SYNC_EXPAND.index, N_SYNC_EXPAND.index, rowIndex)) {
       this.setState({ expandContent: N_SYNC_EXPAND.content, collapse: !(N_SYNC_EXPAND.index === rowIndex) })
     }
     // 同步此行高度
@@ -194,7 +195,7 @@ class Row extends React.Component {
 
   renderTdContentWrap(th, j, child) {
     return (
-      <div className={'u-td-content' + (th.width ? ' fill' : '')} ref={this.collectWidth.bind(this, j)}>
+      <div className={'u-td-content' + (th.width ? ' fill' : '') + (th.className? ` ${th.className}` : '')} ref={this.collectWidth.bind(this, j)}>
         {child}
       </div>
     )

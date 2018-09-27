@@ -1,5 +1,5 @@
 import React from 'react'
-import './table.scss'
+import './table.less'
 import Icon from '../icon/icon'
 import Row from './row'
 
@@ -10,7 +10,7 @@ import Row from './row'
  * @param fixedRows
  * @param columns = [
  *      {
- *          filter: function () {}  // 对表格中的数据进行操作, 参数为表格中的数据, 返回值将被显示
+ *          filters: function () {}  // 对表格中的数据进行操作, 参数为表格中的数据, 返回值将被显示
  *      },
  *     {
  *        type: 'index',
@@ -41,15 +41,16 @@ class Table extends React.Component {
       leftShadow: false,
       topShadow: false,
       syncData: { check: {} },
-      checkStatus: -1,
+      checkStatus: -1,  // -1 全不选中  0 部分  1全选
       fixedBottomHeight: 0,
       sortMap: { current: '', direction: 1 }
     }
 
+    this.trackEl = {current: null}
     this.tableWidth = { plain: 0, left: 0, right: 0 }
     this.thMinWidth = []
     this.checkedList = []
-    this.checkState = -1   // -1 全不选中  0 部分  1全选
+    this.checkState = null
     this.columns = {}
     this.widthList = []
 
@@ -65,13 +66,13 @@ class Table extends React.Component {
   }
   analyseCols() {/* 数据预处理 */
 
-    let colWidth = 0,
-      col = null
-    const columns = this.props.columns,
-      widthList = [],
-      fixedLeft = [],
-      fixedRight = [],
-      plain = []
+    let colWidth = 0
+    let col = null
+    const columns = this.props.columns
+    const widthList = []
+    const fixedLeft = []
+    const fixedRight = []
+    const plain = []
 
     for (let i = 0, len = columns.length; i < len; i++) {
       col = columns[i]
@@ -82,7 +83,15 @@ class Table extends React.Component {
         case 'radio':
           col.cannotExpand = true
           colWidth = col.width || 50
-          this.checkState = (col.type === 'checkbox' ? 1 : 2)
+          if(!this.checkState) {
+            this.checkState = (
+              col.type === 'checkbox'
+              ?  'checkbox'
+                : col.type === 'radio'
+              ? 'radio'
+                : null
+            )
+          }
           break;
         default:
           colWidth = col.width || 0
@@ -91,6 +100,7 @@ class Table extends React.Component {
           }
           break;
       }
+
       col.__i__ = i
 
       switch (col.fixed) {
@@ -142,7 +152,7 @@ class Table extends React.Component {
   checkedRow(row, isChecked, rowIndex) {
     const emit = this.props.onSelectRowChange
 
-    if (this.checkState === 2) { // 单选表格
+    if (this.checkState === 'radio') { // 单选表格
       emit([row])
       return
     }
@@ -250,7 +260,7 @@ class Table extends React.Component {
     // 记录  并调整  对应列的宽度
     this.widthList[data.index] = newWidth
     // 判断要不要显示水平轴 滚动条
-    this.analyXscroll(subDiff)
+    this.analyseXScroll(subDiff)
     // 把标志线归零 , 顺便触发整个更新
     this.setState({ signOffset: 0 })
   }
@@ -338,7 +348,7 @@ class Table extends React.Component {
 
     }) // End Map
 
-    this.analyXscroll(containerWidth - leftW - rightW - plainW)
+    this.analyseXScroll(containerWidth - leftW - rightW - plainW)
 
     this.tableWidth = { left: leftW, right: rightW, plain: plainW }
 
@@ -361,14 +371,14 @@ class Table extends React.Component {
   }
   // 判断有没有竖直方向滚动条
   analyseScroll() {
-    const track = this.trackEl
+    const track = this.trackEl.current
     if (track) {
       this.yScrollBar = track.offsetWidth - track.clientWidth
       this.xScrollBar = track.offsetHeight - track.clientHeight
     }
 
   }
-  analyXscroll(diff) {
+  analyseXScroll(diff) {
     this.xScrollBar = diff < 0 ? 17 : 0
   }
 
@@ -423,7 +433,7 @@ class Table extends React.Component {
                 return (
                   <th className={'u-th' + textAlign} key={i} >
                     {/* 如果不加这一层div, 在ie中, th td内元素的绝对定位会出问题(ie中应该不能将td th作为绝对定位的参照节点, 设置position:reletive无效) */}
-                    <div className='u-th-content__wrap'>
+                    <div className={'u-th-content__wrap ' + (th.className||'')}>
                       {
                         th.type === 'checkbox' ? <Icon type={checkStatus === 0 ? 'half-checked' : checkStatus > 0 ? 'check-fill' : 'check'} onClick={this.checkedAll} />
                           : (th.type === 'expand' || th.type === 'radio') ? null
@@ -479,6 +489,11 @@ class Table extends React.Component {
 
     return this.sortedRows
   }
+  /**
+   * 
+   * @param cols 
+   * @param tType 表格类型 0 主要表格 -1, 1 固定表格
+   */
   renderBody(cols, columns, tType, needSync) {
     const PROPS = this.props
       , { zebra, emptyTip, loading } = PROPS
@@ -490,34 +505,43 @@ class Table extends React.Component {
     }
 
     return (
-      loading ? tType === 0 ? <Icon type='loading' /> : null :
-        (rows && rows.length > 0) ? (
-          <table border='0' cellSpacing='0' cellPadding={0} >
-            {columns}
-            <tbody>
-              {rows.map((tr, i) => (
-                <Row
-                  key={'u-tr' + i}
-                  tr={tr}
-                  rowIndex={i}
-                  checkState={this.checkState || 0}
-                  columns={cols}
-                  bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                  isFixed={tType !== 0}
-                  isBottom={tType === -2}
-                  checkStatus={checkStatus}
-                  widthList={this.widthList}
-                  collectTdWidth={this.collectTdWidth}
-                  syncData={syncData}
-                  syncRow={needSync ? this.syncRow.bind(this) : null}
-                  onChecked={this.checkedRow}
-                  onRowClick={this.props.onRowClick}
-                />
-              ))}
-            </tbody>
-          </table>
-        ) : tType === 0 ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) : null
-
+      <React.Fragment>
+        { loading && tType === 0 ? <Icon type='loading' /> : null }
+        {
+          (rows && rows.length > 0) 
+          ? (
+            <table border='0' cellSpacing='0' cellPadding={0} >
+              {columns}
+              <tbody>
+                {rows.map((tr, i) => (
+                  <Row
+                    key={'u-tr' + i}
+                    tr={tr}
+                    rowIndex={i}
+                    checkState={this.checkState}
+                    columns={cols}
+                    bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
+                    isFixed={tType !== 0}
+                    isBottom={tType === -2}
+                    checkStatus={checkStatus}
+                    widthList={this.widthList}
+                    collectTdWidth={this.collectTdWidth}
+                    syncData={syncData}
+                    syncRow={needSync ? this.syncRow.bind(this) : null}
+                    onChecked={this.checkedRow}
+                    onRowClick={this.props.onRowClick}
+                  />
+                ))}
+              </tbody>
+            </table>
+          ) 
+          : (
+              (tType === 0 && !loading)
+              ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>) 
+              : null
+            ) 
+        }
+      </React.Fragment>
     )
   }
   renderColumns(cols) {
@@ -584,7 +608,7 @@ class Table extends React.Component {
 
           <div className='u-body__track'
             style={{ height: (scrollY || 'auto') + 'px', padding: `0 ${R_W}px 0 ${L_W}px` }}
-            ref={el => this.trackEl = el}
+            ref={this.trackEl}
             onScroll={this.syncScroll}
           >
             <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }}>{plainTable.body}</div>

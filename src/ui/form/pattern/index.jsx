@@ -1,24 +1,40 @@
 import React from 'react'
 import './style.css'
 
+  // const NewInput = Pattern(Input, {
+  //   required: true,
+  //   filter: v => v.replace(/\d/g, ''),
+  //   pattern: v => {
+  //     // return v > 0
+  //     return {
+  //       result: v> 0,
+  //       tip: '输入的值必须大于 0'
+  //     }
+  //   },
+  //   tip: {
+  //     required: '该项必填'|| (()=> {alert('该项必填')}),
+  //     success: 'success' || (() => {alert('success')}),
+  //     error: '出错' || (()=> {alert('出错')})
+  //   },
+  // })
+  //
+  // class form extends Component{
+  //   getInterfaces(obj) {
+  //     obj.clearState()  // 清除验证提示
+  //     obj.pattern()     // 强制验证, 会返回验证结果 false || true
+  //   }
+  //   render() {
+  //     return <NewInput interfaces={this.getInterfaces.bind(this)}/>
+  //   }
+  // }
 
-/**
- * options 为 对象格式, 键有:
- * 
- * @key {function} filter  用于在onChange时 拦截输入数据, 需要返回一个处理过的新值
- *  例: v => v.replace(/\d/g, '')
- * @key {RegExp | function} pattern 
- * @key {object} tip 
- *  例: {success: <func|string>, error: <>, required: <>}
- * @key {bool} required 
- */
 
-function extendFunc(
-  Component, 
-  options,
-   getRealValue
-   ) {
+/*
+*
+* 表单的验证组件, 使用如上, 返回一个新的组件 , 使用如上
+* */
 
+function pattern(Component, options ) {
 
   class FormPattern extends React.PureComponent {
     constructor(props) {
@@ -36,8 +52,10 @@ function extendFunc(
      * 1. 将验证函数发送到外部, 给父组件调用
      */
     componentDidMount() {
-      this.props.emitChildApi(() => {
-        return this.pattern.call(this, this.state.value, 'blur')
+      const emit = this.props.interfaces
+      emit && emit({
+        pattern: () => this.pattern.call(this, this.state.value, 'blur'),
+        clearState: ()=> this.setState({tip: null})
       })
     }
 
@@ -51,6 +69,8 @@ function extendFunc(
 
       if (nextP.value !== this.props.value) {
         this.setState({ value: nextP.value })
+        this.pattern(nextP.value, 'blur')
+
       }
       // 清除提示状态
       const nShould = nextP.shouldCleanState
@@ -65,10 +85,10 @@ function extendFunc(
      * 
      * @function
      *    处理Change事件
-     * @param {event} e 
+     * @param {value} value 
      */
-    handleChange(e, ...args) {
-      let value = getRealValue(e, ...args)
+    handleChange(value) {
+      value = String(value)
 
       const filter = options && options.filter
       if (filter && typeof filter === 'function') value = filter(value);
@@ -115,7 +135,8 @@ function extendFunc(
 
       // 2. 如果输入框没有值， 只需 验证是否必填项, 
       //    如果必填， 则给出错误提示， 否则直接返回， 不再执行下面的验证
-      if (!value) {
+      const rP = options.requiredPattern
+      if (rP ? !rP(value) : !value ) {
         if (options.required) {
           const requiredTip = tip && tip.required
           if (typeof requiredTip === 'function') {
@@ -158,6 +179,7 @@ function extendFunc(
         // pattern 函数验证错误, 如果返回的是 {result: false, failTip: ''}
         // 根据failTip 给出提示
         if (patternResult && patternResult.tip) {
+
           newState.tip = { text: patternResult.tip, type: 'error' }
           this.setState(newState)
           return false
@@ -183,8 +205,7 @@ function extendFunc(
 
     render() {
       const state = this.state
-      const { emitChildApi, shouldCleanState, ...proxyProps } = this.props
-      
+      const {interfaces, ...proxyProps} = this.props
       return (
         <div className={'input-pattern-wrap' + (state.tip ? (' ' + state.tip.type) : '')}>
           <Component
@@ -203,9 +224,9 @@ function extendFunc(
 
   FormPattern.defaultProps = {
     onChange: () => { },
-    emitChildApi: () => { }
   }
+
   return FormPattern
 }
 
-export default extendFunc
+export default pattern

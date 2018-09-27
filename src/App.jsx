@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import { Cell, Input } from '@ui'
-import Pattern from '@ui/function-ui/form-pattern'
+import Pattern from '@ui/function-ui/form/pattern'
 import Form from '@ui/function-ui/form'
+import { DatePicker  } from 'antd'
+import Filter from '@ui/function-ui/form/filter'
+
+const { RangePicker } = DatePicker
+
 
 const renderList = [
   {
@@ -25,15 +30,7 @@ const renderList = [
 
   }
 ]
-
-class App extends Component {
-  constructor() {
-    super()
-
-  }
-
-  render() {
-    const PatternInput = Pattern(Input, {
+const PatternInput = Pattern(Input, {
       required: true,
       filter: v => v.replace(/\D/g, ''),
       pattern: v => {
@@ -48,11 +45,33 @@ class App extends Component {
       }
     })
 
+    const Picker = FormItem(RangePicker, v=>v, (v,v2)=>v2)
+
+class App extends Component {
+  constructor() {
+    super()
+
+    this.state={
+      value: []
+    }
+
+  }
+  handleChange(v) {
+    console.log(v)
+    this.setState({
+      value: v
+    })
+  }
+  render() {
+    
+
     return (
       <div>
 
-        <Form renderList={renderList} />
+        {/* <Form renderList={renderList} /> */}
 
+        {/* <PatternInput/> */}
+        <Picker onChange={this.handleChange.bind(this)} value={this.state.value}/>
       </div>
     )
   }
