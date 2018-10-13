@@ -1,3 +1,15 @@
+.title() {
+  color: rgba(0,0,0,0.65);
+  float: left;
+  white-space: nowrap;
+  padding:0 6px;
+  line-height: 32px;
+}
+.value() {
+  display: table-cell;
+  vertical-align: middle;
+  width: 100%;
+}
 
 .cell{
   margin-bottom:16px;
@@ -9,18 +21,14 @@
     overflow: hidden;
     height:0;
   }
+  &.normal .cell-title,
+  &.reverse .cell-value{
+    .title()
+  }
+  &.normal .cell-value,
+  &.reverse .cell-title{
+    .value()
+  }
 }
 
-.cell-title{
-  color: rgba(0,0,0,0.65);
-  float: left;
-  white-space: nowrap;
-  padding:0 6px;
-  line-height: 32px;
-}
 
-.cell-value{
-  display: table-cell;
-  vertical-align: middle;
-  width: 100%;
-}

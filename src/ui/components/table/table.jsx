@@ -2,12 +2,17 @@ import React from 'react'
 import './table.less'
 import Icon from '../icon/icon'
 import Row from './row'
+import {
+  CHECK_TYPE
+} from './const-data'
 
 /**
  * @param rows[Array]    {表格数据}
  * @param tbodyHeight     {tbody高度}
  * @param zebra[Boolean]  {表格行斑马线显示}
  * @param fixedRows
+ * @prop {fn} onSortChange 表格排序变化
+ * @prop {boolean} databaseSort 是否启用数据库排序, 默认 false(表格根据当前数据自动排序)
  * @param columns = [
  *      {
  *          filters: function () {}  // 对表格中的数据进行操作, 参数为表格中的数据, 返回值将被显示
@@ -32,6 +37,9 @@ import Row from './row'
  * 
  */
 
+const ASC = 'ASC'  //正序
+const DESC = 'DESC' //反序
+
 class Table extends React.Component {
   constructor(props) {
     super(props)
@@ -39,18 +47,19 @@ class Table extends React.Component {
     this.state = {
       signOffset: 0,  // 调整表格列宽时, 指示器样式
       leftShadow: false,
+      rightShadow: true,
       topShadow: false,
       syncData: { check: {} },
       checkStatus: -1,  // -1 全不选中  0 部分  1全选
       fixedBottomHeight: 0,
-      sortMap: { current: '', direction: 1 }
+      sortMap: { current: '', order: ASC } // 表格排序, current 为当前行的prop. order  ASC正序 DESC 反序
     }
 
     this.trackEl = {current: null}
-    this.tableWidth = { plain: 0, left: 0, right: 0 }
+    this.tableWidth = { plain: 0, left: 0, right: 0 , total: 0}
     this.thMinWidth = []
     this.checkedList = []
-    this.checkState = null
+    this.checkState = CHECK_TYPE.NONE
     this.columns = {}
     this.widthList = []
 
@@ -83,13 +92,16 @@ class Table extends React.Component {
         case 'radio':
           col.cannotExpand = true
           colWidth = col.width || 50
-          if(!this.checkState) {
+          /*
+          * 如果整个表格还没定义check_type
+          * */
+          if(this.checkState === CHECK_TYPE.NONE) {
             this.checkState = (
               col.type === 'checkbox'
-              ?  'checkbox'
+              ?  CHECK_TYPE.CHECKBOX
                 : col.type === 'radio'
-              ? 'radio'
-                : null
+              ? CHECK_TYPE.RADIO
+                : CHECK_TYPE.NONE
             )
           }
           break;
@@ -152,7 +164,7 @@ class Table extends React.Component {
   checkedRow(row, isChecked, rowIndex) {
     const emit = this.props.onSelectRowChange
 
-    if (this.checkState === 'radio') { // 单选表格
+    if (this.checkState === CHECK_TYPE.RADIO) { // 单选表格
       emit([row])
       return
     }
@@ -188,18 +200,18 @@ class Table extends React.Component {
   /* ------------------- */
   syncScroll(e) {
     const left = e.currentTarget.scrollLeft
+    // 同步 头部滚动， 如果由固定在下方的表格， 也同步滚动
     this.headerTrack.scrollLeft = left
     this.bottomTable && (this.bottomTable.scrollLeft = left)
 
     const top = e.currentTarget.scrollTop
     this.leftTbody && (this.leftTbody.scrollTop = top)
     this.rightTbody && (this.rightTbody.scrollTop = top)
-
-    const { topShadow, leftShadow } = this.state
-
-      ; (topShadow !== (top > 0)) && this.setState({ topShadow: !topShadow })
-
-      ; (leftShadow !== (left > 0)) && this.setState({ leftShadow: !leftShadow })
+    // console.log(this.container.clientWidth + left, this.tableWidth.total  )
+    const { topShadow, leftShadow, rightShadow } = this.state
+    ; (topShadow !== (top > 0)) && this.setState({ topShadow: !topShadow })
+    ; this.columns.fixedLeft && (leftShadow !== (left > 0)) && this.setState({ leftShadow: !leftShadow })
+    ; this.columns.fixedRight && (rightShadow !== (this.container.clientWidth + left !== this.tableWidth.total)) && this.setState({ rightShadow: !rightShadow })
 
   }
   /* ------------------- */
@@ -242,12 +254,12 @@ class Table extends React.Component {
 
     newWidth < minWidth && (newWidth = minWidth)
 
-    const { left, right, plain } = this.tableWidth
+    // const { left, right, plain } = this.tableWidth
     const containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)// 容器宽度
     //位移差, 调整了的宽度
     let diff = newWidth - oldWidth
     //                   容器宽度 - 新的总宽度
-    let subDiff = containerWidth - (left + right + plain + diff)
+    let subDiff = containerWidth - (this.tableWidth.total + diff)
 
 
     if (subDiff > 0) {  // 如果新总宽度 小于容器宽度, 禁止缩小
@@ -257,6 +269,8 @@ class Table extends React.Component {
 
     // 记录  并调整表格总宽度
     this.tableWidth[data.type] += diff
+    this.tableWidth.total+= diff
+
     // 记录  并调整  对应列的宽度
     this.widthList[data.index] = newWidth
     // 判断要不要显示水平轴 滚动条
@@ -350,7 +364,7 @@ class Table extends React.Component {
 
     this.analyseXScroll(containerWidth - leftW - rightW - plainW)
 
-    this.tableWidth = { left: leftW, right: rightW, plain: plainW }
+    this.tableWidth = { left: leftW, right: rightW, plain: plainW , total: leftW+rightW+plainW}
 
     this.forceUpdate()
   }
@@ -414,10 +428,15 @@ class Table extends React.Component {
 
   }
   //* 表格排序
-  sortData(key) {
+  sortData(key, colConfig) {
     const map = this.state.sortMap
-    const newState = { sortMap: { current: key, direction: map.current === key ? -map.direction : 1 } }
+    const order = map.current === key ? (map.order === ASC ? DESC : ASC) : ASC
+
+    const newState = { sortMap: { current: key, order: order} }
     this.setState(newState)
+
+    const fn = this.props.onSortChange
+    fn && fn({prop: key, order: order }, colConfig)
   }
   renderHeader(cols, columns) {
     const state = this.state
@@ -446,8 +465,8 @@ class Table extends React.Component {
                                   {
                                     th.needSort && (
                                       <span
-                                        onClick={this.sortData.bind(this, th.prop)}
-                                        className={'sort-sign ' + (sortMap.current === th.prop ? (sortMap.direction > 0 ? 'forward' : 'reverse') : 'un-active')}
+                                        onClick={this.sortData.bind(this, th.prop, th)}
+                                        className={'sort-sign ' + (sortMap.current === th.prop ? (sortMap.order === ASC ? 'forward' : 'reverse') : 'un-active')}
                                       >
                                         <Icon type='down-fill' className='up-arrow' />
                                         <Icon type='down-fill' className='down-arrow' />
@@ -471,6 +490,9 @@ class Table extends React.Component {
       </table>
     )
   }
+  /*
+  * 排序rows 并返回新的rows
+  * */
   sortRows(rows) {
     // 如果排序规则没变, 表格数据没变, 且有 已经排序过的 rows数据, 则直接用已经排序过的
 
@@ -480,7 +502,7 @@ class Table extends React.Component {
       this.sortMap = this.state.sortMap
 
       const match = this.sortMap.current
-      const rule = this.sortMap.direction
+      const rule = this.sortMap.order === ASC ? 1 : -1
 
       this.sortedRows = rows.sort((p, n) => {
         return (n[match] - p[match]) * rule
@@ -500,7 +522,7 @@ class Table extends React.Component {
       , { syncData, checkStatus, sortMap } = this.state
     let rows = tType === -2 ? PROPS.fixedRows : PROPS.rows
     // 表格排序
-    if (sortMap.current && rows && rows.length > 0 && tType === 0) {
+    if (!PROPS.databaseSort && sortMap.current && rows && rows.length > 0 && tType === 0) {
       rows = this.sortRows(rows)
     }
 
@@ -593,30 +615,43 @@ class Table extends React.Component {
       , R_W = TW.right
       , B_H = fixedRows ? fixedBottomHeight : 0
       , bottomTable = fixedRows ? this.renderBottom() : null
+      // 用于定义 左右两侧固定列表格高度
       , fixedTableHeight = (hasFixed && scrollY) ? (scrollY - (this.xScrollBar || 0) - B_H) + 'px' : 'auto'
+      // 如果有右侧固定列表格， 则渲染占位符
+      , rightPlaceholder = rightTable && <div className={'u-table-right-placeholder'} style={{width: `${R_W}px`}}></div>
 
     return (
+      /* 总容器 */
       <div className={'u-table__container ' + (this.props.className || '')} ref={el => { this.container = el }}>
+        {/* 调整宽度的标记线 */}
         <div className="resize-col-sign" style={{ display: signOffset ? 'block' : 'none', left: signOffset }}></div>
-        <div className='u-plain__table'>
+
+        {/* 表格的主体 */}
+        <div className='u-plain__table u-main__table'>
           <div className={'u-header__track ' + (topShadow ? 'shadow ' : '')}
-            style={{ padding: `0 ${R_W}px 0 ${L_W}px`, overflowY: this.yScrollBar ? 'scroll' : 'hidden' }}
+            style={{ paddingLeft: `${L_W}px`, overflowY: this.yScrollBar ? 'scroll' : 'hidden' }}
             ref={el => this.headerTrack = el}
           >
             <div className="u-table-header" style={{ width: P_W && (P_W + 'px') }}>{plainTable.header}</div>
+            {/* 右侧固定列占位符 */}
+            {rightPlaceholder}
           </div>
 
           <div className='u-body__track'
-            style={{ height: (scrollY || 'auto') + 'px', padding: `0 ${R_W}px 0 ${L_W}px` }}
+            style={{ height: (scrollY || 'auto') + 'px', paddingLeft: `${L_W}px` }}
             ref={this.trackEl}
             onScroll={this.syncScroll}
           >
             <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }}>{plainTable.body}</div>
-            {/* 外层(track)的padding-bottom 在 ie中 无效, 需要使用这种方法*/}
             {/* padding-right也无效(⊙o⊙)？ */}
+            {/* 右侧固定列占位符 */}
+            {rightPlaceholder}
+            {/* 外层(track)的padding-bottom 在 ie中 无效, 需要使用这种方法*/}
             {B_H > 0 && <div style={{ height: B_H }}></div>}
           </div>
         </div>
+
+        {/* 左固定表格 */}
 
         {leftTable &&
           <div className={'u-fixed-left__table ' + (leftShadow ? 'shadow ' : '')} style={{ width: L_W && (L_W + 'px') }}>
@@ -629,6 +664,9 @@ class Table extends React.Component {
             </div>
           </div>
         }
+
+        {/* 右固定表格 */}
+
         {rightTable &&
           <div className={'u-fixed-right__table ' + (rightShadow ? 'shadow ' : '')} style={{ width: R_W && (R_W + 'px'), right: (this.yScrollBar || 0) + 'px' }}>
             <div className={'u-table-header ' + (topShadow ? 'shadow ' : '')}>{rightTable.header}</div>
@@ -640,6 +678,9 @@ class Table extends React.Component {
             </div>
           </div>
         }
+
+        {/* 下方固定表格 */}
+
         {bottomTable &&
           <div className='u-fixed-bottom__table' style={{ bottom: (this.xScrollBar || 0), right: (this.yScrollBar || 0) }}>
             <div className='u-plain__table'
@@ -649,6 +690,7 @@ class Table extends React.Component {
               <div className="u-table-body" style={{ width: P_W && (P_W + 'px') }} >
                 {bottomTable.plain}
               </div>
+              {rightPlaceholder}
             </div>
 
             {bottomTable.left &&
@@ -656,6 +698,14 @@ class Table extends React.Component {
                 ref={this.fixedBottomHeight}
                 style={{ width: L_W && (L_W + 'px') }}>
                 <div className="u-table-body">{bottomTable.left}</div>
+              </div>
+            }
+
+            {bottomTable.right &&
+              <div className={'u-fixed-right__table ' + (rightShadow ? 'shadow ' : '')}
+                   ref={this.fixedBottomHeight}
+                   style={{ width: R_W && (R_W + 'px') }}>
+                <div className="u-table-body">{bottomTable.right}</div>
               </div>
             }
 
@@ -669,7 +719,8 @@ class Table extends React.Component {
 Table.defaultProps = {
   columns: [],
   fixedRows: null,
-  rows: null
+  rows: null,
+  databaseSort: false  // 是否使用数据库排序, 默认是表格自动排序
 }
 
 export default Table

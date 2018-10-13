@@ -46,17 +46,26 @@ function pattern(Component, options ) {
 
       this.handleBlur = this.handleBlur.bind(this)
       this.handleChange = this.handleChange.bind(this)
+
+      this.patternApi = () => this.pattern.call(this, this.state.value, 'blur')
+      this.clearStateApi = ()=> this.setState({tip: null})
+    }
+    emit(type) {
+      const emit = this.props.interfaces
+      emit && emit({
+        pattern: this.patternApi ,
+        clearState: this.clearStateApi
+      }, type)
     }
     /**
      * @function componentDidMount 
      * 1. 将验证函数发送到外部, 给父组件调用
      */
     componentDidMount() {
-      const emit = this.props.interfaces
-      emit && emit({
-        pattern: () => this.pattern.call(this, this.state.value, 'blur'),
-        clearState: ()=> this.setState({tip: null})
-      })
+      this.emit(true)
+    }
+    componentWillUnmount() {
+      this.emit(false)
     }
 
     /**

@@ -10,7 +10,7 @@ import './style/reset.less'
 // import Radio from './components/radio/radio'
 import Table from './components/table/table'
 // import Icon from './components/icon/icon'
-import Cell from './components/cell/cell'
+import Cell from './components/cell'
 import Input from './components/input'
 import Tab from './components/tab/tab'
 

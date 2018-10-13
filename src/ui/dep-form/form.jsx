@@ -11,14 +11,8 @@ class Form extends Component {
     super(props)
     this.getInterfaces = this.getInterfaces.bind(this)
   }
-  getInterfaces(obj, type) {
-    if(type) {
-      clearStateQueue.push(obj.clearState)
-      patternQueue.push(obj.pattern)
-    } else {
-      clearStateQueue.splice(clearStateQueue.indexOf(obj.clearState),1)
-      patternQueue.splice(patternQueue.indexOf(obj.pattern),1)
-    }
+  getInterfaces(name, dependence) {
+
 
   }
   render() {

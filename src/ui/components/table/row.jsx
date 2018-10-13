@@ -1,6 +1,10 @@
 import React from 'react'
 import Icon from '../icon/icon'
 import ExpandRow from './expand-row'
+import {
+  CHECK_TYPE
+} from './const-data';
+
 /**
  * 有 固定列 (有没有 syncRow)  需同步 ==>>>>>
  * hover  同步
@@ -18,7 +22,7 @@ class Row extends React.Component {
       expandTrHeight: 0
     }
     this.checked = this.checked.bind(this)
-    this.clickRow = this.clickRow.bind(this)
+    // this.clickRow = this.clickRow.bind(this)
     // this.collectWidth = this.collectWidth.bind(this)
 
     this.tdWidthList = []
@@ -28,15 +32,15 @@ class Row extends React.Component {
     }
 
   }
-  clickRow(e){
+  clickRow(colIndex, prop, e){
     const props = this.props
     , {checkState, onRowClick, tr, rowIndex} = props
     // 如果表格为 checkbox 或 radio， 则点击行时， 选中改行
-    if(checkState) {
+    if(checkState !== CHECK_TYPE.NONE) {
       this.checked(e)
     }
     const fn = onRowClick
-    fn && fn(e, tr, rowIndex)
+    fn && fn(e, tr, rowIndex, prop, colIndex)
 
   }
   // 具有多选功能的表格
@@ -139,8 +143,9 @@ class Row extends React.Component {
     if (diff(O_P.syncData.hover, N_P.syncData.hover, rowIndex)) {
       this.setState({ hoverIndex: N_P.syncData.hover })
     }
+
     /* CHECK */
-    if (checkState === 1) { // 多选
+    if (checkState === CHECK_TYPE.CHECKBOX) { // 多选
 
       if (N_STATUS !== O_STATUS) { // table全选
         if (N_STATUS === 1) {
@@ -154,7 +159,7 @@ class Row extends React.Component {
         this.setState({ checked: N_SYNC_CHECK.checked })
       }
 
-    } else if (checkState === 2) {  // 单选
+    } else if (checkState === CHECK_TYPE.RADIO) {  // 单选
       if (diff(O_SYNC_CHECK.index, N_SYNC_CHECK.index, rowIndex)) {
         this.setState({ checked: N_SYNC_CHECK.index === rowIndex })
       }
@@ -222,7 +227,12 @@ class Row extends React.Component {
     return (
       this.props.columns.map((th, j) => {
         const textAlign = th.type ? ' center' : (th.align ? (' '+ th.align) : '')
-          return(<td key={j} className={'u-td'+ textAlign}>{this.renderTdContent(th, j)}</td>)
+          return(
+            <td key={j}
+                className={'u-td'+ textAlign}
+                onClick={this.clickRow.bind(this, j, th.prop)}
+            >{this.renderTdContent(th, j)}</td>
+          )
       })
     )
   }
@@ -239,7 +249,6 @@ class Row extends React.Component {
           <tr className={'u-tr ' + (bgColor || '') + ((hoverIndex === rowIndex || checked) ? ' hover' : '')}
             onMouseEnter={() => this.toggleRowBG(1)}
             onMouseLeave={() => this.toggleRowBG(-1)}
-            onClick={this.clickRow}
           >
             {this.mapRow()}
           </tr>
