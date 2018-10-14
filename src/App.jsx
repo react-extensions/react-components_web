@@ -1,65 +1,34 @@
 import React, { Component } from 'react';
-import { Cell, Input } from '@ui'
-import Pattern from '@ui/function-ui/form/pattern'
-import Form from '@ui/function-ui/form'
-import { DatePicker  } from 'antd'
-import Filter from '@ui/function-ui/form/filter'
+import Input from '@comps/input'
+import Form from '@comps/form'
+import Item from '@comps/item'
+import Label from '@comps/label'
+import {filter} from '@ui'
+import InputTwo from '@comps/input-2'
 
-const { RangePicker } = DatePicker
+
+const Finput = filter(Input, {
+  formatOutputValue: e=> e.target.value
+})
 
 
-const renderList = [
-  {
-    type: 'input',
-    disabled: () => { },
-    label: 'name',
-    rules: {
-      required: true,
-      filter: v => v.replace(/\D/g, ''),
-      pattern: v => {
-        // console.log(/\D/g.test(v), v)
-        return /\d/g.test(v)
-      },
+function handleDepChange(b, v) {
+  return parseInt(v)+1
+}
 
-      tip: {
-        error: '没有数字',
-        // success: 'crract'
-        required: 'bixu'
-      }
-    }
-
-  }
-]
-const PatternInput = Pattern(Input, {
-      required: true,
-      filter: v => v.replace(/\D/g, ''),
-      pattern: v => {
-        // console.log(/\D/g.test(v), v)
-        return /\d/g.test(v)
-      },
-
-      tip: {
-        error: '没有数字',
-        // success: 'crract'
-        required: 'bixu'
-      }
-    })
-
-    const Picker = FormItem(RangePicker, v=>v, (v,v2)=>v2)
 
 class App extends Component {
   constructor() {
     super()
-
-    this.state={
-      value: []
+    this.state = {
+      // value: ''
     }
+    
 
   }
-  handleChange(v) {
-    console.log(v)
+  onChange(e) {
     this.setState({
-      value: v
+      value: e
     })
   }
   render() {
@@ -67,14 +36,46 @@ class App extends Component {
 
     return (
       <div>
+        rawInput
+        {/* <InputTwo onChange={this.onChange.bind(this)} value={this.state.value}/> */}
+        <br/>
+        
+        username:
+        <Item  >
+           <Label name='username'>
+            <Finput onChange={this.onChange.bind(this)} value={this.state.value} />
+          </Label>
+        </Item>
+        <br/>
+        a:
+        <Item >
+          <Label 
+          key='a' 
+          name='a' 
+          dependence={['b']} 
+          onDepChange={handleDepChange}
+          rules= {{}}
+          >
+            <Finput value=''/>
+          </Label>
+        </Item>
+        <br/>
+        b:
+        <Item >
+          <Label name='b' >
+            <Finput value=''/>
+          </Label>
+        </Item>
 
-        {/* <Form renderList={renderList} /> */}
-
-        {/* <PatternInput/> */}
-        <Picker onChange={this.handleChange.bind(this)} value={this.state.value}/>
       </div>
     )
   }
 }
 
-export default App;
+function format(value, key) {
+  return {
+    // username: 
+  }
+}
+
+export default Form(App, format);
