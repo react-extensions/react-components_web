@@ -1,0 +1,27 @@
+.input-pattern-wrap{
+  /* padding-bottom:10px; */
+  position: relative;
+}
+.input-tip{
+  font-size: 14px;
+  line-height:1;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+}
+
+.input-tip.success{
+  color: #28a745;
+}
+
+.input-tip.error{
+  color: #dc3545;
+}
+
+.input-pattern-wrap.success .i-plain-input{
+  border-color: #28a745;
+}
+.input-pattern-wrap.error .i-plain-input {
+  border-color: #dc3545;
+}

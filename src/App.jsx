@@ -5,16 +5,22 @@ import Item from '@comps/item'
 import Label from '@comps/label'
 import {filter} from '@ui'
 import InputTwo from '@comps/input-2'
-
+import pattern from '@comps/pattern'
 
 const Finput = filter(Input, {
   formatOutputValue: e=> e.target.value
 })
 
+const Pinput = pattern(Finput, {
+  required: true,
+    filter: v => v.replace(/\D/g, ''),
+  
+})
 
 function handleDepChange(b, v) {
   return parseInt(v)+1
 }
+
 
 
 class App extends Component {
@@ -24,7 +30,11 @@ class App extends Component {
       // value: ''
     }
     
-
+  }
+  componentDidMount() {
+    Form.onSubmit = function(v) {
+      console.log(v)
+    }
   }
   onChange(e) {
     this.setState({
@@ -38,7 +48,9 @@ class App extends Component {
       <div>
         rawInput
         {/* <InputTwo onChange={this.onChange.bind(this)} value={this.state.value}/> */}
+        <Pinput/>
         <br/>
+
         
         username:
         <Item  >

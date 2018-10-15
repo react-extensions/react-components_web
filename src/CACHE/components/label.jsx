@@ -19,7 +19,6 @@ class Label extends Component {
     }
 
     this.onChange = this.onChange.bind(this)
-    this.onKeyPress = this.onKeyPress.bind(this)
     this.onDepChange = this.onDepChange.bind(this)
   }
   componentDidMount() {
@@ -34,9 +33,6 @@ class Label extends Component {
       subscribeDepChange: this.onDepChange,
     })
 
-  }
-  getChildProps() {
-    return this.props.children.props
   }
   /**
    * @function - 当该组件的依赖项发生改变, 会触发此函数, 
@@ -66,22 +62,8 @@ class Label extends Component {
     this.props.onChange(this.props.name, v, this.props.key)
 
     // 触发绑定在组件 自身上的 onChange
-    const rawOnChange = this.getChildProps().onChange
+    const rawOnChange = this.props.children.props.onChange
     rawOnChange && rawOnChange(v)
-  }
-  /**
-   * @function - 在表单上处理onKeyPress, 主要用于处理 点击 enter 提交
-   * 
-   */
-  onKeyPress(e) {
-     // 触发绑定在组件 自身上的 onChange
-    const rawOnKeyPress = this.getChildProps().rawOnKeyPress
-    rawOnKeyPress && rawOnKeyPress(e)
-    
-    if(e.nativeEvent.keyCode !== 13 || e.ctrlkey || e.altKey) return
-    
-    this.props.onSubmit()
-
   }
   // changeValue(v) {
   //   const cValue = this.state.value
@@ -95,11 +77,7 @@ class Label extends Component {
         Object.assign(
           {}, 
           children.props, 
-          {
-            onChange: this.onChange,
-            value: this.state.value,
-            onKeyPress: this.onKeyPress
-          }
+          {onChange: this.onChange, value: this.state.value}
         )
       )
     )
