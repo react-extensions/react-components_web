@@ -1,5 +1,5 @@
 const React = require('react')
-require('./tab.scss')
+require('./tab.less')
 
 // props
 // active 初始选中
@@ -26,11 +26,10 @@ class Tab extends React.Component {
         const {tabList} = this.props
         const {active} = this.state
         return (
-            <ul className='tab-group clearfix'>
+            <ul className='tab-group'>
               {
                 tabList.map((item, i) => (
-                  <li className={'tab-item pointer ' + (i === 0 ? 'first ' : '') + (active === i ? 'active ' : '')}
-                  
+                  <li className={'tab-item pointer ' + (active === i ? 'active ' : '')}
                    key={i} 
                    onClick={this.choose.bind(this, i)}>{item}</li>
                 ))

@@ -5,23 +5,11 @@ import './style.less'
 class PlainInput extends React.PureComponent {
   constructor(props) {
     super(props)
-
     this.state = {
-      proxyProps: this.proxyProps(props),
-      value: ''
+      value: props.value || ''
     }
+  }
 
-  }
-  /**
-  * 
-  * @function
-  * 代理props
-  */
-  proxyProps(props) {
-    const subProps = Object.assign({}, props)
-    delete subProps.value
-    return subProps
-  }
   /**
    * 
    * @function lifeHook
@@ -29,23 +17,20 @@ class PlainInput extends React.PureComponent {
    * 监听父组件 数据变化, 
    */
   UNSAFE_componentWillReceiveProps(nextP) {
-    const newState = { proxyProps: this.proxyProps(nextP) }
-
-
     if (nextP.value !== this.props.value) {
-      newState.value = nextP.value
+      this.setState({ value: nextP.value })
     }
-
-    this.setState(newState)
   }
 
   render() {
     const props = this.props
     const state = this.state
+    const {htmlType, ...proxyProps} = props
 
     return (
       <input
-        {...state.proxyProps}
+        {...proxyProps}
+        type = {htmlType || 'text'}
         value={state.value}
         className={'i-plain-input ' + (props.className || '')}
       />

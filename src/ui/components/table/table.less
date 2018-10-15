@@ -1,5 +1,5 @@
-@import '../../style/animation.scss';
-$row-height: 50px; // 表格行高
+@import '../../style/animation.less';
+@row-height: 50px; // 表格行高
 
 /* 主体 */
 .u-table__container {
@@ -34,6 +34,8 @@ $row-height: 50px; // 表格行高
     margin: -21px 0 0 -21px;
     animation: rotate ease-in-out 1s infinite;
   }
+
+
 }
 
 @keyframes rotate {
@@ -49,6 +51,19 @@ $row-height: 50px; // 表格行高
 /* 布局 */
 col {
   transition: width ease .3s;
+}
+
+.u-plain__table{
+  .u-header__track,
+  .u-body__track{
+    font-size:0;
+    white-space: nowrap;
+  }
+  .u-table-body,
+  .u-table-header,
+  .u-table-right-placeholder{
+    display: inline-block;
+  }
 }
 
 .u-fixed-left__table,
@@ -68,6 +83,7 @@ col {
     overflow: hidden;
     // transition: height ease .3s;
   }
+
 }
 
 .u-fixed-right__table {
@@ -86,7 +102,7 @@ col {
   .u-plain__table {
     overflow-x: hidden;
   }
-
+  .u-fixed-right__table.shadow,
   .u-fixed-left__table.shadow {
     box-shadow: 0 0 10px 0 rgba(204, 204, 204, 0.5);
   }
@@ -175,10 +191,11 @@ col {
 
 .u-th,
 .u-td {
-  height: $row-height;
+  height: @row-height;
   text-align: center;
   vertical-align: middle;
   text-overflow: ellipsis;
+  font-size: 14px;
 
   &.center {
     text-align: center !important;
