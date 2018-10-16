@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types'
+import Context from './context'
 
 /**
  * @component label
@@ -160,4 +161,17 @@ Label.propTypes = {
 
 }
 
-export default Label
+function extend (Comp) {
+  return class FormItem extends React.PureComponent {
+    render() {
+      const children = this.props.children
+      return (
+        <Context.Consumer>
+          { obj => React.cloneElement(children, Object.assign({}, children.props, obj)) }
+        </Context.Consumer>
+      )
+    }
+  }
+}
+
+export default extend(Label)

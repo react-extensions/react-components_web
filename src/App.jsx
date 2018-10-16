@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import Input from '@comps/input'
 import Form from '@comps/form'
 import Item from '@comps/item'
-import Label from '@comps/label'
 import {filter} from '@ui'
 import InputTwo from '@comps/input-2'
 // import pattern from '@comps/pattern'  
@@ -61,9 +60,8 @@ class App extends Component {
         </Item> */}
         <br/>
         a:
-        <Item >
 
-          <Label 
+          <Item 
           key='a' 
           name='a' 
           dependence={['b']} 
@@ -84,15 +82,12 @@ class App extends Component {
           }
           >
             <Finput value=''/>
-          </Label>
-        </Item>
+          </Item>
         <br/>
         b:
-        <Item >
-          <Label name='b' >
+          <Item name='b' >
             <Finput value=''/>
-          </Label>
-        </Item>
+          </Item>
 
       </div>
     )
