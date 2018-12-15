@@ -1,37 +1,65 @@
 import React, { Component } from 'react';
-import './radio.scss'
-import Icon from '../icon/icon'
+import './style.scss'
 import PropTypes from 'prop-types'
+import Context from './context'
 
 class Radio extends Component {
-  toggleRadio(e) {
-    if(e.target.checked) {
-      const parent = this.context.radioGroup
-      const {label} = this.props
-      parent.setState({checked: label})
-      const change = parent.props.onChange
-      change && change(label)
+  constructor(props) {
+    super(props)
+
+    this.init()
+
+    this.toggleRadio = this.toggleRadio.bind(this)
+  }
+
+  init() {
+    const props = this.props
+    const pValue = props.value
+    const bool = pValue && (typeof pValue === 'string' || typeof pValue === 'number')
+    const id = bool ? pValue : (props.label || props.id)
+    const value = props.value || id
+
+    this.value = {
+      id: id,
+      label: props.label || null,
+      value: value
     }
+    
   }
-  shouldComponentUpdate(nP, nS) {
-    return nP.checked !== this.props.checked
+
+  toggleRadio(e) {
+    if(!e.target.checked) return
+    const fn = this.props.onChange
+    fn && fn(this.value)
+
   }
-/*   componentDidUpdate() {
-    console.log('更新了', this.props.label)
-  } */
+    // props更新值, 默认值
+  // componentWillReceiveProps(nextP, context){
+    
+  //   if(nextP.checked !== this.props.checked) {
+  //     // this.init(nextP)
+  //   }
+  // }
+  shouldComponentUpdate(nP) {
+    const id = this.value.id
+    return (id === nP.checked) !== (id === this.props.checked)
+  }
+
   render() {
-    const {children, className, label, checked} = this.props
+    const props = this.props
+    const checked = props.checked === this.value.id
+    
     return (
-      <label className={'radio ' + (checked ? 'is-checked ' : '') + (className || '')}>
+      <label className={'radio ' + (checked ? 'is-checked ' : '') + (props.className || '')}>
         <input type='radio'
-        className='radio__exact'
-        onChange={e => this.toggleRadio(e)}
-        checked = {checked}
+               className='radio__exact'
+               onChange={this.toggleRadio}
+               checked = {checked}
         />
-        { children || 
-          <span className='radio-label'>
-            <Icon type={checked ? 'radio-fill' : 'radio'} className='radio-icon'/>
-            {label}
+        { props.children ||
+        <span className='radio-label'>
+          <div className= {'radio-icon' + (checked ? ' radio-fill' : ' radio')}> </div>
+          {props.label}
           </span>
         }
       </label>
@@ -39,42 +67,7 @@ class Radio extends Component {
   }
 }
 
-class Group extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      checked: false
-    }
-  }
-  getChildContext() {
-    return {radioGroup: this}
-  }
-  componentWillMount() {
-    this.setState({checked: this.props.checked})
-  }
-  shouldComponentUpdate(nP, nS) {
-    // console.log('要不要更新')
-    return nS.checked !== this.state.checked //|| (nS.checked !== nP.checked && nP.checked !== this.props.checked)
-  }
-/*   componentDidUpdate() {
-    console.log('已更新RadioGroup')
-  } */
-  render() {
-    const {children, className} = this.props
-    return (
-      <div className={'radio-group ' + (className || '')}>
-      {
-        React.Children.map(children, (radio) => {
-          
-          return React.cloneElement(radio, Object.assign({}, radio.props, {
-            checked: radio.props.label === this.state.checked
-          }))
-        })
-      }
-      </div>
-    )
-  }
-}
+
 
 Radio.propTypes = {
   label: PropTypes.oneOfType([
@@ -83,20 +76,17 @@ Radio.propTypes = {
   ]),  // label
   className: PropTypes.string //自定义类名
 }
-Group.propTypes = {
-  checked: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.number
-  ]),
-  className: PropTypes.string //自定义类名
-  
+
+function extend(Comp) {
+  return class RadioMiddlware extends React.Component {
+    render() {
+      return (
+        <Context.Consumer>
+          {obj => <Comp {...this.props} {...obj} />}
+        </Context.Consumer>
+      )
+    }
+  }
 }
 
-
-Group.childContextTypes =
-Radio.contextTypes = {
-  radioGroup: PropTypes.any
-}
-
-Radio.Group = Group
-export default Radio
+export default extend(Radio)

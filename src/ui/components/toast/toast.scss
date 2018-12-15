@@ -1,0 +1,37 @@
+.u-toast-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  &.hidden{
+    display: none
+  }
+}
+
+.u-toast-content {
+  position: fixed;
+  line-height: 1;
+  padding: 10px 12px;
+  background: rgba(3, 3, 3, 0.84);
+  border-radius: 8px; /*no*/
+  color: #fff;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.5); /*no*/
+  animation: u_fadeIn ease .3s;
+  &.center {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%)
+  }
+  &.bottom {
+    left: 50%;
+    bottom: 5%;
+    transform: translateX(-50%)
+  }
+}
+
+
+@keyframes u_fadeIn{
+  from {opacity: 0}
+  to {opacity: 1}
+}

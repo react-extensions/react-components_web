@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types'
 /**
+ * @component 
+ * 
  * 
  * @prop {string} name 表单 name字段
  * @prop {array|string} dependence 依赖表单的name字段组成的数组， 当依赖发生变化时， 会通知此表单， 并执行handler
@@ -83,10 +85,7 @@ class Label extends Component {
     this.props.onSubmit()
 
   }
-  // changeValue(v) {
-  //   const cValue = this.state.value
-  //   // if( cValue=== undefined || cValue === null) return
-  // }
+
   render() {
     const children = this.props.children
     return (

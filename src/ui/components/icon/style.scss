@@ -1,0 +1,38 @@
+/* 用伪类做各种简易 icon */
+
+$size: 14px;
+
+.u-icon__close-bg,
+.u-icon__close {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  border-radius:50%;
+  overflow: hidden;
+
+  &:after,
+  &:before{
+    display:block;
+    content: '\0020';
+    width: 1px;
+    height: 14px;
+    background: #ccc;
+    transform-origin: center center;
+    position: absolute;
+    top:50%;left:50%;
+    transform: translate(-50%, -50%) rotateZ(45deg);
+  }
+
+  &:after{
+    transform: translate(-50%, -50%) rotateZ(-45deg);
+  }
+}
+.u-icon__close-bg{
+  background: #ccc;
+  &:after,
+  &:before{
+    background: #fff;
+    height: 10px;
+  }
+}

@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import './cell.less'
+import './cell.scss'
 /**
  * @component {comp} Cell 一个响应式布局
  * 

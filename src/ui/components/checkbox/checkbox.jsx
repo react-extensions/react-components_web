@@ -1,127 +1,91 @@
-import React, { Component } from 'react';
-import './checkbox.scss'
-import Icon from '../icon/icon'
+import React, {Component} from 'react'
 import PropTypes from 'prop-types'
+import Context from './context'
 
+/**
+ * @prop {string} id 
+ * @prop {string} label
+ * @prop {any} value
+ * 
+ * 
+ */
 class Checkbox extends Component {
   constructor(props) {
     super(props)
     this.state = {
       checked: false
     }
-    this.initial = this.initial.bind(this)
+
+    this.init(props, true)
+    this.toggleCheck = this.toggleCheck.bind(this)
   }
   toggleCheck(e) {
-    const parent = this.parent()
-    let bool = e.target.checked
-    if(!!parent) {
-      let list = parent.listCache
-      const {label} = this.props
-      if(bool) {
-        list = list.concat([label])
-      } else {
-        list = list.filter(item => item !==  label)
-      }
-      parent.listCache = list
-      const parentPropsFn = parent.props.onChange
-      !!parentPropsFn && parentPropsFn(list)
-    } else {
-      const {onChange} = this.props
-      !!onChange && onChange(bool)
+    const fn = this.props.onChange
+    const checked = e.target.checked
+    fn && fn( checked, this.value)
+
+    this.setState({
+      checked: e.target.checked
+    })
+  }
+
+  init(props, isInit) {
+    const pValue = props.value
+    const bool = pValue && (typeof pValue === 'string' || typeof pValue === 'number')
+    const id = bool ? pValue : (props.label || props.id)
+    const value = props.value || id
+    this.value = {
+      id: id,
+      label: props.label || null,
+      value: value
     }
-    // 更新自己的样式, 状态
-    this.setState({checked: bool})
+    const checked = props.defaultChecked.indexOf(id) > -1
+    
+    isInit ? this.state.checked = checked : this.setState({checked: checked})
+    const fn = this.props.onChange
+    checked && fn && fn(true,this.value,  false)
   }
-  // 获取父组件
-  parent() {
-    return this.context.checkGroup
-  }
-  initial(v) {
-    let bool = false
-    const parent = this.parent()
-    if(parent) {
-      const list = parent.listCache
-      if(list && Array.isArray(list)) {
-        const {label} = this.props
-        for(let i = list.length - 1; i >= 0; i--) {
-          if(label === list[i]) {
-            bool = true
-            break
-          }
-        }
-      }
-    }
-    else {
-      bool = !!v
-    }
-    this.setState({checked: bool})
-  }
-  // 初始化, 默认值
-  componentWillMount() {
-    this.initial(this.props.checked)
-  }
+
   // props更新值, 默认值
-  componentWillReceiveProps(nextProps){
-    this.initial(nextProps.checked)
+  componentWillReceiveProps(nextP){
+    if(nextP.defaultChecked !== this.props.defaultChecked) {
+      this.init(nextP)
+    }
   }
   shouldComponentUpdate(nP, nS) {
-    return nP.checked !== this.props.checked || nS.checked !== this.state.checked
+    return nS.checked !== this.state.checked
   }
-  /* componentDidUpdate() {
-    console.log('更新了' , this.props.label)
-  } */
   render() {
     const {label, className, children} = this.props
     const {checked} = this.state
     return (
       <label className={'checkbox ' + (className || '')}>
         <input type='checkbox'
-        className='checkbox__exact'
-        onChange={e => this.toggleCheck(e)}
-        checked = {checked}
-        />
-        <Icon type={checked ? 'check-fill' : 'check'} />
+                className='checkbox__exact'
+                onChange={this.toggleCheck}
+                checked = {checked}
+          />
+        <span className={'checkbox-icon-wrap' + (checked ? ' check-fill' : ' check')}>
+          <span className='checkbox-icon'></span>
+        </span>
         { children ? children : (<span className='checkbox-label'>{label}</span>)}
+        
       </label>
     )
   }
 }
 
-class Group extends Component {
-
-  getChildContext() {
-    return {
-      checkGroup: this
-    }
-  }
-  shouldComponentUpdate(nP) {
-    let bool = nP.checkedList !== this.props.checkedList
-    if(bool) {
-      this.listCache = nP.checkedList || []
-    }
-    return bool
-  }
-  componentWillMount() {
-    this.listCache = this.props.checkedList || []
-  }
-/*   componentDidUpdate() {
-    console.log('更新了checkbox group')
-  } */
-  render() {
-    const {className, children} = this.props
-    return (
-      <div className={"checkbox-group " + (className || '')}>
-        { children }
-      </div>
-    )
-  }
-}
-
-
-/* 
-* Group props 的 checked 为 checkbox label 组成的数组
-*/
-
+// function extend(Comp) {
+//   return class CheckboxMiddleware extends React.PureComponent{
+//     render() {
+//       return (
+//         <Context.Consumer>
+//           {obj => <Comp {...this.props} {...obj}/>}
+//         </Context.Consumer>
+//       )
+//     }
+//   }
+// }
 
 /* Checkbox  props 类型检查 */
 Checkbox.propTypes = {
@@ -129,18 +93,17 @@ Checkbox.propTypes = {
   checked: PropTypes.bool,  //初始默认选中
   className: PropTypes.string //自定义类名
 }
-/* Group props 类型检查 */
-Group.propTypes = {
-  checked: PropTypes.array,  //初始默认选中
-  className: PropTypes.string //自定义类名
+
+function extend (Comp) {
+  return class CheckboxContext extends React.Component{
+    render(){
+      return (
+        <Context.Consumer>
+          {obj=> <Comp {...this.props} {...obj}/>}
+        </Context.Consumer>
+      )
+    }
+  }
 }
 
-
-/* context 类型检查 */
-Group.childContextTypes = 
-Checkbox.contextTypes = {
-  checkGroup: PropTypes.any
-}
-
-Checkbox.Group = Group
-export default Checkbox
+export default extend(Checkbox)

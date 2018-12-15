@@ -1,6 +1,6 @@
 import React from 'react'
 import './table.less'
-import Icon from '../icon/icon'
+import Icon from '../icon'
 import Row from './row'
 import {
   CHECK_TYPE

@@ -1,0 +1,86 @@
+@import '../../style/global-config.scss';
+input::-webkit-input-placeholder{
+  color:$base-disabled-color;
+}
+input::-moz-placeholder{   /* Mozilla Firefox 19+ */
+  color:$base-disabled-color;
+}
+input:-moz-placeholder{    /* Mozilla Firefox 4 to 18 */
+  color:$base-disabled-color;
+}
+input:-ms-input-placeholder{  /* Internet Explorer 10-11 */
+  color:$base-disabled-color;
+}
+.u-plain-input{
+  width:100%;
+  box-sizing: border-box;
+  padding: 4px 12px;
+
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+  outline: none;
+  font-size: $base-font-size;
+  line-height: $base-font-size + 8px;
+  color: $base-font-color;
+  transition:all ease .3s ;
+  &._icon-before{
+    padding-left: 30px;
+  }
+  &._icon-after{
+    padding-right: 30px;
+  }
+
+  &:hover,
+  &:focus{
+    border-color: $base-color;
+  }
+  &:focus{
+    box-shadow: 0 2px 4px 0 fade_out($base-color, 0.8);
+  }
+
+  &._success{
+    box-shadow: 0 2px 4px 0 fade_out($success-color, 0.8);
+    border-color: $success-color;
+  }
+  &._warning{
+    box-shadow: 0 2px 4px 0 fade_out($warning-color, 0.8);
+    border-color: $warning-color;
+  }
+  &._error{
+    box-shadow: 0 2px 4px 0 fade_out($error-color, 0.8);
+    border-color: $error-color;
+  }
+
+  &:disabled{
+    border-color: $base-disabled-color !important;
+    background-color: #ebebe4 !important;
+    color:$base-disabled-color !important;
+  }
+}
+
+.u-input-wrap{
+  display: inline-block;
+  position: relative;
+  width:100%;
+  &._has-fix{
+
+  }
+}
+
+.u-input-icon{
+  position: absolute;
+  top:50%;
+  transform: translateY(-50%);
+  display: inline-block;
+  width: 16px;
+  height: auto;
+  overflow: hidden;
+  &._before{
+    left: 12px;
+  }
+  &._after{
+    right: 12px;
+  }
+}
+
