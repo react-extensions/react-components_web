@@ -1,0 +1,19 @@
+@import '../../style/global-config.scss';
+
+.u-btn {
+  outline: none;
+  border: none;
+  font-size: inherit;
+  color: inherit;
+  background-color: $base-bg-color-light;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  min-width: 74px;
+  padding: 0 16px;
+
+  height: $base-form-height;
+  border-radius:$base-border-radius;
+}

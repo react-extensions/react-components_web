@@ -2,9 +2,7 @@
 .cell{
   display: table;
   width:100%;
-  &+.cell{
-    margin-top:24px;
-  }
+
   &::after{
     display: block;
     content: '\0020';

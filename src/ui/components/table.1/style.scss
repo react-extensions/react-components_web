@@ -1,0 +1,286 @@
+@import '../../style/animation.scss';
+
+$row-height: 50px; // 表格行高
+
+/* 主体 */
+.u-table__container {
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+  transition: opacity cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
+
+  table {
+    border-spacing: 0;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .iconfont {
+    display: inline-block;
+    cursor: pointer;
+    vertical-align: text-top;
+    transition: transform cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
+  }
+
+  .u-icon__loading {
+    z-index: 50;
+    height: 42px;
+    width: 42px;
+    position: absolute;
+    top: 50%;
+    right: 50%;
+    margin: -21px 0 0 -21px;
+  }
+
+}
+
+
+
+/* 布局 */
+//col {
+//  //transition: width ease .3s;
+//}
+
+.u-plain__table{
+  .u-header__track,
+  .u-body__track{
+    font-size:0;
+    white-space: nowrap;
+  }
+  .u-table-body,
+  .u-table-header,
+  .u-table-right-placeholder{
+    display: inline-block;
+  }
+}
+
+.u-fixed-left__table,
+.u-fixed-right__table {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 26;
+  background-color: #fff;
+  transition: box-shadow ease-out .4s;
+
+  &.shadow {
+    box-shadow: 0 -3px 10px 0 #ccc;
+  }
+
+  .u-table-body {
+    overflow: hidden;
+    // transition: height ease .3s;
+  }
+
+}
+
+.u-fixed-right__table {
+  right: 0;
+  left: auto;
+}
+
+.u-fixed-bottom__table {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: #fff;
+  box-shadow: 0 0 10px 0 rgba(204, 204, 204, 0.5);
+
+  .u-plain__table {
+    overflow-x: hidden;
+  }
+  .u-fixed-right__table.shadow,
+  .u-fixed-left__table.shadow {
+    box-shadow: 0 0 10px 0 rgba(204, 204, 204, 0.5);
+  }
+}
+
+.u-body__track {
+  overflow: auto;
+}
+
+.u-table-body {
+  min-height: 1px;
+}
+
+.u-table-header,
+.u-header__track {
+  overflow-x: hidden;
+  transition: box-shadow ease-out .4s;
+
+  &.shadow {
+    box-shadow: 0 0 10px 0 #ccc;
+    position: relative;
+  }
+}
+
+/* 标记线 */
+.resize-col-sign {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed #888;
+  width: 0;
+  z-index: 11;
+}
+
+/* 排序 */
+.sort-sign {
+  margin-left: 8px;
+  vertical-align: baseline !important;
+  color: #999;
+  position: relative;
+  &:hover{
+    color:#A3D8FF;
+  }
+
+  .icon-down-fill {
+    font-size: 12px !important;
+    line-height: 0.9;
+  }
+
+  .up-arrow {
+    transform: rotateX(180deg)
+  }
+
+  .down-arrow {
+    position: absolute;
+    top: 9px;
+    left: 0;
+    vertical-align: middle;
+  }
+
+  &.reverse .up-arrow,
+  &.forward .down-arrow {
+    color: #20a0ff !important;
+  }
+}
+
+/* 细节 */
+.u-th-content__wrap {
+  position: relative;
+}
+
+.u-th {
+  background: #F5F5F5;
+  border-top: 1px solid #e9e9e9;
+  border-bottom: 1px solid #e9e9e9;
+  text-align: center;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+}
+
+.u-td {
+  border-bottom: 1px solid #e9e9e9;
+  overflow: hidden;
+  .u-turn-right {
+    transform: rotateZ(-90deg);
+  }
+}
+
+.u-th,
+.u-td {
+  height: $row-height;
+  font-size: 14px;
+  &.center {
+    text-align: center !important;
+  }
+
+  &.right {
+    text-align: right !important;
+  }
+
+  &.left {
+    text-align: left !important;
+  }
+}
+
+
+.u-th-content,
+.u-td-content {
+  padding: 0 10px;
+  display: inline-block;
+  // 如果用户设置的 列宽， 就会被加上 fill 类名
+  &.fill {
+    width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}
+
+.u-th-content{
+  white-space: nowrap;
+}
+.u-td-content{
+  white-space: normal;
+}
+
+
+.u-tr {
+  transition: all ease .3s;
+
+  &.darken {
+    background: #fafafa;
+  }
+
+  &.lighten {
+    background: #fff;
+  }
+
+  &.hover {
+    background: #d5eaff;
+  }
+}
+/* ----------------------- */
+/* ---  用于调整表格列宽  --*/
+/* ----------------------- */
+.u-table-resize-btn {
+  width: 2px;
+  height: 18px;
+  background: #CCC;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  z-index: 20;
+  margin-top: -9px;
+  cursor: col-resize;
+  user-select: none;
+  transition: ease all .3s;
+
+  &:hover {
+    background: #1890ff;
+  }
+}
+
+/* ----------------------*/
+/* ------可扩展 tr ------*/
+/* ----------------------*/
+.expand-tr {
+  animation: bounceOut ease .3s;
+  transform-origin: top;
+  background: #fff;
+
+  &.hidden {
+    visibility: hidden;
+    background: #f1f1f1;
+  }
+}
+
+.expand-td {
+  border-top: 2px solid #f9f7f7 !important;
+}
+
+/* ----------------------- */
+/* --  没有数据时的提示   -- */
+/* ------------------------ */
+.empty-table-tip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  .empty-tip__span {
+    font-size: 14px;
+  }
+}

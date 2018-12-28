@@ -4,12 +4,18 @@ import ExpandRow from './expand-row'
 import {
   CHECK_TYPE
 } from './const-data';
+import cn from '../class-name'
 
 /**
  * 有 固定列 (有没有 syncRow)  需同步 ==>>>>>
  * hover  同步
  * checkbox  点击表格行 同步
+ * 高度同步
  */
+
+function diff(o, n, c) {
+  return o !== n && (o === c || n === c)
+}
 
 class Row extends React.Component {
   constructor(props) {
@@ -21,100 +27,42 @@ class Row extends React.Component {
       hoverIndex: -1,
       expandTrHeight: 0
     }
-    this.checked = this.checked.bind(this)
-    // this.clickRow = this.clickRow.bind(this)
-    // this.collectWidth = this.collectWidth.bind(this)
 
-    this.tdWidthList = []
+    this.colWidthList = []
 
     if (props.syncRow) {
       this.expandTr = React.createRef()
     }
 
-  }
-  clickRow(colIndex, prop, e){
-    const props = this.props
-    , {checkState, onRowClick, tr, rowIndex} = props
-    // 如果表格为 checkbox 或 radio， 则点击行时， 选中改行
-    if(checkState !== CHECK_TYPE.NONE) {
-      this.checked(e)
-    }
-    const fn = onRowClick
-    fn && fn(e, tr, rowIndex, prop, colIndex)
+    this.checked = this.checked.bind(this)
 
-  }
-  // 具有多选功能的表格
-  checked(e) {
-    e && e.stopPropagation()
-
-    const bool = !this.state.checked
-
-    const { onChecked, syncRow, tr, rowIndex } = this.props
-    // 发送数据给table
-    onChecked(tr, bool, rowIndex)
-
-    if (syncRow) {  // 只有 有固定列的时候, 才会有 props.syncRow
-      syncRow('check', { index: rowIndex, checked: bool })
-    } else {
-      this.setState({ checked: bool })
-    }
-
-  }
-  // 具有扩展功能的表格
-  expand(content, e) {
-    e.stopPropagation()
-    const collapse = this.state.collapse
-      , { rowIndex, syncRow, isFixed } = this.props
-
-    if (syncRow && isFixed) {
-      syncRow('expand', { index: collapse ? rowIndex : -1, content })
-    } else {
-      this.setState({
-        collapse: !collapse,
-        expandContent: content
-      });
-    }
-
-  }
-
-  // 鼠标移入样式
-  toggleRowBG(type) {
-
-    const { rowIndex, syncRow } = this.props
-
-    if (syncRow) {
-      syncRow('hover', type > 0 ? rowIndex : -1)
-    } else {
-      this.setState({ hoverIndex: type > 0 ? rowIndex : -1 })
-    }
-
-  }
-  collectWidth(j, el) {
-    if (!el) return;
-    this.tdWidthList[j] = el.offsetWidth
   }
 
   // 将列宽按照最宽设置
+  /**
+   * 比较一列中所有单元格的宽度，然后留下最宽的，并收集
+   *
+   * */
   componentDidMount() {
-    const tdWidthList = this.tdWidthList
+    const colWidthList = this.colWidthList
 
-    const { widthList, columns } = this.props
+    const { colMinRenderWidthList, columns } = this.props
+
     let index = 0
     let width = 0
-    for (let i = 0, len = tdWidthList.length; i < len; i++) {
+    for (let i = 0, len = colWidthList.length; i < len; i++) {
 
       if (columns[i].cannotExpand) continue;
 
       index = columns[i].__i__
 
-      width = tdWidthList[i] + 20
+      width = colWidthList[i] + 20
 
-      if (width > widthList[index]) {
-        this.props.collectTdWidth(index, width)
+      if (width > colMinRenderWidthList[index]) {
+        colMinRenderWidthList[index] = width
       }
     }
 
-    // this.initialized = true
 
   }
 
@@ -133,9 +81,7 @@ class Row extends React.Component {
       , N_SYNC_EXPAND = N_P.syncData.expand || {}
 
 
-    function diff(o, n, c) {
-      return o !== n && (o === c || n === c)
-    }
+
     // 控制一下性能
     // 同步表格行数据
 
@@ -169,7 +115,7 @@ class Row extends React.Component {
     if (diff(O_SYNC_EXPAND.index, N_SYNC_EXPAND.index, rowIndex)) {
       this.setState({ expandContent: N_SYNC_EXPAND.content, collapse: !(N_SYNC_EXPAND.index === rowIndex) })
     }
-    // 同步此行高度
+    // 同步expandTr高度
     if (N_SYNC_EXPAND.index === rowIndex && N_P.syncData.expandTrHeight !== this.state.expandTrHeight) {
       N_P.isFixed && this.setState({ expandTrHeight: N_P.syncData.expandTrHeight })
     }
@@ -187,6 +133,10 @@ class Row extends React.Component {
       || N_S.collapse !== O_S.collapse
       || N_S.expandTrHeight !== O_S.expandTrHeight
   }
+  /*
+  * 有expandTr时，展开或关闭后，同步高度
+  *
+  * */
   componentDidUpdate(prevP, prevS) {
     const syncRow = prevP.syncRow
     if (prevS.collapse !== this.state.collapse && prevS.collapse && syncRow && !prevP.isFixed) {
@@ -197,10 +147,87 @@ class Row extends React.Component {
       syncRow('expandTrHeight', height)
     }
   }
+  /**
+   * 点击表格单元格
+   * */
+  clickRow(colIndex, prop, e){
+    const props = this.props
+
+    // 如果表格为 checkbox 或 radio， 则点击行时， 选中改行
+    if(props.checkState !== CHECK_TYPE.NONE) {
+      this.checked(e)
+    }
+    props.onTdClick(e, props.tr, props.rowIndex, prop, colIndex)
+
+  }
+  // 具有多选功能的表格
+  checked(e) {
+    e && e.stopPropagation()
+
+    const bool = !this.state.checked
+    const props = this.props
+
+    // 发送数据给table
+    props.onChecked(props.tr, bool, props.rowIndex)
+
+    if (props.syncRow) {  // 只有 有固定列的时候, 才会有 props.syncRow
+      props.syncRow('check', { index: props.rowIndex, checked: bool })
+    } else {
+      this.setState({ checked: bool })
+    }
+
+  }
+  // 具有扩展功能的表格
+  expand(content, e) {
+    e.stopPropagation()
+    const collapse = this.state.collapse
+    const props = this.props
+
+    if (props.syncRow && props.isFixed) {
+      props.syncRow('expand', { index: collapse ? props.rowIndex : -1, content })
+    } else {
+      this.setState({
+        collapse: !collapse,
+        expandContent: content
+      });
+    }
+
+  }
+
+  // 鼠标移入样式
+  toggleRowBG(type) {
+
+    const { rowIndex, syncRow } = this.props
+
+    if (syncRow) {
+      syncRow('hover', type > 0 ? rowIndex : -1)
+    } else {
+      this.setState({ hoverIndex: type > 0 ? rowIndex : -1 })
+    }
+
+  }
+
+  /**
+   *
+   * 计算宽度
+   *
+   * */
+
+  collectWidth(j, el) {
+    if (!el) return;
+    this.colWidthList[j] = el.offsetWidth
+  }
+
+// .______       _______ .__   __.  _______   _______ .______
+// |   _  \     |   ____||  \ |  | |       \ |   ____||   _  \
+// |  |_)  |    |  |__   |   \|  | |  .--.  ||  |__   |  |_)  |
+// |      /     |   __|  |  . `  | |  |  |  ||   __|  |      /
+// |  |\  \----.|  |____ |  |\   | |  '--'  ||  |____ |  |\  \----.
+// | _| `._____||_______||__| \__| |_______/ |_______|| _| `._____|
 
   renderTdContentWrap(th, j, child) {
     return (
-      <div className={'u-td-content' + (th.width ? ' fill' : '') + (th.className? ` ${th.className}` : '')} ref={this.collectWidth.bind(this, j)}>
+      <div title={(typeof child === 'string' || typeof child === 'number')?child:''} className={'u-td-content' + (th.width ? ' fill' : '') + (th.className? ` ${th.className}` : '')} ref={this.collectWidth.bind(this, j)}>
         {child}
       </div>
     )
@@ -226,10 +253,10 @@ class Row extends React.Component {
 
     return (
       this.props.columns.map((th, j) => {
-        const textAlign = th.type ? ' center' : (th.align ? (' '+ th.align) : '')
+        const align = th.type ? ' _center' : cn(' _'+(th.align || this.props.align))
           return(
             <td key={j}
-                className={'u-td'+ textAlign}
+                className={'u-td'+ align}
                 onClick={this.clickRow.bind(this, j, th.prop)}
             >{this.renderTdContent(th, j)}</td>
           )
@@ -237,26 +264,26 @@ class Row extends React.Component {
     )
   }
   render() {
-    const { columns, tr, bgColor, rowIndex, isBottom,  isFixed, } = this.props//  syncExpandRow, isFixed, 
-    if (!tr) return null
+    const props = this.props
+    if (!props.tr) return null
+    const state = this.state
 
-    const { collapse, hoverIndex, expandContent, expandTrHeight, checked } = this.state
 
-    return isBottom
+    return props.isBottom
       ? (<tr className={'u-tr'}>{this.mapRow()}</tr>)
       : (
         <React.Fragment>
-          <tr className={'u-tr ' + (bgColor || '') + ((hoverIndex === rowIndex || checked) ? ' hover' : '')}
-            onMouseEnter={() => this.toggleRowBG(1)}
-            onMouseLeave={() => this.toggleRowBG(-1)}
+          <tr className={'u-tr ' + (props.bgColor || '') + ((state.hoverIndex === props.rowIndex || state.checked) ? ' hover' : '')}
+            onMouseEnter={this.toggleRowBG.bind(this,1)}
+            onMouseLeave={this.toggleRowBG.bind(this,-1)}
           >
             {this.mapRow()}
           </tr>
           {
-            !collapse && (
-              <tr className='expand-tr' ref={this.expandTr} style={isFixed ? { height: expandTrHeight } : null}>
-                <td colSpan={columns.length} className='expand-td'>
-                  {!isFixed ? <ExpandRow content={expandContent} tr={tr} /> : null}
+            !state.collapse && (
+              <tr className='expand-tr' ref={this.expandTr} style={props.isFixed ? { height: state.expandTrHeight } : null}>
+                <td colSpan={props.columns.length} className='expand-td'>
+                  {!props.isFixed ? <ExpandRow content={state.expandContent} tr={props.tr} /> : null}
                 </td>
               </tr>
             )

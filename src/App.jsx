@@ -1,103 +1,100 @@
 import React, { Component } from 'react';
-import Input from '@comps/input'
-import Form from '@comps/form'
-import Item from '@comps/item'
-import {filter} from '@ui'
-import InputTwo from '@comps/input-2'
-// import pattern from '@comps/pattern'  
+import {
+    Table,
+    Input,
+    Button
+} from './ui'
 
-const Finput = filter(Input, {
-  formatOutputValue: e=> e.target.value
-})
 
-// const Pinput = pattern(Finput, {
-//   required: true,
-//     filter: v => v.replace(/\D/g, ''),
-  
-// })
+const columns = [
+    {
+        label: '姓名',
+        prop: 'name'
+    },
+    {
+        label: '年龄',
+        prop: 'age'
+    },
+    {
+        label: '工作',
+        prop: 'job'
+    },
+    {
+        label: '备注',
+        prop: 'note'
+    },
+     {
+        label: '备注',
+        prop: 'note'
+    },
+     {
+        label: '备注',
+        prop: 'note'
+    }
+]
+const rows = [
+    {
+        name: '李十三',
+        age: '22',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+    },
+    {
+        name: '李十三',
+        age: '22',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
 
-function handleDepChange(b, v) {
-  if(!v) return ''
-  return parseInt(v)+1
-}
+    },
+    {
+        name: '李十三',
+        age: '22',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
 
+    },
+    {
+        name: '李十三',
+        age: '22',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+
+    },
+]
 
 
 class App extends Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
+
     this.state = {
-      // value: ''
+        rows: [...rows]
     }
-    
+
   }
-  componentDidMount() {
-    Form.onSubmit = function(v) {
-      console.log(v)
-    }
+  handleClick(){
+      this.setState({
+          rows: rows.concat(this.state.rows)
+      })
   }
-  onChange(e) {
-    this.setState({
-      value: e
-    })
-  }
+
   render() {
-    
-
     return (
-      <div>
-        rawInput
-        {/* <InputTwo onChange={this.onChange.bind(this)} value={this.state.value}/> */}
-        {/* <Pinput/> */}
-        <br/>
-
-        
-        {/* username:
-        <Item  >
-           <Label name='username'>
-            <Finput onChange={this.onChange.bind(this)} value={this.state.value} />
-          </Label>
-        </Item> */}
-        <br/>
-        a:
-
-          <Item 
-          key='a' 
-          name='a' 
-          dependence={['b']} 
-          onDepChange={handleDepChange}
-          filter={v=> v.replace(/\D/g, '')}
-          pattern = {
-            v => {
-              if(!v) {
-                console.log('必填')
-                return {msg:"必填"}
-              }
-              if(parseInt(v)<5) {
-                console.log('必须大于5')
-
-                return {result: false, msg: '必须大于5'}
-              }
-            }
-          }
-          >
-            <Finput value=''/>
-          </Item>
-        <br/>
-        b:
-          <Item name='b' >
-            <Finput value=''/>
-          </Item>
-
+      <div className="App">
+      <div style={{background: 'red',lineHeight: '20px',}}>
+          <span style={{lineHeight: '20px',display:'inline-block',background:'black'}}>123213213</span>
+      </div>
+        <Button  onClick={this.handleClick.bind(this)}>{'click'}</Button>
+        <Input/>
+        <Table tableHeight={300}
+            columns={columns} 
+            rows={this.state.rows}
+            // type='tile'
+        />
+        1231
       </div>
     )
   }
 }
 
-function format(value, key) {
-  return {
-    // username: 
-  }
-}
-
-export default Form(App, format);
+export default App

@@ -17,7 +17,6 @@ class Form extends React.PureComponent {
 
     this.formQuery = {}
     this.depMap = {}
-    this.validatorQueue = []
 
     this.contextValue = {
       interfaces: this.getApi,  // 用于向父组件发送值
@@ -26,10 +25,13 @@ class Form extends React.PureComponent {
       onSubmit: () => {
         this.props.onSubmit(this.formQuery)
       },
+      items: []
     }
+  }
+  componentDidMount() {
 
+    const props = this.props
     if(props.id) {
-
       if(formQueue.some(item=> item.id === props.id)) {
         throw Error('已存在id为'+props.id+'的表单组件')
       } else {
@@ -39,7 +41,6 @@ class Form extends React.PureComponent {
         })
       }
     }
-
   }
   componentWillUnmount() {
     for(let i=0, len = formQueue.length; i<len;i++) {
@@ -48,24 +49,57 @@ class Form extends React.PureComponent {
         break
       }
     }
-    // formQueue = formQueue.filter(item=> item.id !== this.props.id)
-
   }
-  // UNSAFE_componentWillReceiveProps(nextP) {
-  //   if(nextP.value !== this.props.value) {
-  //
-  //   }
-  // }
+  /**
+   * 验证
+   * */
   validate(callback) {
-    if(this.validatorQueue.every(item=>item())){
+    let queue = [...this.contextValue.items]
+    if(this.preValidate(queue)) {
       callback(this.formQuery)
     }
   }
+  preValidate(queue, isOneOf) {
+    let i = 0
+    let item = queue[0]
+    while (item) {
+      let res = item.validator()
+      const oneOf = item.props.oneOf
+      const subQueue = []
+
+      if(oneOf) {
+        queue = queue.filter(item=>{
+          const res = oneOf.indexOf(item.props.name) === -1
+          if(!res) {
+            subQueue.push(item)
+          }
+          return res
+        })
+      }
+
+      // 未通过校验，验证oneOf中的其他组件
+      if(!res) {
+        if(subQueue.length) {
+          if(!this.preValidate(subQueue, true)) {
+            item.showTip()
+            return false
+          }
+        }else{
+          !isOneOf && item.showTip()
+          return false
+        }
+      }
+      i++
+      item = queue[i]
+    }
+    return true
+  }
+
   /**
    * @function - 用于获取从label组件传过来的接口及参数，然后存储
    * @param {Object} param0
    */
-  getApi({depQueue, subscribeDepChange, validator, }) {
+  getApi({depQueue, subscribeDepChange, validator, item }) {
     if (depQueue) {
       const map = this.depMap
       depQueue.forEach(item => {
@@ -74,9 +108,8 @@ class Form extends React.PureComponent {
       })
     }
 
-    if(validator) {
-      this.validatorQueue.push(validator)
-    }
+
+    this.contextValue.items.push(item)
   }
 
   /**
@@ -137,7 +170,7 @@ Form.submit = function(id, callback) {
     }
   }
   if(!got) {
-    throw Error('未找到id为'+id+'的表单组件')
+    console.error('未找到id为'+id+'的表单组件')
   }
 }
 

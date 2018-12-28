@@ -11,7 +11,7 @@ class Button extends React.PureComponent {
     const {children, label, type, className, ...rest} = this.props
     const text = children || label
 
-    const cN = (type ? (' _'+type) : '') + (className ? (' '+className): '')
+    const cN = (type ? (' _'+type) : ' _normal') + (className ? (' '+className): '')
 
     return text && (
       <button {...rest} type= 'button' className={'u-btn' + cN }  >
@@ -22,8 +22,8 @@ class Button extends React.PureComponent {
 }
 
 Button.propTypes = {
-  children: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
-  label: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
+  children: PropTypes.node,
+  label: PropTypes.node,
 }
 
 export default Button

@@ -1,4 +1,6 @@
 /* 用伪类做各种简易 icon */
+@import '../../style/animation.scss';
+@import '../../style/global-config.scss';
 
 $size: 14px;
 
@@ -35,4 +37,16 @@ $size: 14px;
     background: #fff;
     height: 10px;
   }
+}
+
+.u-icon__loading{
+  width:$size;
+  height: $size;
+  box-sizing: border-box;
+  border: 2px solid;
+  border-color: $base-theme-color;
+  animation: u_spin linear 0.8s infinite;
+  border-radius: 50%;
+  border-right-color: transparent;
+  border-left-color: transparent;
 }

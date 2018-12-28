@@ -23,6 +23,8 @@ class FormItem extends React.PureComponent {
     this.onFocus = this.onFocus.bind(this)
     this.onChange = this.onChange.bind(this)
     this.onDepChange = this.onDepChange.bind(this)
+    this.validator = this.validator.bind(this)
+    this.hideTip = this.hideTip.bind(this)
   }
   componentDidMount() {
     const props = this.props
@@ -35,7 +37,7 @@ class FormItem extends React.PureComponent {
     props.interfaces({
       depQueue: depQueue,
       subscribeDepChange: this.onDepChange,
-      validator: this.validator.bind(this)
+      item: this
     })
 
     if(this.state.value || this.state.value === 0) {
@@ -68,14 +70,17 @@ class FormItem extends React.PureComponent {
    * 
    */
   onChange(...valueQueue) {
-
     this.changeState(true, ...valueQueue)
   }
 
   changeState(shouldEmit, ...valueQueue){
     let exactV = valueQueue[0]
-    if(this.props.filter){
-      exactV = this.props.filter(exactV)
+    if(this.props.filter ){
+      try{
+        exactV = this.props.filter(exactV)
+      }catch (e) {
+        throw e
+      }
     }
 
     this.setState({value: exactV})
@@ -86,11 +91,20 @@ class FormItem extends React.PureComponent {
    * */
   onBlur() {
     this.validator()
+    this.showTip()
   }
   /**
    * 获取焦点时，隐藏所有的提示
    * */
   onFocus() {
+    const oneOf = this.props.oneOf
+    if(oneOf) {
+      this.props.items.forEach(item=> {
+        if(oneOf.indexOf(item.props.name)>-1) {
+          item.hideTip()
+        }
+      })
+    }
     if(!this.state.validateResult) return
     this.setState({validateResult: null})
   }
@@ -99,25 +113,34 @@ class FormItem extends React.PureComponent {
   //   -- 如果成功了，隐藏错误提示，或者显示成功提示
   //   -- 如果失败了，继续显示
   validator() {
+
     const value = this.state.value
     const props = this.props
-
-    const result = props.validator(value)
+    let  result = props.validator(value)
+    let boolResult = true
     // -1 如果未返回值， 则判定为 true
     if(typeof result === 'undefined'){
-      return true
+      boolResult = true
+      result = null
     }
     // -2 如果返回的是布尔值，直接返回
     else if(typeof result === 'boolean') {
-      return result
+      boolResult = result
+      result = null
     }
     // -2 返回了除了以上的任何值，判定为false
     else {
-      this.setState({ validateResult: result })
-      return false
+      boolResult = false
     }
+    this.tip = result
+    return boolResult
   }
-
+  showTip(){
+    this.setState({ validateResult: this.tip })
+  }
+  hideTip(){
+    this.setState({ validateResult: null })
+  }
   render() {
     const state = this.state
     return (
@@ -142,7 +165,6 @@ FormItem.propTypes = {
   dependence: PropTypes.oneOfType([ PropTypes.array, PropTypes.string]),
   name: PropTypes.string,
   validator: PropTypes.func,
-
 }
 
 

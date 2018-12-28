@@ -1,0 +1,150 @@
+@import '../../style/global-config.scss';
+@import '../../style/animation.scss';
+
+%mask{
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+$header-height: 60px;
+
+.u-modal-container{
+  @extend %mask;
+  width: 100%;
+  height:100%;
+  display: table;
+  &._hidden{
+    display: none;
+  }
+  &._mask{
+    background: rgba(34,34,34,0.50);
+  }
+
+  animation: u_fadeIn linear .3s;
+}
+
+//.u-modal-mask{
+//  @extend %mask;
+//  z-index: -1;
+//}
+
+.u-modal-position-box{
+  width: 100%;
+  height:100%;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.u-modal {
+  margin: auto;
+  position: relative;
+  z-index: 111;
+  //top: 50%;
+  //left: 50%;
+  //transform: translate(-50%, -50%);
+  min-width: 406px;
+  max-width: 800px;
+  border-radius: 4px; /*no*/
+
+  background: #FFF;
+  overflow: hidden;
+  transform-origin: center center;
+  animation: u_scaleIn ease-in-out .3s;
+}
+
+.u-modal-close-btn{
+  position: absolute !important;
+  right:0;
+  top:0;
+
+  height: $header-height;
+  width: $header-height;
+  cursor: pointer;
+  background:none;
+  border:none;
+  .u-icon{
+    &:after,
+    &:before{
+      background: #999;
+      width:2px;
+      height: 21px;
+      transition:ease background .2s;
+    }
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover{
+    .u-icon:after,
+    .u-icon:before{
+        background: #222222;
+      }
+  }
+}
+
+.u-modal-header{
+  height: $header-height;
+  padding: 19px 24px;
+  line-height: 22px;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid #F0F2F5;
+}
+
+.u-modal-body{
+  min-height: 84px;
+  max-height: 440px;
+  padding: 32px;
+}
+
+.u-modal-footer{
+  border-top: 1px solid #F0F2F5;
+  height: $header-height;
+  padding: 14px 24px;
+  text-align: right;
+}
+
+.u-modal-btn{
+  user-select: none;
+  &+.u-modal-btn{
+    margin-left: 10px;
+  }
+}
+
+/*-----------------*/
+/*-----个性定制-----*/
+/*-----------------*/
+.u-modal-container {
+
+  &._no-title{
+    .u-modal-body{
+      min-height: 94px;
+    }
+  }
+  &._alert{
+    .u-modal-body{
+      text-align: center;
+    }
+    .u-modal-btn {
+      width: 100%;
+    }
+  }
+
+  &._not-fn{
+    width: auto;
+    margin: 0 auto;
+    .u-modal-body{
+      min-width: 160px;
+      padding: 0;
+      //min-height: 0;
+    }
+  }
+}
+
+
+
+

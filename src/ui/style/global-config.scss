@@ -1,17 +1,12 @@
-$base-font-size: 14px;
-
-$base-color: #1890FF;
-
-$base-font-color: #666;
-$base-disabled-color: #ccc;
-$base-disabled-color-light: #F0F2F5;
-
-$base-hover-bg-color:#27A2F2;
-$base-active-bg-color: #0166BF;
-
-$success-color: #13ce66;
-$warning-color: #f7ba2a;
-$error-color: #F5222D;
+$base-theme-color: #1890FF; /* 基础主题色 */
+$base-border-color: #ccc;  /* 基础边框色 */
+$base-bg-color-light: #f5f5f5; /* 基础背景色 - 轻 */
 
 
-$link-color: #20a0ff;
+$base-form-height: 32px;  /* 表单组件基础高度 */
+
+$base-border-radius: 4px; /* 基础圆角 */
+
+
+
+
