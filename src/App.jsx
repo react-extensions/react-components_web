@@ -29,7 +29,9 @@ const columns = [
     },
      {
         label: '备注',
-        prop: 'note'
+        prop: 'note',
+        fixed:'left',
+        width: 12
     }
 ]
 const rows = [
@@ -58,7 +60,6 @@ const rows = [
         age: '22',
         job: 'bug制造师',
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
-
     },
 ]
 
@@ -86,7 +87,8 @@ class App extends Component {
       </div>
         <Button  onClick={this.handleClick.bind(this)}>{'click'}</Button>
         <Input/>
-        <Table tableHeight={300}
+        <Table 
+            tableHeight={300}
             columns={columns} 
             rows={this.state.rows}
             // type='tile'

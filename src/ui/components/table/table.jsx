@@ -38,18 +38,22 @@ class Table extends React.Component {
             sortMap: { current: '', order: ASC } // 表格排序, current 为当前行的prop. order  ASC正序 DESC 反序
         }
 
-        this.containerEl = {current: null}
-        this.headerTrackEl = {current: null}
         this.trackEl = { current: null }
-        this.tableWidth = { plain: 0, left: 0, right: 0, total: 0 }
+        this.containerEl = { current: null }
+        this.headerTrackEl = { current: null }
+        this.leftTableTbodyEl = { current: null }
+        this.rightTableTbodyEl = { current: null }
+
+        this.tableWidth = { plain: '100%', left: 0, right: 0, total: 0 }
         this.checkedList = []       // 多选或单选表格， 选中的表格行
         this.checkState = CHECK_TYPE.NONE  // 当前表格的类型  带有单选 | 有多选功能  | 无
 
 
 
         // 根据colums数据， 进行预处理
-        this.initialize()
+        this.initialize(props)
 
+        this.onRowMount = this.onRowMount.bind(this)
 
         this.moveSign = this.moveSign.bind(this)
         this.resizeCol = this.resizeCol.bind(this)
@@ -65,52 +69,45 @@ class Table extends React.Component {
     * 数据预处理
     *
     * */
-    initialize() {
+    initialize(props) {
 
-        const props = this.props
 
-        const propsColumns = props.columns
-        let col = null
-        let colWidth = 0
-        const widthList = []
-
+        const propsColumns = [...props.columns]
         const columns = {
             left: [],
             plain: [],
-            right: []
+            right: [],
+            // all: []
         }
-
+        let tableType = null
+        let col = null
+        let type = null
+        let isCheckbox = false
+        let isRadio = false
+        let minWidth = 0
         for (let i = 0, len = propsColumns.length; i < len; i++) {
-            col = propsColumns[i]
-            col.__i__ = i
+            col = Object.assign({}, propsColumns[i])  // 拷贝
+            type = col.type
+            isCheckbox = type === 'checkbox'
+            isRadio = type === 'radio'
 
+            // 记录原始位置
+            col.__i__ = i  
 
-            switch (col.type) {
-                case 'checkbox':
-                case 'expand':
-                case 'index':
-                case 'radio':
-                    col.cannotExpand = true
-                    colWidth = col.width || 50
-                    // 定义表格的类型
-                    if (this.checkState === CHECK_TYPE.NONE) {
-                        this.checkState = (
-                            col.type === 'checkbox'
-                                ? CHECK_TYPE.CHECKBOX
-                                : col.type === 'radio'
-                                    ? CHECK_TYPE.RADIO
-                                    : CHECK_TYPE.NONE
-                        )
-                    }
-                    break
-                default:
-                    colWidth = col.width || 0
-                    if (col.width) {
-                        col.cannotExpand = true
-                    }
-                    break
+            // 最小缩放宽度
+            minWidth = col.width || ((isCheckbox || isRadio || type === 'expand' || type === 'index') ? 50 : 0);
+            col.minWidth = minWidth         // 最小允许宽度
+            col.maxWidthInCol = minWidth    // 一列中最大宽度
+            col.firstRenderWidth = minWidth // 首次渲染后 ， 一列中最大宽度
+
+            // 如果 设置type 或 width 则 禁止展宽
+            if (type || col.width || col.fixed) {
+                col.cannotExpand = true
             }
 
+            
+
+            // 根据fixed 属性， 分配
 
             switch (col.fixed) {
                 case 'left':
@@ -124,15 +121,18 @@ class Table extends React.Component {
                     break
             }
 
-            widthList.push(colWidth)
+            // columns.all.push(col)
+
+            // 定义表格的类型
+            if (!tableType) {
+                tableType = isCheckbox ? CHECK_TYPE.CHECKBOX : (isRadio ? CHECK_TYPE.RADIO : CHECK_TYPE.NONE)
+            }
+
         }
 
 
         this.columns = columns
-
-        /* 用于计算表格宽度 */
-        this.colMinZoomWidthList = [...widthList]  // 用户自动拖拽表格列时，最小的宽度，等于th最小宽度
-        this.colMinRenderWidthList = widthList     // 渲染时的列宽
+        this.checkState = tableType
 
         this.HAS_LEFT = columns.left.length > 0
         this.HAS_RIGHT = columns.right.length > 0
@@ -147,22 +147,24 @@ class Table extends React.Component {
     }
 
     UNSAFE_componentWillReceiveProps(nextP) {
-
-        // 更新了 rows数据后, 将所有 checkbox状态清空
+        // 更新了 rows数据后
         if (nextP.rows !== this.props.rows) {
+            // 将所有 checkbox状态清空
             this.checkedList = []
+           
+
             this.setState({
                 syncData: { check: {} },
                 checkStatus: -1,
             })
         }
-
     }
-
     componentDidUpdate(prevP) {
         // rows 数据更新后, 重新设置col宽度
         if (prevP.rows !== this.props.rows) {
+            this.analyseScroll()
             this._initStructure()
+
         }
     }
 
@@ -176,11 +178,30 @@ class Table extends React.Component {
             this._initStructure()
         }, 1000)
     }
+    /**
+     * 收集th col 的最小宽度
+     * @param {*} col 
+     * @param {*} el 
+     */
+    onThMount(col, el) {
+        // cannotExpand 不需要根据dom元素设置宽度，因为肯定已经有了
+        // 没有th.width 的肯定需要
+        if (!el || (col.cannotExpand && col.width)) return
+        col.minWidth = el.offsetHeight + 20
+    }
+    /**
+     * 收集td col 的最大宽度
+     */
+    onRowMount(col, width) {
+        if (col.cannotExpand || width < col.minWidth) return;
 
+        if(!this.state.complete) {
+            col.firstRenderWidth = width
+        }
 
-    collectThWidth(th, el) {
-        if (!el || th.cannotExpand) return
-        this.colMinZoomWidthList[th.__i__] = el.offsetWidth + 20
+        if (width > col.maxWidthInCol) {
+            col.maxWidthInCol = width
+        }
     }
 
     // 判断有没有竖直方向滚动条
@@ -205,10 +226,20 @@ class Table extends React.Component {
     * */
     _initStructure() {
 
-        this.analyseScroll()
+        if (this.HAS_LEFT) {
+            console.log(this.columns.left)
+            let tableWidth = 0
+            this.columns.left.forEach((prev, cur, i) => {
+                console.log(prev, cur, i)
+                return (typeof prev === 'number' ? prev : prev.width) + cur.width
+            })
+            // this.tableWidth.left =
+        }
+
+        // this.analyseScroll()
         // 初始化 横向结构, 列宽,
 
-        !this.props.disabledDrag ? this.computeColWidth() : this.computeColWidthTwo()
+        // this.props.dragAble ? this.computeColWidth() : this.computeColWidthTwo()
 
         setTimeout(() => { this.setState({ complete: true }) })
 
@@ -218,7 +249,7 @@ class Table extends React.Component {
     computeColWidth() {
 
         // 容器宽度（物理宽度）
-        const containerWidth = parseFloat(this.container.clientWidth) - this.yScrollBar || 0
+        const containerWidth = parseFloat(this.containerEl.current.clientWidth) - this.yScrollBar || 0
         const columns = this.props.columns
         const colMinRenderWidthList = this.colMinRenderWidthList
         const colMinZoomWidthList = this.colMinZoomWidthList
@@ -370,24 +401,25 @@ class Table extends React.Component {
 
     /*---    同步滚动    ---*/
     syncScroll(e) {
+        // if(!this.HAS_LEFT || !this.HAS_RIGHT) return
         const left = e.currentTarget.scrollLeft
         // 同步 头部滚动， 如果由固定在下方的表格， 也同步滚动
-        this.headerTrack.scrollLeft = left
+        this.headerTrack.current.scrollLeft = left
         this.bottomTable && (this.bottomTable.scrollLeft = left)
 
         const top = e.currentTarget.scrollTop
-        this.leftTbody && (this.leftTbody.scrollTop = top)
-        this.rightTbody && (this.rightTbody.scrollTop = top)
+        this.HAS_LEFT && (this.leftTableTbodyEl.current.scrollTop = top)
+        this.HAS_RIGHT && (this.rightTableTbodyEl.current.scrollTop = top)
         const { topShadow, leftShadow, rightShadow } = this.state
             ; (topShadow !== (top > 0)) && this.setState({ topShadow: !topShadow })
         this.columns.fixedLeft && (leftShadow !== (left > 0)) && this.setState({ leftShadow: !leftShadow })
-        this.columns.fixedRight && (rightShadow !== (this.container.clientWidth + left !== this.tableWidth.total)) && this.setState({ rightShadow: !rightShadow })
+        this.columns.fixedRight && (rightShadow !== (this.containerEl.current.clientWidth + left !== this.tableWidth.total)) && this.setState({ rightShadow: !rightShadow })
 
     }
 
     /*--- 调整表格列大小 ---*/
     getOffsetLeft(e) {
-        const C = this.container
+        const C = this.containerEl.current
         const P = C.getBoundingClientRect()
         return e.clientX - P.left + C.scrollLeft
     }
@@ -427,7 +459,7 @@ class Table extends React.Component {
         newWidth < minWidthExact && (newWidth = minWidthExact)
 
         // const { left, right, plain } = this.tableWidth
-        const containerWidth = (parseFloat(this.container.clientWidth) - this.yScrollBar || 0)// 容器宽度
+        const containerWidth = (parseFloat(this.containerEl.current.clientWidth) - this.yScrollBar || 0)// 容器宽度
         //位移差, 调整了的宽度
         let diff = newWidth - minRenderWidth
         //                   容器宽度 - 新的总宽度
@@ -493,164 +525,7 @@ class Table extends React.Component {
         return this.sortedRows
     }
 
-    renderHeader(cols, columns) {
-        const state = this.state
-        const props = this.props
-        const { checkStatus, sortMap } = state
 
-        const renderPlainTh = (th) => (
-            <React.Fragment>
-                <span ref={this.collectThWidth.bind(this, th)} className='u-th-content'>
-                    {th.label}
-                    {
-                        th.needSort && (
-                            <span
-                                onClick={this.sortData.bind(this, th.prop, th)}
-                                className={'sort-sign ' + (sortMap.current === th.prop ? (sortMap.order === ASC ? 'forward' : 'reverse') : 'un-active')}
-                            >
-                                <Icon type='down-fill' className='up-arrow' />
-                                <Icon type='down-fill' className='down-arrow' />
-                            </span>
-                        )
-                    }
-                </span>
-                {
-                    !props.disabledDrag && (
-                        <i
-                            className='u-table-resize-btn'
-                            onMouseDown={e => this.prepareResizeCol(e, th.__i__, th.fixed || 'plain')}>
-                        </i>
-                    )
-                }
-            </React.Fragment>
-        )
-
-        const renderCheckboxTh = () => (
-            <Icon type={checkStatus === 0 ? 'half-checked' : checkStatus > 0 ? 'check-fill' : 'check'}
-                onClick={this.checkedAll} />
-        )
-
-
-        return (
-            <table border='0' cellSpacing='0' cellPadding={0}>
-                {columns}
-                <thead>
-                    <tr>
-                        {
-                            cols.map((th, i) => {
-                                const align = th.align || this.props.align
-                                const textAlign = th.type ? ' center' : (align ? (' ' + align) : '')
-                                return (
-                                    <th className={'u-th' + textAlign} key={i}>
-                                        {/*ie中应该不能将td th作为绝对定位的参照节点， 所以如果 在 th td内有绝对定位的元素，样式会出问题*/}
-                                        {/*加一层div, 并将其style设置为position:relative ，来标准化这一样式*/}
-                                        <div className={'u-th-content__wrap ' + (th.className || '')}>
-                                            {
-                                                (th.type === 'expand' || th.type === 'radio') ? null
-                                                    : th.type === 'checkbox' ? renderCheckboxTh()
-                                                        : th.type === 'index' ? '#'
-                                                            : renderPlainTh(th)
-                                            }
-                                        </div>
-                                    </th>
-                                )
-                            })
-                        }
-                    </tr>
-                </thead>
-            </table>
-        )
-    }
-
-
-    /**
-     *
-     * @param cols
-     * @param tType 表格类型 0 主要表格 -1, 1 固定表格
-     */
-    renderBody(cols, columns, tType, needSync) {
-        const PROPS = this.props
-            , { zebra, emptyTip, loading, align } = PROPS
-            , { syncData, checkStatus, sortMap } = this.state
-        let rows = tType === -2 ? PROPS.fixedRows : PROPS.rows
-        // 表格排序
-        if (!PROPS.databaseSort && sortMap.current && rows && rows.length > 0 && tType === 0) {
-            rows = this.sortRows(rows)
-        }
-
-        return (
-            <React.Fragment>
-                {loading && tType === 0 ? <Icon type='loading' /> : null}
-                {
-                    (rows && rows.length > 0)
-                        ? (
-                            <table border='0' cellSpacing='0' cellPadding={0}>
-                                {columns}
-                                <tbody>
-                                    {rows.map((tr, i) => (
-                                        <Row
-                                            key={'u-tr' + i}
-                                            tr={tr}
-                                            align={align}
-                                            rowIndex={i}
-                                            checkState={this.checkState}
-                                            columns={cols}
-                                            bgColor={zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                                            isFixed={tType !== 0}
-                                            isBottom={tType === -2}
-                                            checkStatus={checkStatus}
-                                            colMinRenderWidthList={this.colMinRenderWidthList}
-                                            syncData={syncData}
-                                            syncRow={needSync ? this.syncRow.bind(this) : null}
-                                            onChecked={this.checkedRow}
-                                            onTdClick={this.props.onTdClick}
-                                        />
-                                    ))}
-                                </tbody>
-                            </table>
-                        )
-                        : (
-                            (tType === 0 && !loading)
-                                ? (<div className='empty-table-tip'>{emptyTip || (<span className='empty-tip__span'>暂无数据</span>)}</div>)
-                                : null
-                        )
-                }
-            </React.Fragment>
-        )
-    }
-
-    renderColumns(cols) {
-        const list = this.colMinRenderWidthList
-
-        return (
-            <colgroup>
-                {cols.map(item => (<col key={item.__i__} style={{ minWidth: list[item.__i__], width: list[item.__i__] }}></col>))}
-            </colgroup>
-        )
-    }
-
-    renderTable(cols, tType, needSync) {
-        const columns = this.renderColumns(cols)
-        return {
-            header: this.renderHeader(cols, columns, tType, needSync),
-            body: this.renderBody(cols, columns, tType, needSync)
-        }
-    }
-
-    renderBottom() {
-        const { fixedLeft, fixedRight, plain } = this.columns
-        const plainT = this.renderBody(plain, this.renderColumns(plain), -2, false)
-
-        let left = null
-        let right = null
-        if (fixedLeft) {
-            left = this.renderBody(fixedLeft, this.renderColumns(fixedLeft), -2, false)
-        }
-        if (fixedRight) {
-            right = this.renderBody(fixedRight, this.renderColumns(fixedRight), -2, false)
-        }
-        return { plain: plainT, left, right }
-    }
 
     render() {
         const state = this.state
@@ -676,18 +551,22 @@ class Table extends React.Component {
 
         /**
          * 
-         * colgroup 元素
+         * 渲染 colgroup 元素
          * 
          */
-        const colgroup = !state.complete ? null : (
-            <colgroup>
-                {
-                    props.columns.map(item => {
-                        const i = item.__i__
-                        return <col key={i} style={{ minWidth: zoomList[i], width: renderList[i] }} />
-                    })
-                }
-            </colgroup>
+
+        const renderColumns = (columns) => (
+            !state.complete ? null : (
+                <colgroup>
+                    {
+                        /**
+                         * 关于 width 还待研究
+                         * 
+                          */
+                    }
+                    {columns.map(col => <col key={col.__i__} style={{ minWidth: col.minWidth, width: col.firstRenderWidth || col.minWidth /* 暂时 */ }} />)}
+                </colgroup>
+            )
         )
         /**
          * 渲染 thead
@@ -697,7 +576,7 @@ class Table extends React.Component {
 
             const renderPlainTh = (col) => (
                 <React.Fragment>
-                    <span ref={this.collectThWidth.bind(this, col)} className='u-th-content'>
+                    <span ref={this.onThMount.bind(this, col)} className='u-th-content'>
                         {col.label}
                         {
                             col.needSort && (
@@ -712,7 +591,7 @@ class Table extends React.Component {
                         }
                     </span>
                     {
-                        !props.disabledDrag && (
+                        props.dragAble && (
                             <i
                                 className='u-table-resize-btn'
                                 onMouseDown={e => this.prepareResizeCol(e, col.__i__, col.fixed || 'plain')}>
@@ -729,7 +608,7 @@ class Table extends React.Component {
 
             return (
                 <thead>
-                    <tr>
+                    <tr className='u-tr'>
                         {
                             columns.map((col) => {
                                 const align = col.type ? ' _center' : cn('_' + (col.align || props.align))
@@ -775,18 +654,19 @@ class Table extends React.Component {
                                     {rows.map((tr, i) => (
                                         <Row
                                             key={'u-tr' + i}
+                                            rowIndex={i}
                                             tr={tr}
                                             align={props.align}
-                                            rowIndex={i}
                                             checkState={this.checkState}
                                             columns={columns}
                                             bgColor={props.zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
                                             isFixed={tType !== 0}
                                             isBottom={tType === -2}
+                                            syncData={state.syncData}
                                             checkStatus={state.checkStatus}
                                             colMinRenderWidthList={this.colMinRenderWidthList}
-                                            syncData={state.syncData}
                                             syncRow={needSync ? this.syncRow.bind(this) : null}
+                                            onRowMount={this.onRowMount}
                                             onChecked={this.checkedRow}
                                             onTdClick={this.props.onTdClick}
                                         />
@@ -803,7 +683,7 @@ class Table extends React.Component {
             )
         }
 
-        const renderTable = (thead, tbody) => {
+        const renderTable = (colgroup, thead, tbody) => {
             return (
                 <table className={'u-table'} border='0' cellSpacing='0' cellPadding={0}>
                     {colgroup}
@@ -812,15 +692,21 @@ class Table extends React.Component {
                 </table>
             )
         }
-        
+
         const renderScrollTable = () => {
+            const colgroup = renderColumns(columns.plain)
+
             return (
                 <div className='u-plain__table u-main__table'>
                     <div className={'u-header__track ' + (state.topShadow ? 'shadow ' : '')}
                         style={{ paddingLeft: `${leftTableWidth}px`, overflowY: this.yScrollBar ? 'scroll' : 'hidden' }}
                         ref={this.headerTrackEl}
                     >
-                        <div className="u-table-header" style={{ width: plainTableWidth }}>{plainTable.header}</div>
+                        <div className="u-table-header" style={{ width: plainTableWidth }}>
+                            {
+                                renderTable(colgroup, renderTHead(columns.plain))
+                            }
+                        </div>
                         {/* 右侧固定列占位符 */}
                         {rightPlaceholder}
                     </div>
@@ -830,7 +716,11 @@ class Table extends React.Component {
                         ref={this.trackEl}
                         onScroll={this.syncScroll}
                     >
-                        <div className="u-table-body" style={{ width: plainTableWidth }}>{plainTable.body}</div>
+                        <div className="u-table-body" style={{ width: plainTableWidth }}>
+                            {
+                                renderTable(colgroup, null, renderTBody(columns.plain))
+                            }
+                        </div>
                         {/* padding-right也无效(⊙o⊙)？ */}
                         {/* 右侧固定列占位符 */}
                         {rightPlaceholder}
@@ -841,22 +731,68 @@ class Table extends React.Component {
             )
         }
 
+        const renderLeftTable = () => {
+            const colgroup = renderColumns(columns.left)
+            return (
+                <div className={'u-fixed-left__table ' + (state.leftShadow ? '_shadow ' : '')} style={{ width: leftTableWidth }}>
+                    <div className={'u-table-header ' + (state.topShadow ? '_shadow ' : '')}>
+                        {renderTable(colgroup, renderTHead(columns.left))}
+                    </div>
+                    <div className="u-table-body"
+                        style={{ height: fixedTableHeight }}
+                        ref={this.leftTableTbodyEl}
+                    >
+                        {renderTable(colgroup, null, renderTBody(columns.left))}
+                    </div>
+                </div>
+            )
+        }
+
+        const renderRightTable = () => {
+            const colgroup = renderColumns(columns.right)
+
+            return (
+                <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
+                    style={{ width: rightTableWidth, right: (this.yScrollBar) }}>
+                    <div className={'u-table-header ' + (state.topShadow ? '_shadow ' : '')}>
+                        {renderTable(colgroup, renderTHead(columns.right))}
+                    </div>
+                    <div className="u-table-body"
+                        style={{ height: fixedTableHeight }}
+                        ref={this.rightTableTbodyEl}
+                    >
+                        {renderTable(colgroup, null, renderTBody(columns.right))}
+                    </div>
+                </div>
+            )
+        }
+
         /**
          * 
          * 根节点
          * 
          */
+        const fixedTableHeight = (this.hasFixed && this.IS_SCROLL) ? (this.tableHeight - (this.xScrollBar || 0) - /* B_H */ 0) : 'auto'
+
         return (
             /* 总容器 */
             <div className={'u-table-container' + cn(props.className)}
                 ref={this.containerEl}
                 style={{ opacity: state.complete ? 1 : 0 }}
             >
+                {/* 普通表格 */}
                 {
                     !this.IS_SCROLL
-                        ? renderTable(renderTHead(columns.plain), renderTBody(columns.plain))
+                        ? renderTable(renderColumns(columns.plain), renderTHead(columns.plain), renderTBody(columns.plain))
                         : renderScrollTable()
                 }
+
+                {/* 左固定表格 */}
+                {this.HAS_LEFT && renderLeftTable()}
+
+                {/* 右固定表格 */}
+                {this.HAS_RIGHT && renderRightTable()}
+
 
             </div>
         )
@@ -870,7 +806,7 @@ Table.defaultProps = {
     fixedRows: null,
     rows: null,
     databaseSort: false,  // 是否使用数据库排序, 默认是表格自动排序
-    disabledDrag: false,  // 不允许用户拖拽设置表格列宽
+    dragAble: false,  // 允许用户拖拽设置表格列宽
     onSortChange: () => { },
     onTdClick: () => { },
     onSelectRowChange: () => { },
@@ -883,7 +819,7 @@ Table.propTypes = {
 
     zebra: PropTypes.bool,        // 是否需要斑马线
     loading: PropTypes.bool,      // 控制表格显示loading
-    disabledDrag: PropTypes.bool, // 禁用设置表格列宽
+    dragAble: PropTypes.bool, // 禁用设置表格列宽
     databaseSort: PropTypes.bool, // 排序方式，表格自身排序 | 数据库排序（有onSortChange事件）
 
     onTdClick: PropTypes.func,    // 点击表格单元格
