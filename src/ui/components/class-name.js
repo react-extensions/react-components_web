@@ -1,3 +1,3 @@
-export default function (name){
-    return name ? (' '+ name) : ''
+export default function (name, preFix){
+    return name ? (' '+(preFix||'')+ name) : ''
 }

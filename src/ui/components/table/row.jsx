@@ -202,7 +202,7 @@ class Row extends React.Component {
     renderTdContentWrap(col, child) {
         return (
             <div title={(typeof child === 'string' || typeof child === 'number') ? child : ''}
-             className={'u-td-content' + (col.width ? ' fill' : '') + (col.className ? ` ${col.className}` : '')}
+             className={'u-td-content' + (col.width ? ' _fill' : '') + (col.className ? ` ${col.className}` : '')}
               ref={this.collectWidth.bind(this, col)}>
                 {child}
             </div>
@@ -229,7 +229,7 @@ class Row extends React.Component {
 
         return (
             this.props.columns.map((col, j) => {
-                const align = col.type ? ' _center' : cn(' _' + (col.align || this.props.align))
+                const align = col.type ? ' _align-center' : cn(col.align, '_align-')
                 return (
                     <td key={j}
                         className={'u-td' + align}

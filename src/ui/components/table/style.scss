@@ -8,6 +8,20 @@ $row-height: 60px; // 表格行高
     background: #fff;
     overflow: hidden;
     transition: opacity cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
+    &._align-center {
+        text-align: center !important;
+    }
+
+    &._align-right {
+        text-align: right !important;
+    }
+
+    &._align-left {
+        text-align: left !important;
+    }
+    &._stretch{
+        overflow-x: auto;
+    }
 
     .iconfont {
         display: inline-block;
@@ -25,9 +39,10 @@ $row-height: 60px; // 表格行高
         right: 50%;
         margin: -21px 0 0 -21px;
     }
-
+    
 }
 
+// table
 .u-table {
     border-spacing: 0;
     table-layout: fixed;
@@ -70,7 +85,6 @@ $row-height: 60px; // 表格行高
         overflow: hidden;
         // transition: height ease .3s;
     }
-
 }
 
 .u-fixed-right__table {
@@ -188,15 +202,15 @@ $row-height: 60px; // 表格行高
 
 .u-th,
 .u-td {
-    &._center {
+    &._align-center {
         text-align: center !important;
     }
 
-    &._right {
+    &._align-right {
         text-align: right !important;
     }
 
-    &._left {
+    &._align-left {
         text-align: left !important;
     }
 }
@@ -205,6 +219,8 @@ $row-height: 60px; // 表格行高
 .u-th-content,
 .u-td-content {
     display: inline-block;
+    padding-left:20px;
+    box-sizing: border-box;
 
     // 如果用户设置的 列宽， 就会被加上 fill 类名
     &._fill {
@@ -220,6 +236,8 @@ $row-height: 60px; // 表格行高
 
 .u-td-content {
     white-space: normal;
+    // white-space: nowrap;
+
 }
 
 

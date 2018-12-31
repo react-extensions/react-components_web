@@ -9,29 +9,45 @@ import {
 const columns = [
     {
         label: '姓名',
-        prop: 'name'
+        prop: 'name',
+        width: 120
+
     },
     {
         label: '年龄',
-        prop: 'age'
+        prop: 'age',
+        width: 120
+
     },
     {
         label: '工作',
-        prop: 'job'
+        prop: 'job',
+        width: 120
+
     },
     {
         label: '备注',
-        prop: 'note'
+        prop: 'note',
+        width: 320
+
     },
      {
         label: '备注',
-        prop: 'note'
+        prop: 'note',
+        width: 420
+
     },
      {
         label: '备注',
         prop: 'note',
         fixed:'left',
-        width: 12
+        width: 120
+    },
+     {
+        label: '备注',
+        prop: 'note',
+        fixed:'right',
+        width: 120
     }
 ]
 const rows = [
@@ -69,7 +85,7 @@ class App extends Component {
     super(props)
 
     this.state = {
-        rows: [...rows]
+        rows: [...rows, ...rows, ...rows, ...rows, ...rows]
     }
 
   }
@@ -88,10 +104,10 @@ class App extends Component {
         <Button  onClick={this.handleClick.bind(this)}>{'click'}</Button>
         <Input/>
         <Table 
-            tableHeight={300}
+            tableHeight={300}   
             columns={columns} 
             rows={this.state.rows}
-            // type='tile'
+            type='tile'
         />
         1231
       </div>
