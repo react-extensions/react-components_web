@@ -32,13 +32,11 @@ class Table extends React.Component {
             leftShadow: false,  // 阴影
             rightShadow: true,
             topShadow: false,
-            
+            syncData: { check: {} },
             checkStatus: -1,  // -1 全不选中  0 部分  1全选
-            fixedBottomHeight: 0, // 底部表格高度
+            fixedBottomHeight: 0,
             sortMap: { current: '', order: ASC } // 表格排序, current 为当前行的prop. order  ASC正序 DESC 反序
         }
-
-        this.syncQueue = []
 
         this.plainTableBodyTrackEl = { current: null }
         this.containerEl = { current: null }
@@ -96,13 +94,13 @@ class Table extends React.Component {
             col.__i__ = i
 
             // 最小缩放宽度
-            minWidth = col.width || ((isCheckbox || isRadio || type === 'expand' || type === 'index') ? 50 : null);
+            minWidth = col.width || ((isCheckbox || isRadio || type === 'expand' || type === 'index') ? 50 : 0);
             col.minWidth = minWidth         // 最小允许宽度
             col.maxWidthInCol = minWidth    // 一列中最大宽度
             col.firstRenderWidth = minWidth // 首次渲染后 ， 一列中最大宽度
 
             // 如果 设置type 或 width 则 禁止展宽
-            if (type || col.fixed) {
+            if (type /* || col.width */ || col.fixed) {
                 col.cannotExpand = true
             }
 
@@ -149,7 +147,7 @@ class Table extends React.Component {
         // 首次渲染完成
         if (this.state.complete) return
         // 第一次渲染有无数据
-        this.hasNoData = props.rows.length === 0
+        this.hasNoDataWhenInit = props.rows.length === 0
     }
     /**
      * 初次渲染完成后，开始计算布局
@@ -171,6 +169,7 @@ class Table extends React.Component {
             this.checkedList = []
 
             this.setState({
+                syncData: { check: {} },
                 checkStatus: -1,
             })
         }
@@ -206,27 +205,23 @@ class Table extends React.Component {
      */
     onThMount(col, el) {
         // cannotExpand 不需要根据dom元素设置宽度，因为肯定已经有了
-        // 如果已设置col.width 则以col.width作为最小宽度， 也不需要设置
-        if (!el || this.state.complete || col.width || (col.cannotExpand && col.width)) return
-        const domWidth = el.offsetWidth
-        col.minWidth = domWidth
-        col.maxWidthInCol = domWidth    // 一列中最大宽度
-        col.firstRenderWidth = domWidth
+        // 没有th.width 的肯定需要
+        if (!el || (col.cannotExpand && col.width)) return
+        col.minWidth = el.offsetHeight
     }
     /**
      * 收集td col 的最大宽度
      */
     onRowMount(col, width) {
         /* 暂时，第一次渲染没数据 */
-        // 如果cannotExpand 或者 td内容宽度 小于最小宽度 或者  td内容宽度 小于 当前已有的最大宽度
-        // 不进行下一步
-        if (col.cannotExpand || width < col.minWidth || width < col.maxWidthInCol) return;
-
-        col.maxWidthInCol = width
+        if (col.cannotExpand || width < col.minWidth) return;
 
         if (!this.state.complete) {
-            // console.log(123)
             col.firstRenderWidth = width
+        }
+
+        if (width > col.maxWidthInCol) {
+            col.maxWidthInCol = width
         }
     }
 
@@ -250,8 +245,6 @@ class Table extends React.Component {
 
         // 初始化 横向结构, 列宽,
         this.analyseScroll()
-
-        // if(this.props.rows.length===0) return
 
         this.USE_TILE_LAYOUT && this.computeColWidth()
 
@@ -290,8 +283,6 @@ class Table extends React.Component {
             }
         }())
 
-        // console.log(hasZero)
-
 
         // 如果表格 物理宽度 大于 计算宽度   diff > 0
         const diff = containerWidth - totalWidth
@@ -309,7 +300,6 @@ class Table extends React.Component {
 
             minWidth = col.minWidth
             maxWidthInCol = col.maxWidthInCol
-            // console.log(minWidth, maxWidthInCol)
 
             //  对于像 checkbox|expand 这种列，没有获取节点的最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
             // 比较th的宽度 和 td的宽度，哪个宽用哪个
@@ -350,7 +340,6 @@ class Table extends React.Component {
             }
 
             col.maxWidthInCol = lastWidth
-            // col.firstRenderWidth = lastWidth
 
             return col
         }) // End forEach
@@ -397,13 +386,13 @@ class Table extends React.Component {
 
         if (this.HAS_RIGHT) {
             this.rightTableTbodyEl.current.scrollTop = top
-            if (state.rightShadow !== (this.containerEl.current.clientWidth + left - (this.tableWidth.total + this.scrollBarX) < -5)) {
+            if (state.rightShadow !== (this.containerEl.current.clientWidth + left - (this.tableWidth.total+this.scrollBarX)< -5)) {
                 this.setState({ rightShadow: !state.rightShadow })
             }
         }
 
     }
-
+  
 
 
 
@@ -439,7 +428,7 @@ class Table extends React.Component {
                          * 关于 width 还待研究
                          */
                     }
-                    {columns.map(col => <col key={col.__i__} style={{ minWidth: col.minWidth, width: this.USE_TILE_LAYOUT ? col.firstRenderWidth : col.minWidth }} />)}
+                    {columns.map(col => <col key={col.__i__} style={{ minWidth: col.minWidth, width: col.maxWidthInCol}} />)}
                 </colgroup>
             )
         )
@@ -531,18 +520,19 @@ class Table extends React.Component {
                                             key={'u-tr' + i}
                                             rowIndex={i}
                                             tr={tr}
+                                            align={props.align}
                                             checkState={this.checkState}
                                             columns={columns}
                                             bgColor={props.zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
                                             isFixed={tType !== 0}
                                             isBottom={tType === -2}
-                                            needSync={this.HAS_FIXED}
+                                            syncData={state.syncData}
                                             checkStatus={state.checkStatus}
-                                            // syncRow={needSync ? this.syncRow : null}
+                                            colMinRenderWidthList={this.colMinRenderWidthList}
+                                            syncRow={needSync ? this.syncRow.bind(this) : null}
                                             onRowMount={this.onRowMount}
                                             onChecked={this.checkedRow}
                                             onTdClick={this.props.onTdClick}
-                                            syncQueue = {this.syncQueue}
                                         />
                                     ))}
                                 </tbody>

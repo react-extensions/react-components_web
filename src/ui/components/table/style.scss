@@ -173,17 +173,12 @@ $row-height: 60px; // 表格行高
 }
 
 /* 细节 */
-.u-th-content-wrap {
-    position: relative;
-}
+
 
 .u-th {
     background: #F5F5F5;
     border-top: 1px solid #e9e9e9;
     border-bottom: 1px solid #e9e9e9;
-    text-align: center;
-    vertical-align: middle;
-    text-overflow: ellipsis;
 }
 
 .u-td {
@@ -195,10 +190,6 @@ $row-height: 60px; // 表格行高
     }
 }
 
-.u-tr {
-    height: $row-height;
-    font-size: 14px;
-}
 
 .u-th,
 .u-td {
@@ -215,6 +206,14 @@ $row-height: 60px; // 表格行高
     }
 }
 
+.u-th-content-wrap {
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 
 .u-th-content,
 .u-td-content {
@@ -224,7 +223,7 @@ $row-height: 60px; // 表格行高
 
     // 如果用户设置的 列宽， 就会被加上 fill 类名
     &._fill {
-        width: 100%;
+        // width: 100%;
         text-overflow: ellipsis;
         overflow: hidden;
     }
@@ -242,7 +241,9 @@ $row-height: 60px; // 表格行高
 
 
 .u-tr {
-    transition: background cubic-bezier(0.455, 0.03, 0.515, 0.955) .6s;
+    transition: background cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
+    height: $row-height;
+    font-size: 14px;
 
     &._darken {
         background: #fafafa;

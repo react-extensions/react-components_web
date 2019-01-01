@@ -10,43 +10,53 @@ const columns = [
     {
         label: '姓名',
         prop: 'name',
-        width: 120
+        // width: 10
 
     },
     {
         label: '年龄',
         prop: 'age',
-        width: 120
+        width: 50
 
     },
     {
         label: '工作',
         prop: 'job',
-        width: 120
+        width: 70
 
     },
     {
         label: '备注',
         prop: 'note',
-        width: 320
+        width: 120
+
+    }, {
+        label: '备注',
+        prop: 'note',
+        width: 120
+
+    }, {
+        label: '备注',
+        prop: 'note',
+        width: 120
 
     },
      {
         label: '备注',
         prop: 'note',
-        width: 420
+        // width: 720
 
     },
      {
         label: '备注',
         prop: 'note',
-        fixed:'left',
+        // fixed:'left',
         width: 120
     },
      {
         label: '备注',
         prop: 'note',
-        fixed:'right',
+        // fixed:'right',
         width: 120
     }
 ]
@@ -59,21 +69,21 @@ const rows = [
     },
     {
         name: '李十三',
-        age: '22',
+        age: '221',
         job: 'bug制造师',
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
 
     },
     {
         name: '李十三',
-        age: '22',
+        age: '21232',
         job: 'bug制造师',
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
 
     },
     {
         name: '李十三',
-        age: '22',
+        age: '2',
         job: 'bug制造师',
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
     },
@@ -85,7 +95,7 @@ class App extends Component {
     super(props)
 
     this.state = {
-        rows: [...rows, ...rows, ...rows, ...rows, ...rows]
+        rows: []
     }
 
   }
@@ -107,7 +117,7 @@ class App extends Component {
             tableHeight={300}   
             columns={columns} 
             rows={this.state.rows}
-            type='tile'
+            // type='tile'
         />
         1231
       </div>

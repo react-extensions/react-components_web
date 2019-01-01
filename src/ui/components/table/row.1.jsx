@@ -7,10 +7,6 @@ import {
 import cn from '../class-name'
 
 const HEIGHT = 'HEIGHT'
-const HOVER = 'HOVER'
-const CHECK = 'CHECK'
-const EXPAND = 'EXPAND'
-const EXPAND_HEIGHT = 'EXPAND_HEIGHT'
 
 class Subject {
     constructor(){
@@ -45,22 +41,24 @@ class Row extends React.Component {
             checked: false,
             collapse: true,
             expandContent: null,
-            isHover: false,
+            hoverIndex: -1,
             expandTrHeight: 0,
             trHeight: null
         }
         this.mounted = false
 
-        if (props.needSync) {
+        if (props.syncRow) {
             this.expandTr = {current: null}
-            let syncObj = props.syncQueue[props.rowIndex]
-            if(!syncObj) {
-                syncObj = new Subject()
-                props.syncQueue[props.rowIndex] = syncObj
-            }
-            this.removeObjserver = syncObj.addObserver(this)
-            this.syncObj = syncObj
         }
+
+        let syncObj = props.syncQueue[props.rowIndex]
+        if(!syncObj) {
+            syncObj = new Subject()
+            props.syncQueue[props.rowIndex] = syncObj
+        }
+        this.removeObjserver = syncObj.addObserver(this)
+        this.syncObj = syncObj
+        console.log(syncObj)
 
         this.checked = this.checked.bind(this)
         this.getTrHeight = this.getTrHeight.bind(this)
@@ -69,7 +67,62 @@ class Row extends React.Component {
     componentDidMount() {
         this.mounted = true
     }
-   
+
+    componentWillReceiveProps(N_P) {
+        const O_P = this.props
+            , rowIndex = O_P.rowIndex
+            , checkState = O_P.checkState // 1 多选  2 单选  0 没有
+
+            , O_STATUS = O_P.checkStatus
+            , N_STATUS = N_P.checkStatus
+
+            , O_SYNC_CHECK = O_P.syncData.check || {}
+            , N_SYNC_CHECK = N_P.syncData.check || {}
+
+            , O_SYNC_EXPAND = O_P.syncData.expand || {}
+            , N_SYNC_EXPAND = N_P.syncData.expand || {}
+
+
+
+        // 控制一下性能
+        // 同步表格行数据
+
+        /* HOVER */
+        if (diff(O_P.syncData.hover, N_P.syncData.hover, rowIndex)) {
+            this.setState({ hoverIndex: N_P.syncData.hover })
+        }
+
+        /* CHECK */
+        if (checkState === CHECK_TYPE.CHECKBOX) { // 多选
+
+            if (N_STATUS !== O_STATUS) { // table全选
+                if (N_STATUS === 1) {
+                    this.setState({ checked: true })
+                } else if (N_STATUS === -1) {
+                    this.setState({ checked: false })
+                }
+            }
+
+            if (N_STATUS !== 1 && N_STATUS !== -1 && rowIndex === N_SYNC_CHECK.index) {
+                this.setState({ checked: N_SYNC_CHECK.checked })
+            }
+
+        } else if (checkState === CHECK_TYPE.RADIO) {  // 单选
+            if (diff(O_SYNC_CHECK.index, N_SYNC_CHECK.index, rowIndex)) {
+                this.setState({ checked: N_SYNC_CHECK.index === rowIndex })
+            }
+        }
+
+        /* EXPAND */
+        if (diff(O_SYNC_EXPAND.index, N_SYNC_EXPAND.index, rowIndex)) {
+            this.setState({ expandContent: N_SYNC_EXPAND.content, collapse: !(N_SYNC_EXPAND.index === rowIndex) })
+        }
+        // 同步expandTr高度
+        if (N_SYNC_EXPAND.index === rowIndex && N_P.syncData.expandTrHeight !== this.state.expandTrHeight) {
+            N_P.isFixed && this.setState({ expandTrHeight: N_P.syncData.expandTrHeight })
+        }
+
+    }
     shouldComponentUpdate(N_P, N_S) {
         const O_P = this.props
             , O_S = this.state
@@ -78,53 +131,40 @@ class Row extends React.Component {
             || O_P.tr !== N_P.tr
             || O_P.rowIndex !== N_P.rowIndex
             || N_S.checked !== O_S.checked
-            || N_S.isHover !== O_S.isHover
+            || N_S.hoverIndex !== O_S.hoverIndex
             || N_S.collapse !== O_S.collapse
             || N_S.expandTrHeight !== O_S.expandTrHeight
-            || N_S.trHeight !== O_S.trHeight
     }
     /*
     * 有expandTr时，展开或关闭后，同步高度
     *
     * */
     componentDidUpdate(prevP, prevS) {
-     
-        if (prevS.collapse !== this.state.collapse && prevS.collapse && prevP.needSync && !prevP.isFixed) {
+        const syncRow = prevP.syncRow
+        if (prevS.collapse !== this.state.collapse && prevS.collapse && syncRow && !prevP.isFixed) {
             //this.expandTr.current.clientHeight  在ie9中获取不到值
             //.getBoundingClientRect().height    在普通浏览器中又获取不到值
             const el = this.expandTr.current
             const height = /MSIE 9/i.test(window.navigator.userAgent) ? el.getBoundingClientRect().height : el.clientHeight
-            this.syncObj.emit(EXPAND_HEIGHT, height, this)
+            syncRow('expandTrHeight', height)
         }
     }
     componentWillUnmount() {
-        this.removeObjserver && this.removeObjserver(len=>{
+        this.removeObjserver(len=>{
             len === 0 && (this.props.syncQueue[this.props.rowIndex] = null);
         })
     }
-    /**
-     * 更新同步数据
-     * @param {*} key 
-     * @param {*} value 
-     */
     updateSync(key, value) {
         if(key === HEIGHT) {
             this.setState({trHeight: value})
-        } else if(key === HOVER) {
-            this.setState({isHover: value})
         }
     }
-    /**
-     * 获取tr高度
-     * @param {*} el 
-     */
     getTrHeight(el) {
-        if(!el || !this.props.needSync) return
+        if(!el) return
         const height = el.clientHeight
         if(this.oldHeight !== height ) {
             this.oldHeight = height
             const cacheHeight = this.syncObj.height
-            // 当高度缩小时， 会导致bug /* 暂时 */
             if(height < cacheHeight) {
                 this.setState({
                     trHeight:  cacheHeight
@@ -150,17 +190,17 @@ class Row extends React.Component {
     // 具有多选功能的表格
     checked(e) {
         e && e.stopPropagation()
-        const isChecked = !this.state.checked  // 是否选中
-        
+
+        const bool = !this.state.checked
         const props = this.props
 
         // 发送数据给table
-        props.onChecked(props.tr, isChecked, props.rowIndex)
+        props.onChecked(props.tr, bool, props.rowIndex)
 
-        this.setState({ checked: isChecked })
-
-        if (props.needSync) { 
-            this.syncObj.emit(CHECK, isChecked, this)
+        if (props.syncRow) {  // 只有 有固定列的时候, 才会有 props.syncRow
+            props.syncRow('check', { index: props.rowIndex, checked: bool })
+        } else {
+            this.setState({ checked: bool })
         }
 
     }
@@ -181,21 +221,25 @@ class Row extends React.Component {
 
     }
 
-    /**
-     * 鼠标移入移出样式
-     */
-    toggleRowBG(isOn) {
-        this.setState({ isHover: isOn > 0 })
-        if (this.props.needSync) {
-            this.syncObj.emit(HOVER, isOn > 0, this)
+    // 鼠标移入样式
+    toggleRowBG(type) {
+
+        const { rowIndex, syncRow } = this.props
+
+        if (syncRow) {
+            syncRow('hover', type > 0 ? rowIndex : -1)
+        } else {
+            this.setState({ hoverIndex: type > 0 ? rowIndex : -1 })
         }
+
     }
 
     /**
-     * 收集td宽度
-     * @param {*} col 
-     * @param {*} el 
-     */
+     *
+     * 计算宽度
+     *
+     * */
+
     collectWidth(col, el) {
         if (!el || this.mounted) return;
         this.props.onRowMount(col, el.offsetWidth)
@@ -258,7 +302,7 @@ class Row extends React.Component {
             ? (<tr className={'u-tr'} ref={this.getTrHeight} style={{height: state.trHeight}}>{this.mapRow()}</tr>)
             : (
                 <React.Fragment>
-                    <tr className={'u-tr' + cn(props.bgColor) + ((state.isHover || state.checked) ? ' _hover' : '')}
+                    <tr className={'u-tr ' + (props.bgColor || '') + ((state.hoverIndex === props.rowIndex || state.checked) ? ' _hover' : '')}
                         onMouseEnter={this.toggleRowBG.bind(this, 1)}
                         onMouseLeave={this.toggleRowBG.bind(this, -1)}
                         ref={this.getTrHeight} style={{height: state.trHeight}}
