@@ -77,19 +77,24 @@ $row-height: 60px; // 表格行高
     background-color: #fff;
     transition: box-shadow ease-out .4s;
 
-    &._shadow {
-        box-shadow: 0 -3px 10px 0 #ccc;
-    }
-
     .u-table-body {
         overflow: hidden;
         // transition: height ease .3s;
     }
 }
 
+.u-fixed-left__table{
+    &._shadow {
+        box-shadow: 0 -3px 10px 0 rgba(0,0,0,0.12);
+    }
+}
+
 .u-fixed-right__table {
     right: 0;
     left: auto;
+     &._shadow {
+        box-shadow: -4px -3px 10px 0 rgba(0,0,0,0.12);
+    }
 }
 
 .u-fixed-bottom__table {
@@ -98,7 +103,7 @@ $row-height: 60px; // 表格行高
     right: 0;
     z-index: 30;
     background: #fff;
-    box-shadow: 0 0 10px 0 rgba(204, 204, 204, 0.5);
+    box-shadow: 0 0 10px 0 rgba(0,0,0,0.12);
 
     .u-plain__table {
         overflow-x: hidden;
@@ -106,7 +111,7 @@ $row-height: 60px; // 表格行高
 
     .u-fixed-right__table._shadow,
     .u-fixed-left__table._shadow {
-        box-shadow: 0 0 10px 0 rgba(204, 204, 204, 0.5);
+        box-shadow: 0 0 10px 0 rgba(0,0,0,0.12);
     }
 }
 
@@ -124,7 +129,7 @@ $row-height: 60px; // 表格行高
     transition: box-shadow ease-out .4s;
 
     &._shadow {
-        box-shadow: 0 0 10px 0 #ccc;
+        box-shadow: 0 0 10px 0 rgba(0,0,0,0.12);
         position: relative;
     }
 }
@@ -241,7 +246,7 @@ $row-height: 60px; // 表格行高
 
 
 .u-tr {
-    transition: background cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
+    transition: background  .3s;
     height: $row-height;
     font-size: 14px;
 

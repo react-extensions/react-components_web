@@ -33,7 +33,7 @@ const columns = [
     }, {
         label: '备注',
         prop: 'note',
-        width: 120
+        // width: 120
 
     }, {
         label: '备注',
@@ -50,13 +50,13 @@ const columns = [
      {
         label: '备注',
         prop: 'note',
-        // fixed:'left',
+        fixed:'left',
         width: 120
     },
      {
         label: '备注',
         prop: 'note',
-        // fixed:'right',
+        fixed:'right',
         width: 120
     }
 ]
@@ -88,6 +88,34 @@ const rows = [
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
     },
 ]
+const rowsTwo = [
+    {
+        name: '李十三',
+        age: '22',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+    },
+    {
+        name: '李十三',
+        age: '221',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+
+    },
+    {
+        name: '李十三',
+        age: '21232',
+        job: 'bug制造师',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+
+    },
+    {
+        name: '李十三',
+        age: '12213123213123',
+        job: 'bug制造师',
+        note: '测试士大夫士大夫士大分开了沙发了逻辑零六十飞机；刻录机解放了垃圾斯大林拉萨机了解了十大'
+    },
+]
 
 
 class App extends Component {
@@ -95,13 +123,13 @@ class App extends Component {
     super(props)
 
     this.state = {
-        rows: []
+        rows: [...rows]
     }
 
   }
   handleClick(){
       this.setState({
-          rows: rows.concat(this.state.rows)
+          rows: rowsTwo.concat(this.state.rows)
       })
   }
 
@@ -117,7 +145,7 @@ class App extends Component {
             tableHeight={300}   
             columns={columns} 
             rows={this.state.rows}
-            // type='tile'
+            type='tile'
         />
         1231
       </div>

@@ -18,6 +18,7 @@ class Subject {
         this.height = 0
     }
     emit(key, value, vm) {
+        key === HEIGHT && (this.height = value)
         this.observerQueue.forEach(item=>item !== vm && item.updateSync(key, value))
     }
     addObserver(observer) {
@@ -26,6 +27,9 @@ class Subject {
             this.observerQueue.splice(this.observerQueue.indexOf(observer), 1)
             callback(this.observerQueue.length)
         }
+    }
+    resize() {
+        this.observerQueue.forEach(item=>item.forceUpdate())
     }
 }
 
@@ -41,19 +45,11 @@ function diff(o, n, c) {
 class Row extends React.Component {
     constructor(props) {
         super(props)
-        this.state = {
-            checked: false,
-            collapse: true,
-            expandContent: null,
-            isHover: false,
-            expandTrHeight: 0,
-            trHeight: null
-        }
-        this.mounted = false
+
+        let syncObj = props.syncQueue[props.rowIndex]
 
         if (props.needSync) {
-            this.expandTr = {current: null}
-            let syncObj = props.syncQueue[props.rowIndex]
+            this.expandTr = React.createRef()
             if(!syncObj) {
                 syncObj = new Subject()
                 props.syncQueue[props.rowIndex] = syncObj
@@ -61,6 +57,19 @@ class Row extends React.Component {
             this.removeObjserver = syncObj.addObserver(this)
             this.syncObj = syncObj
         }
+        
+
+        this.state = {
+            checked: false,  // 选中
+            collapse: true,  // 折叠
+            expandContent: null, // 扩展行内容
+            isHover: false,      // 鼠标移入
+            expandTrHeight: 0,   // 扩展行 高度
+            trHeight: props.isFixed ? syncObj.height:null       // 行宽度
+        }
+        this.mounted = false
+
+        
 
         this.checked = this.checked.bind(this)
         this.getTrHeight = this.getTrHeight.bind(this)
@@ -114,6 +123,7 @@ class Row extends React.Component {
             this.setState({isHover: value})
         }
     }
+
     /**
      * 获取tr高度
      * @param {*} el 
@@ -121,19 +131,11 @@ class Row extends React.Component {
     getTrHeight(el) {
         if(!el || !this.props.needSync) return
         const height = el.clientHeight
-        if(this.oldHeight !== height ) {
-            this.oldHeight = height
-            const cacheHeight = this.syncObj.height
-            // 当高度缩小时， 会导致bug /* 暂时 */
-            if(height < cacheHeight) {
-                this.setState({
-                    trHeight:  cacheHeight
-                })
-            } else {
-                this.syncObj.emit(HEIGHT, height, this)
-            }
+        if(this.syncObj.height !== height ) {
+            this.syncObj.emit(HEIGHT, height, this)
         }
     }
+
     /**
      * 点击表格单元格
      * */
@@ -261,7 +263,7 @@ class Row extends React.Component {
                     <tr className={'u-tr' + cn(props.bgColor) + ((state.isHover || state.checked) ? ' _hover' : '')}
                         onMouseEnter={this.toggleRowBG.bind(this, 1)}
                         onMouseLeave={this.toggleRowBG.bind(this, -1)}
-                        ref={this.getTrHeight} style={{height: state.trHeight}}
+                        ref={!props.isFixed && this.getTrHeight} style={{height: state.trHeight}}
                     >
                         {this.mapRow()}
                     </tr>

@@ -48,7 +48,6 @@ class Table extends React.Component {
 
         this.tableWidth = { plain: '100%', left: 0, right: 0, total: 0 }
         this.checkedList = []       // 多选或单选表格， 选中的表格行
-        this.checkState = CHECK_TYPE.NONE  // 当前表格的类型  带有单选 | 有多选功能  | 无
 
         this.scrollBarY = 0
         this.scrollBarX = 0
@@ -133,7 +132,7 @@ class Table extends React.Component {
 
 
         this.columns = columns
-        this.checkState = tableType
+        this.checkState = tableType // 当前表格的类型  带有单选 | 有多选功能  | 无
 
         this.HAS_LEFT = columns.left.length > 0
         this.HAS_RIGHT = columns.right.length > 0
@@ -196,7 +195,9 @@ class Table extends React.Component {
         clearTimeout(this.resizeTimer)
         this.resizeTimer = setTimeout(() => {
             this._initStructure()
-            this.forceUpdate()
+            this.forceUpdate(()=>{
+                this.syncQueue.forEach(item=>item.resize())
+            })
         }, 500)
     }
     /**
@@ -217,15 +218,13 @@ class Table extends React.Component {
      * 收集td col 的最大宽度
      */
     onRowMount(col, width) {
-        /* 暂时，第一次渲染没数据 */
         // 如果cannotExpand 或者 td内容宽度 小于最小宽度 或者  td内容宽度 小于 当前已有的最大宽度
         // 不进行下一步
         if (col.cannotExpand || width < col.minWidth || width < col.maxWidthInCol) return;
 
         col.maxWidthInCol = width
-
+        // 如果第一次渲染没有数据，这一步将一直不会执行， firstRender = minWidth
         if (!this.state.complete) {
-            // console.log(123)
             col.firstRenderWidth = width
         }
     }
@@ -251,9 +250,9 @@ class Table extends React.Component {
         // 初始化 横向结构, 列宽,
         this.analyseScroll()
 
-        // if(this.props.rows.length===0) return
+        if(this.props.rows.length===0 || !this.USE_TILE_LAYOUT) return
 
-        this.USE_TILE_LAYOUT && this.computeColWidth()
+        this.computeColWidth()
 
     }
 
@@ -309,7 +308,6 @@ class Table extends React.Component {
 
             minWidth = col.minWidth
             maxWidthInCol = col.maxWidthInCol
-            // console.log(minWidth, maxWidthInCol)
 
             //  对于像 checkbox|expand 这种列，没有获取节点的最小宽度,  其最小宽度在初始化时(constructor中) 已经被设置了
             // 比较th的宽度 和 td的宽度，哪个宽用哪个
@@ -350,7 +348,6 @@ class Table extends React.Component {
             }
 
             col.maxWidthInCol = lastWidth
-            // col.firstRenderWidth = lastWidth
 
             return col
         }) // End forEach
@@ -439,7 +436,7 @@ class Table extends React.Component {
                          * 关于 width 还待研究
                          */
                     }
-                    {columns.map(col => <col key={col.__i__} style={{ minWidth: col.minWidth, width: this.USE_TILE_LAYOUT ? col.firstRenderWidth : col.minWidth }} />)}
+                    {columns.map(col => <col key={col.__i__} style={{ minWidth: col.minWidth, width: this.USE_TILE_LAYOUT ? col.maxWidthInCol : col.minWidth }} />)}
                 </colgroup>
             )
         )
@@ -510,9 +507,9 @@ class Table extends React.Component {
             )
         }
 
-        const renderTBody = (columns, tType, needSync) => {
+        const renderTBody = (columns, tType) => {
 
-            let rows = tType === -2 ? props.fixedRows : props.rows
+            let rows = tType === 'bottom' ? props.fixedRows : props.rows
             // 表格排序
             if (!props.databaseSort && sortMap.current && rows && rows.length > 0 && tType === 0) {
                 rows = this.sortRows(rows)
@@ -520,7 +517,7 @@ class Table extends React.Component {
 
             return (
                 <React.Fragment>
-                    {props.loading && tType === 0 ? <Icon type='loading' /> : null}
+                    {props.loading && tType === 'normal' ? <Icon type='loading' /> : null}
                     {
                         (rows && rows.length > 0)
                             ? (
@@ -528,17 +525,16 @@ class Table extends React.Component {
                                 <tbody>
                                     {rows.map((tr, i) => (
                                         <Row
-                                            key={'u-tr' + i}
+                                            key={i}
                                             rowIndex={i}
                                             tr={tr}
-                                            checkState={this.checkState}
                                             columns={columns}
+                                            checkState={this.checkState}
                                             bgColor={props.zebra && (i % 2 === 0 ? 'lighten' : 'darken')}
-                                            isFixed={tType !== 0}
-                                            isBottom={tType === -2}
+                                            isFixed={tType !== 'normal' && tType !== 'bottom'}
+                                            isBottom={tType === 'bottom'}
                                             needSync={this.HAS_FIXED}
                                             checkStatus={state.checkStatus}
-                                            // syncRow={needSync ? this.syncRow : null}
                                             onRowMount={this.onRowMount}
                                             onChecked={this.checkedRow}
                                             onTdClick={this.props.onTdClick}
@@ -593,7 +589,7 @@ class Table extends React.Component {
                         onScroll={this.syncScroll}
                     >
                         <div className="u-table-body">
-                            {renderTable(colgroup, null, renderTBody(columns.plain), { width: plainTableWidth })}
+                            {renderTable(colgroup, null, renderTBody(columns.plain, 'normal'), { width: plainTableWidth })}
                         </div>
 
                         {
@@ -619,7 +615,7 @@ class Table extends React.Component {
                         style={{ height: fixedTableHeight }}
                         ref={this.leftTableTbodyEl}
                     >
-                        {renderTable(colgroup, null, renderTBody(columns.left))}
+                        {renderTable(colgroup, null, renderTBody(columns.left, 'left'))}
                     </div>
                 </div>
             )
@@ -638,7 +634,7 @@ class Table extends React.Component {
                         style={{ height: fixedTableHeight }}
                         ref={this.rightTableTbodyEl}
                     >
-                        {renderTable(colgroup, null, renderTBody(columns.right))}
+                        {renderTable(colgroup, null, renderTBody(columns.right, 'right'))}
                     </div>
                 </div>
             )
@@ -661,7 +657,7 @@ class Table extends React.Component {
                 {
                     this.USE_SPLIT_LAYOUT
                         ? renderSplitLayoutTable()
-                        : renderTable(renderColumns(columns.plain), renderTHead(columns.plain), renderTBody(columns.plain))
+                        : renderTable(renderColumns(columns.plain), renderTHead(columns.plain), renderTBody(columns.plain, 'normal'))
                 }
 
                 {/* 左固定表格 */}
@@ -706,9 +702,8 @@ Table.propTypes = {
 
     emptyTip: PropTypes.node,     // 定义表格为空数据时要显示的提示
     align: PropTypes.oneOf(['left', 'right', 'center']), // 表格内文本对齐
-    // responsive: PropTypes.bool,   // 自适应布局
     rows: PropTypes.array,
-    // fixedRows:
+    fixedRows: PropTypes.array,
 }
 
 export default Table
