@@ -11,7 +11,7 @@ import Portal from './components/portal'
 import Button from './components/button'
 import Table from './components/table'
 import Modal from './components/modal'
-// import Icon from './components/icon/icon'
+import Icon from './components/icon'
 import Cell from './components/cell'
 import Input from './components/input'
 // import Tab from './components/tab/tab'
@@ -31,7 +31,7 @@ export {
   Table,
   Input,
   Modal,
-  // Icon,
+  Icon,
   Cell,
   // Tab,
 }

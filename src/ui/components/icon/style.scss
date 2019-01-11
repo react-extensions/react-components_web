@@ -2,51 +2,173 @@
 @import '../../style/animation.scss';
 @import '../../style/global-config.scss';
 
+.u-icon {
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
 $size: 14px;
 
+/* 关闭 icon */
 .u-icon__close-bg,
 .u-icon__close {
-  position: relative;
-  width: 14px;
-  height: 14px;
-  display: inline-block;
-  border-radius:50%;
-  overflow: hidden;
-
-  &:after,
-  &:before{
-    display:block;
-    content: '\0020';
-    width: 1px;
+    position: relative;
+    width: 14px;
     height: 14px;
+    display: inline-block;
+    border-radius: 50%;
+    overflow: hidden;
+
+    &:after,
+    &:before {
+        display: block;
+        content: '\0020';
+        width: 1px;
+        height: 14px;
+        background: #ccc;
+        transform-origin: center center;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotateZ(45deg);
+    }
+
+    &:after {
+        transform: translate(-50%, -50%) rotateZ(-45deg);
+    }
+}
+
+.u-icon__close-bg {
     background: #ccc;
-    transform-origin: center center;
-    position: absolute;
-    top:50%;left:50%;
-    transform: translate(-50%, -50%) rotateZ(45deg);
-  }
 
-  &:after{
-    transform: translate(-50%, -50%) rotateZ(-45deg);
-  }
+    &:after,
+    &:before {
+        background: #fff;
+        height: 10px;
+    }
 }
-.u-icon__close-bg{
-  background: #ccc;
-  &:after,
-  &:before{
+
+/* loading icon */
+.u-icon__loading {
+    width: $size;
+    height: $size;
+    border: 2px solid;
+    border-color: $base-theme-color;
+    animation: u_spin linear 0.8s infinite;
+    border-radius: 50%;
+    border-right-color: transparent;
+    border-left-color: transparent;
+}
+
+/* check icon */
+.u-icon__square {
+    display: inline-block;
+    border: 1px solid $base-border-color;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    border-radius: 2px;
+    position: relative;
+    transition: border ease .3s;
     background: #fff;
-    height: 10px;
-  }
+
+    &:hover {
+        border-color: $base-theme-color;
+    }
+
+    &:after {
+        display: block;
+        content: '\0020';
+        width: 0;
+        overflow: hidden;
+        position: absolute;
+        transition: transform ease .3s, background ease .3s, ;
+
+    }
+
+    &._half-checked {
+        &:after {
+            width: 6px;
+            height: 6px;
+            top: 50%;
+            left: 50%;
+            margin-top: -3px;
+            margin-left: -3px;
+            border-radius: 1px;
+            background: $base-theme-color;
+        }
+    }
+
+    &._checked {
+        border-color: $base-theme-color;
+
+        &::after {
+            bottom: 20%;
+            left: 50%;
+            margin-left: -3px;
+            width: 4px;
+            height: 8px;
+            border-bottom: 2px solid $base-theme-color;
+            border-right: 2px solid $base-theme-color;
+            transform: rotateZ(35deg);
+            transform: rotate3d(0, 0, 1, 35deg);
+        }
+    }
 }
 
-.u-icon__loading{
-  width:$size;
-  height: $size;
-  box-sizing: border-box;
-  border: 2px solid;
-  border-color: $base-theme-color;
-  animation: u_spin linear 0.8s infinite;
-  border-radius: 50%;
-  border-right-color: transparent;
-  border-left-color: transparent;
+$border : 6px solid;
+
+.u-icon__arrow-fill {
+    width: 0;
+    height: 0;
+    border: $border $base-border-color;
+    transition: border ease .3s;
+    transform: rotateZ(45deg);
+    // animation: spinner linear 8s infinite ;
+    &._active{
+        border-color: $base-theme-color;
+    }
+
+    &._up {
+        border-bottom-color: transparent !important;
+        border-right-color: transparent  !important;
+    }
+
+    &._down {
+        border-left-color: transparent  !important;
+        border-top-color: transparent  !important;
+    }
+
+    &._left {
+        border-right-color: transparent  !important;
+        border-top-color: transparent  !important;
+
+    }
+
+    &._right {
+        border-left-color: transparent  !important;
+        border-bottom-color: transparent  !important;
+    }
 }
+
+// @keyframes spinner {
+//     0% {
+//         border-bottom-color: transparent;
+//         border-right-color: transparent;
+//     }
+
+//     25% {
+//         border-right-color: transparent;
+//         border-top-color: transparent;
+//     }
+
+//     50% {
+//         border-left-color: transparent;
+//         border-top-color: transparent;
+//     }
+
+//     75% {
+//         border-left-color: transparent;
+//         border-bottom-color: transparent;
+//     }
+// }

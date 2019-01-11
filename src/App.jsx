@@ -1,12 +1,34 @@
 import React, { Component } from 'react';
+import './style.scss'
 import {
     Table,
     Input,
-    Button
+    Button,
+    Icon
 } from './ui'
+
+import Parent from './example/parent'
+import Child from './example/child'
 
 
 const columns = [
+     {
+        type: 'index',
+        // fixed: 'left'
+    },
+    {
+        type: 'checkbox',
+        // fixed: 'left',
+    },
+    {
+        type: 'expand',
+        // fixed: 'left',
+        content: (
+            <h1>
+                12313
+            </h1>
+        )
+    },
     {
         label: '姓名',
         prop: 'name',
@@ -16,13 +38,12 @@ const columns = [
     {
         label: '年龄',
         prop: 'age',
-        width: 50
+        needSort: true
 
     },
     {
         label: '工作',
         prop: 'job',
-        width: 70
 
     },
     {
@@ -33,12 +54,10 @@ const columns = [
     }, {
         label: '备注',
         prop: 'note',
-        // width: 120
 
     }, {
         label: '备注',
         prop: 'note',
-        width: 120
 
     },
      {
@@ -50,14 +69,13 @@ const columns = [
      {
         label: '备注',
         prop: 'note',
-        fixed:'left',
-        width: 120
+        // fixed:'left',
     },
      {
         label: '备注',
         prop: 'note',
-        fixed:'right',
-        width: 120
+        // fixed:'right',
+
     }
 ]
 const rows = [
@@ -113,7 +131,7 @@ const rowsTwo = [
         name: '李十三',
         age: '12213123213123',
         job: 'bug制造师',
-        note: '测试士大夫士大夫士大分开了沙发了逻辑零六十飞机；刻录机解放了垃圾斯大林拉萨机了解了十大'
+        note: '测试士大夫士大夫士大分开了沙发了逻辑零六十飞机圾斯大林拉萨机了解了十大'
     },
 ]
 
@@ -121,19 +139,40 @@ const rowsTwo = [
 class App extends Component {
   constructor(props) {
     super(props)
+         let arr = [...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows,...rows]
+         arr = arr.concat(arr)
+         let ar = [...arr,...arr,...arr,...arr]
 
+         console.log(ar.length)
+         
     this.state = {
-        rows: [...rows]
+        rows: [],
+        index: 0
     }
-
   }
   handleClick(){
       this.setState({
-          rows: rowsTwo.concat(this.state.rows)
+          rows: this.state.rows.concat(rowsTwo)
+      })
+  }
+  change() {
+      this.setState({
+          index: this.state.index+1
       })
   }
 
   render() {
+      const index = this.state.index%2 
+      let str = ''
+      switch(index) {
+          case 0:
+          str = '_up';
+          break
+          case 1:
+          str = '_down'
+          break
+          
+      }
     return (
       <div className="App">
       <div style={{background: 'red',lineHeight: '20px',}}>
@@ -142,12 +181,25 @@ class App extends Component {
         <Button  onClick={this.handleClick.bind(this)}>{'click'}</Button>
         <Input/>
         <Table 
-            tableHeight={300}   
             columns={columns} 
+            loading={true}
             rows={this.state.rows}
-            type='tile'
+    //         fixedRows={[ {
+    //     name: '李十三',
+    //     age: '12213123213123',
+    //     job: 'bug制造师',
+    //     note: '测试士大夫士大夫士大分开了沙发了逻辑零六十飞机圾斯大林拉萨机了解了十大'
+    // }, {
+    //     name: '李十三',
+    //     age: '12213123213123',
+    //     job: 'bug制造师',
+    //     note: '测试士大夫士大夫士大分开了沙发了逻辑零六十飞机圾斯大林拉萨机了解了十大'
+    // },]}
         />
-        1231
+
+        <Icon type='arrow-fill' className={str} onClick={this.change.bind(this)}></Icon>
+    
+
       </div>
     )
   }

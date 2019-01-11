@@ -1,11 +1,11 @@
-export const CHECK_TYPE = {
-  CHECKBOX: 'CHECKBOX',
-  RADIO: 'RADIO',
-  NONE: 'NONE'
+export const checkType = {
+    CHECKBOX: 'CHECKBOX',
+    RADIO: 'RADIO',
+    NONE: 'NONE'
 }
 
-export const TABLE_TYPE = {
-    HAS_FIXED: 'HAS_FIXED',
-    NEED_SCROLL: 'NEED_SCROLL',
-    
+export const checkStatus = {
+    CHECKED: '_checked',
+    NOT_CHECKED: '_not-checked',
+    HALF_CHECKED: '_half-checked'
 }
