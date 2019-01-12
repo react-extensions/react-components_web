@@ -15,6 +15,8 @@ const CHECK = 'CHECK'
 const EXPAND = 'EXPAND'
 const EXPAND_HEIGHT = 'EXPAND_HEIGHT'
 
+const isIE9 = /MSIE 9/i.test(window.navigator.usergent)
+
 class Subject {
     constructor() {
         this.observerQueue = []
@@ -40,9 +42,6 @@ class Subject {
 }
 
 
-function diff(o, n, c) {
-    return o !== n && (o === c || n === c)
-}
 
 /**
  * 
@@ -67,10 +66,10 @@ class Row extends React.Component {
 
         this.state = {
             isChecked: isChecked,  // 选中
-            collapse: true,  // 折叠
+            isCollapse: true,  // 折叠
             expandContent: null, // 扩展行内容
-            isHover: false,      // 鼠标移入
             expandTrHeight: 0,   // 扩展行 高度
+            isHover: false,      // 鼠标移入
             trHeight: props.isFixed ? syncObj.height : null       // 行宽度
         }
         this.mounted = false
@@ -84,7 +83,7 @@ class Row extends React.Component {
 
     shouldComponentUpdate(N_P, N_S) {
         const O_P = this.props
-            , O_S = this.state
+        const O_S = this.state
 
         return O_P.columns !== N_P.columns
             || O_P.rowData !== N_P.rowData
@@ -92,7 +91,7 @@ class Row extends React.Component {
             || O_P.checkStatus !== N_P.checkStatus
             || N_S.isChecked !== O_S.isChecked
             || N_S.isHover !== O_S.isHover
-            || N_S.collapse !== O_S.collapse
+            || N_S.isCollapse !== O_S.isCollapse
             || N_S.expandTrHeight !== O_S.expandTrHeight
             || N_S.trHeight !== O_S.trHeight
     }
@@ -102,19 +101,7 @@ class Row extends React.Component {
             this.setState({ isChecked: nextP.checkStatus === CHECKED })
         }
     }
-    /*
-    * 有expandTr时，展开或关闭后，同步高度
-    *
-    * */
-    componentDidUpdate(prevP, prevS) {
-        if (prevS.collapse !== this.state.collapse && prevS.collapse && prevP.needSync && !prevP.isFixed) {
-            //this.expandTr.current.clientHeight  在ie9中获取不到值
-            //.getBoundingClientRect().height    在普通浏览器中又获取不到值
-            const el = this.expandTr.current
-            const height = /MSIE 9/i.test(window.navigator.userAgent) ? el.getBoundingClientRect().height : el.clientHeight
-            this.syncObj.emit(EXPAND_HEIGHT, height, this)
-        }
-    }
+
     componentWillUnmount() {
         this.removeObjserver && this.removeObjserver(len => {
             len === 0 && (this.props.syncQueue[this.props.rowIndex] = null);
@@ -135,6 +122,17 @@ class Row extends React.Component {
                 break;
             case CHECK:
                 this.setState({ isChecked: value })
+                break;
+            case EXPAND:
+                this.setState({
+                    isCollapse: value.isCollapse,
+                    expandContent: this.props.isFixed ? null : value.expandContent
+                }, this.getExpandRowHeight)
+                break;
+            case EXPAND_HEIGHT:
+                this.setState({ expandTrHeight: value })
+                break;
+
         }
 
     }
@@ -182,20 +180,31 @@ class Row extends React.Component {
 
     }
     // 具有扩展功能的表格
-    expand(content, e) {
+    expand(expandContent, e) {
         e.stopPropagation()
-        const collapse = this.state.collapse
         const props = this.props
+        const isCollapse = !this.state.isCollapse
 
-        if (props.syncRow && props.isFixed) {
-            props.syncRow('expand', { index: collapse ? props.rowIndex : -1, content })
-        } else {
-            this.setState({
-                collapse: !collapse,
-                expandContent: content
-            });
+        if (props.needSync) {
+            this.syncObj.emit(EXPAND, { isCollapse, expandContent }, this)
         }
 
+        this.setState({
+            isCollapse: isCollapse,
+            expandContent: props.isFixed ? null : expandContent
+        }, this.getExpandRowHeight);
+
+    }
+    /**
+     * 获取
+     */
+    getExpandRowHeight() {
+        if (this.props.isFixed || this.state.isCollapse || !this.props.needSync) return
+        //this.expandTr.current.clientHeight  在ie9中获取不到值
+        //.getBoundingClientRect().height    在普通浏览器中又获取不到值
+        const el = this.expandTr.current
+        const height = isIE9 ? el.getBoundingClientRect().height : el.clientHeight
+        this.syncObj.emit(EXPAND_HEIGHT, height, this)
     }
 
     /**
@@ -215,7 +224,6 @@ class Row extends React.Component {
      */
     collectWidth(col, el) {
         if (!el) return;
-
         this.props.onRowMount(col, el.offsetWidth)
     }
 
@@ -236,8 +244,9 @@ class Row extends React.Component {
         )
     }
     renderTdContent(col) {
-        const { columns, rowData, rowIndex, isBottom } = this.props//  syncExpandRow, isFixed, 
-        const { isChecked, collapse } = this.state
+
+        const { rowData, rowIndex, isBottom } = this.props
+        const { isChecked, isCollapse } = this.state
 
         return isBottom
             ? this.renderTdContentWrap(col, rowData[col.type || col.prop] || null)
@@ -245,8 +254,8 @@ class Row extends React.Component {
                 ? (<Icon type='square' className={isChecked ? CHECKED : NOT_CHECKED} onClick={this.toggleCheck} />)
                 : col.type === 'expand'
                     ? (<Icon type='arrow-fill'
-                        className={'_expand-btn ' + (collapse ? '_right' : '_down')}
-                        onClick={this.expand.bind(this, columns[col.__i__].content)} />)
+                        className={'_expand-btn ' + (isCollapse ? '_right' : '_down')}
+                        onClick={this.expand.bind(this, col.content)} />)
                     : col.type === 'index'
                         ? rowIndex + 1
                         : (rowData[col.prop] || rowData[col.prop] === 0 || col.filter) && this.renderTdContentWrap(col, col.filter ? col.filter(rowData[col.prop], Object.assign({}, rowData), rowIndex) : rowData[col.prop])
@@ -270,8 +279,6 @@ class Row extends React.Component {
         const props = this.props
         if (!props.rowData) return null
         const state = this.state
-
-
         return props.isBottom
             ? (<tr className={'u-tr'} ref={this.getTrHeight} style={{ height: state.trHeight }}>{this.mapRow()}</tr>)
             : (
@@ -285,10 +292,12 @@ class Row extends React.Component {
                         {this.mapRow()}
                     </tr>
                     {
-                        !state.collapse && (
-                            <tr className='expand-tr' ref={this.expandTr} style={props.isFixed ? { height: state.expandTrHeight } : null}>
-                                <td colSpan={props.columns.length} className='expand-td'>
-                                    {!props.isFixed ? <ExpandRow content={state.expandContent} tr={props.rowData} /> : null}
+                        !state.isCollapse && (
+                            <tr className='u-expand-tr'
+                                ref={this.expandTr}
+                                style={props.isFixed ? { height: state.expandTrHeight } : null}>
+                                <td colSpan={props.columns.length} className='u-expand-td'>
+                                    {!props.isFixed ? <ExpandRow content={state.expandContent} rowData={props.rowData} /> : null}
                                 </td>
                             </tr>
                         )

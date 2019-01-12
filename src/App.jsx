@@ -23,10 +23,14 @@ const columns = [
     {
         type: 'expand',
         // fixed: 'left',
-        content: (
-            <h1>
+        content: (obj) => (
+            <div>
+                {obj.job}
+                <hr/>
                 12313
-            </h1>
+                <hr/>
+                <h1>abc</h1>
+            </div>
         )
     },
     {
@@ -81,28 +85,28 @@ const columns = [
 const rows = [
     {
         name: '李十三',
-        age: '22',
-        job: 'bug制造师',
+        age: '1',
+        job: 'bug制造师1',
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
-    },
-    {
-        name: '李十三',
-        age: '221',
-        job: 'bug制造师',
-        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
-
-    },
-    {
-        name: '李十三',
-        age: '21232',
-        job: 'bug制造师',
-        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
-
     },
     {
         name: '李十三',
         age: '2',
-        job: 'bug制造师',
+        job: 'bug制造师2',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+
+    },
+    {
+        name: '李十三',
+        age: '3',
+        job: 'bug制造师3',
+        note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
+
+    },
+    {
+        name: '李十三',
+        age: '4',
+        job: 'bug制造师4',
         note: '娃娃啊沙发沙发士大夫 士大夫撒是否是 士大夫是士大夫'
     },
 ]
@@ -182,8 +186,11 @@ class App extends Component {
         <Input/>
         <Table 
             columns={columns} 
-            loading={true}
             rows={this.state.rows}
+            // type={'tile'}
+            dragAble={true} 
+            // tableHeight={800}
+            // loading={true}
     //         fixedRows={[ {
     //     name: '李十三',
     //     age: '12213123213123',

@@ -10,15 +10,13 @@ $row-height: 60px; // 表格行高
     background: #fff;
     overflow: hidden;
     transition: opacity cubic-bezier(0.455, 0.03, 0.515, 0.955) .3s;
-
+    // min-height: 200px;
     &._align-center {
         text-align: center !important;
     }
-
     &._align-right {
         text-align: right !important;
     }
-
     &._align-left {
         text-align: left !important;
     }
@@ -26,16 +24,11 @@ $row-height: 60px; // 表格行高
     &._stretch {
         overflow-x: auto;
     }
-
-
-    .u-icon__loading {
-        z-index: 50;
-        height: 42px;
-        width: 42px;
-        position: absolute;
-        top: 50%;
-        right: 50%;
-        margin: -21px 0 0 -21px;
+    .sort-sign .u-icon__arrow-fill {
+        display: block;
+    }
+    .u-icon__arrow-fill {
+        display: inline-block;
     }
 
 }
@@ -58,9 +51,7 @@ $row-height: 60px; // 表格行高
         font-size: 0;
         white-space: nowrap;
     }
-    .u-body__track{
-        min-height: 200px;
-    }
+
 
     .u-table-body,
     .u-table-header,
@@ -236,6 +227,7 @@ $row-height: 60px; // 表格行高
 }
 
 
+
 .u-tr {
     transition: background .2s;
     height: $row-height;
@@ -278,31 +270,48 @@ $row-height: 60px; // 表格行高
 /* ----------------------*/
 /* ------可扩展 tr ------*/
 /* ----------------------*/
-.expand-tr {
-    // animation: bounceOut ease .3s;
-    transform-origin: top;
-    background: #fff;
+.u-expand-tr {
 
-    &.hidden {
-        visibility: hidden;
-        background: #f1f1f1;
-    }
+    background: #fff;
+    font-size: 14px;
+
 }
 
-.expand-td {
-    border-top: 2px solid #f9f7f7 !important;
+.u-expand-td {
+    // border-top: 2px solid #f9f7f7 !important;
 }
 
 /* ----------------------- */
 /* --  没有数据时的提示   -- */
 /* ------------------------ */
-.empty-table-tip {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-
-    .empty-tip__span {
+.u-table-empty-tip-wrap {
         font-size: 14px;
+        .u-table-empty-tip{
+            padding: 30px 0 ;
+        }
+    
+}
+
+/* loading */
+
+.u-table-loading-wrap{
+    position: absolute;
+    z-index: 50;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+    background: rgba(255,255,255, .6);
+    transition: background ease .3s;
+    .u-icon__loading {
+        z-index: 50;
+        height: 42px;
+        width: 42px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        // transform: translate(-50%, -50%)
+        margin-top: -21px;
+        margin-left: -21px;
     }
 }
