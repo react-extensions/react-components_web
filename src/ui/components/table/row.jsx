@@ -31,7 +31,7 @@ class Subject {
         return function (callback) {
             this.observerQueue.splice(this.observerQueue.indexOf(observer), 1)
             callback(this.observerQueue.length)
-        }
+        }.bind(this);
     }
     // window.resize()
     resize() {
@@ -134,7 +134,6 @@ class Row extends React.Component {
                 break;
 
         }
-
     }
 
     /**
