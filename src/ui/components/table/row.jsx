@@ -113,6 +113,7 @@ class Row extends React.Component {
      * @param {*} value 
      */
     updateSync(key, value) {
+        /* eslint-disable */
         switch (key) {
             case HEIGHT:
                 this.setState({ trHeight: value })
@@ -132,8 +133,9 @@ class Row extends React.Component {
             case EXPAND_HEIGHT:
                 this.setState({ expandTrHeight: value })
                 break;
-
         }
+        /* eslint-enable */
+        
     }
 
     /**

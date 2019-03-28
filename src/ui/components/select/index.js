@@ -1,7 +1,7 @@
-import Select from "./select";
-import Option from "./option";
-import './select.scss'
+import Select from './select';
+import Option from './option';
+import './select.scss';
 
-Select.Option = Option
+Select.Option = Option;
 
-export default Select
+export default Select;

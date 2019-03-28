@@ -1,5 +1,5 @@
-import './style.scss'
+import './style.scss';
 
-import View from './table'
+import View from './table';
 
-export default View
+export default View;

@@ -1,9 +1,10 @@
-.u-td-content{
-    white-space: nowrap !important;
-    text-overflow: ellipsis;
-    overflow: hidden;
+.App{
+    border:1px solid #ccc;
 }
 
-#root{
-    height: 1000px;
+.render-item{
+    height: 30px;
+    line-height: 30px;
+    padding: 0 30px;
+    border-top:1px solid #eee;
 }

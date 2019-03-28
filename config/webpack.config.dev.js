@@ -302,6 +302,10 @@ module.exports = merge(baseConfig, {
             exclude: sassModuleRegex,
             use: getStyleLoaders({ importLoaders: 2 }, 'sass-loader'),
           },
+           {
+            test: /\.less$/,
+            use: getStyleLoaders({ importLoaders: 2 }, 'less-loader'),
+          },
           // Adds support for CSS Modules, but using SASS
           // using the extension .module.scss or .module.sass
           {

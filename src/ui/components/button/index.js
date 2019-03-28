@@ -1,4 +1,4 @@
-import View from './view'
-import './style.scss'
+import View from './view';
+import './style.scss';
 
-export default View
+export default View;

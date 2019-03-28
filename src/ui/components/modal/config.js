@@ -1,3 +1,3 @@
 export default {
-  container: null
-}
+    container: null
+};
