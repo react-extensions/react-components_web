@@ -3,7 +3,7 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-03-13 18:14:57
- * @LastEditTime: 2019-03-28 11:20:42
+ * @LastEditTime: 2019-03-28 17:41:03
  */
 
 /**
@@ -19,6 +19,7 @@
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import ReactDOM from 'react-dom';
 
 
 class BigDataRender extends Component {
@@ -33,21 +34,32 @@ class BigDataRender extends Component {
         this.containerEl = React.createRef();
         this.renderNodeQueue = [];
 
-        this.getItem = this.getItem.bind(this);
         this.handleScroll = this.handleScroll.bind(this);
     }
     /**
      * 如果 this.props.data发生变化，全部都要重新执行
      */
     componentDidMount() {
-        //    只需要didMount时执行
+        this.computeSize();
+    }
+    componentDidUpdate(prevProps) {
+        if (prevProps.data !== this.props.data) {
+            this.computeSize();
+        }
+    }
+    computeSize() {
+        const {
+            data,
+            range
+        } = this.props;
+        if(data.length < range) return;
         this.setState({
-            totalHeight: this.containerEl.current.scrollHeight * (this.props.data.length / this.props.range)
+            totalHeight: this.containerEl.current.scrollHeight * (data.length / range)
         });
     }
-    getItem(el) {
+    getItem(index, el) {
         if (!el) return;
-        this.renderNodeQueue.push(el);
+        this.renderNodeQueue[index] = ReactDOM.findDOMNode(el);
     }
 
     /**
@@ -57,27 +69,28 @@ class BigDataRender extends Component {
     handleScroll(e) {
         const wrapEl = e.target;
         const scrollTop = wrapEl.scrollTop;
-        const time = + new Date();
-        const prevScrollTop = this.scrollTop  || 0;
-        const prevTime = this.time || time;      
+        // const time = + new Date();
+        const prevScrollTop = this.scrollTop || 0;
+        // const prevTime = this.time || time;      
 
         this.scrollTop = scrollTop;
-        this.time = time;
-        
-        if(Math.abs(scrollTop-prevScrollTop)/ (time-prevTime) > 30) {
-            clearTimeout(this.timer);
-            this.timer = setTimeout(()=>{
-                // console.log('reset')
-            },32);
-            return;
-        }
+        // this.time = time;
 
-        
+        // if(Math.abs(scrollTop-prevScrollTop)/ (time-prevTime) > 30) {
+        //     clearTimeout(this.timer);
+        //     this.timer = setTimeout(()=>{
+        //         // console.log('reset')
+        //     },32);
+        //     return;
+        // }
+
+
         const minDistance = this.props.distance;
         const containerEl = this.containerEl.current;
 
         // 向下滚动，内容上移
         if (scrollTop > prevScrollTop) {
+
             // 距最底部内容滚动到视口小于 dist 距离长度时，更换数据
             const curDistance = this.state.offsetTop +
                 containerEl.clientHeight -
@@ -89,10 +102,12 @@ class BigDataRender extends Component {
                 const queue = this.renderNodeQueue;
                 const distance = scrollTop - this.state.offsetTop - minDistance;
                 for (let i = 0, len = queue.length; i < len; i++) {
+                    if (!queue[i]) return;
                     if (queue[i].offsetTop > distance) {
 
                         let index = i - 1 + this.state.index;
-                        let offsetTop = queue[i - 1].offsetTop + this.state.offsetTop;
+                        const prevItem = queue[i - 1];
+                        let offsetTop = (prevItem ? prevItem.offsetTop : 0) + this.state.offsetTop;
 
                         const lastIndex = this.props.data.length - this.props.range;
                         const lastOffsetTop = wrapEl.scrollHeight - containerEl.clientHeight;
@@ -120,6 +135,8 @@ class BigDataRender extends Component {
                 const distance = this.props.height + minDistance + curDistance;
                 const queue = this.renderNodeQueue;
                 for (let i = 0, len = queue.length; i < len; i++) {
+                    if (!queue[i]) return;
+
                     if (queue[i].offsetTop > distance) {
 
                         let index = this.state.index + 1 - (this.props.range - i);
@@ -152,11 +169,11 @@ class BigDataRender extends Component {
             offsetTop
         } = this.state;
 
-        const subData = data.slice(index, index + range);
+        const shouldRenderDriectly = data.length < range;
 
         return (
             <div
-                onScroll={this.handleScroll}
+                onScroll={shouldRenderDriectly ? null : this.handleScroll}
                 style={{
                     height: this.props.height,
                     position: 'relative',
@@ -164,20 +181,22 @@ class BigDataRender extends Component {
                     overflowX: 'hidden'
                 }}
             >
-                <div style={{
-                    height: totalHeight
-                }}
+                <div style={shouldRenderDriectly ? null : { height: totalHeight }}
                 >
-                    <div
-                        ref={this.containerEl}
-                        style={{ transform: `translate3d(0,${offsetTop}px,0)` }}
-                    >
-                        {
-                            React.Children.map(children(subData), child => (
-                                React.cloneElement(child, Object.assign({}, child.props, { ref: this.getItem }))
-                            ))
-                        }
-                    </div>
+                    {
+                        shouldRenderDriectly ? children(data) : (
+                            <div
+                                ref={this.containerEl}
+                                style={{ transform: `translate3d(0,${offsetTop}px,0)` }}
+                            >
+                                {
+                                    React.Children.map(children(data.slice(index, index + range)), (child, index) => (
+                                        React.cloneElement(child, Object.assign({}, child.props, { ref: this.getItem.bind(this, index) }))
+                                    ))
+                                }
+                            </div>
+                        )
+                    }
                 </div>
             </div>
         );
@@ -185,8 +204,8 @@ class BigDataRender extends Component {
 }
 
 BigDataRender.defaultProps = {
-    range: 50, // 一页展示项目的数量, 要求项目总高度要大于容器高度
-    height: 600, // 容器高度
+    range: 25, // 一页展示项目的数量, 要求项目总高度要大于容器高度
+    height: 200, // 容器高度
     distance: 50 // 最小触发距离 单位px
 };
 

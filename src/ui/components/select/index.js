@@ -1,6 +1,6 @@
 import Select from './select';
 import Option from './option';
-import './select.scss';
+import './select.less';
 
 Select.Option = Option;
 
