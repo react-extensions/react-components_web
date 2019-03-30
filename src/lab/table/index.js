@@ -1,4 +1,5 @@
 import './style.less';
-import View from './view';
+
+import View from './table';
 
 export default View;

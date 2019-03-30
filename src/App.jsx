@@ -1,15 +1,44 @@
 import React, { Component } from 'react';
-import './style.scss'
-import BigData from './lab/big-data-render'
-import Select from './ui/components/select'
+import './style.less'
+import BigData from './lab/big-data-render-pro'
+import Table from './lab/table'
 
-
-
-const children = [];
+let rows = []
 for (let i = 0; i < 1000; i++) {
-    children.push(i);
+    rows.push({
+        one: i,
+        two: i,
+        three: i,
+        four: i,
+        five: i
+    })
 }
 
+const columns = [
+    {
+        type: 'checkbox'
+    },
+    {
+        prop: 'one',
+        label: '第一行'
+    },
+    {
+        prop: 'two',
+        label: '第二行'
+    },
+    {
+        prop: 'three',
+        label: '第三行'
+    },
+    {
+        prop: 'four',
+        label: '第四行'
+    },
+    {
+        prop: 'five',
+        label: '第五行'
+    }
+]
 
 class App extends Component {
     constructor(props) {
@@ -23,22 +52,24 @@ class App extends Component {
 
         return (
             <div className="App" >
-                <Select data={children}>
+                {/* <Table columns={columns} rows={rows} tableHeight={600} /> */}
+                <BigData data={rows}>
                     {
                         data => (
-                            <BigData data={data}>
-                                {
-                                    data => {
-                                        return data.map((item, index) => {
-                                            return <Select.Option key={item} id={item}>{item}</Select.Option>
-                                        })
+                            <table>
+                                <tbody>
+                                    {
+                                        data.map(item => (
+                                            <tr key={item.one}>
+                                                <td>{item.one}</td>
+                                            </tr>
+                                        ))
                                     }
-                                }
-                            </BigData>
+                                </tbody>
+                            </table>
                         )
                     }
-                </Select>
-
+                </BigData>
             </div>
         )
     }

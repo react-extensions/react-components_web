@@ -1,13 +1,13 @@
 /* 用伪类做各种简易 icon */
-@import '../../style/animation.scss';
-@import '../../style/global-config.scss';
 
 .u-icon {
     cursor: pointer;
     box-sizing: border-box;
 }
 
-$size: 14px;
+@size: 14px;
+@base-theme-color: red;
+@base-border-color: #ccc;
 
 /* 关闭 icon */
 .u-icon__close-bg,
@@ -50,10 +50,10 @@ $size: 14px;
 
 /* loading icon */
 .u-icon__loading {
-    width: $size;
-    height: $size;
+    width: @size;
+    height: @size;
     border: 2px solid;
-    border-color: $base-theme-color;
+    border-color: @base-theme-color;
     animation: u_spin linear 0.8s infinite;
     border-radius: 50%;
     border-right-color: transparent;
@@ -63,7 +63,7 @@ $size: 14px;
 /* check icon */
 .u-icon__square {
     display: inline-block;
-    border: 1px solid $base-border-color;
+    border: 1px solid @base-border-color;
     width: 16px;
     height: 16px;
     vertical-align: middle;
@@ -73,7 +73,7 @@ $size: 14px;
     background: #fff;
 
     &:hover {
-        border-color: $base-theme-color;
+        border-color: @base-theme-color;
     }
 
     &:after {
@@ -95,12 +95,12 @@ $size: 14px;
             margin-top: -3px;
             margin-left: -3px;
             border-radius: 1px;
-            background: $base-theme-color;
+            background: @base-theme-color;
         }
     }
 
     &._checked {
-        border-color: $base-theme-color;
+        border-color: @base-theme-color;
 
         &::after {
             bottom: 20%;
@@ -108,25 +108,25 @@ $size: 14px;
             margin-left: -3px;
             width: 4px;
             height: 8px;
-            border-bottom: 2px solid $base-theme-color;
-            border-right: 2px solid $base-theme-color;
+            border-bottom: 2px solid @base-theme-color;
+            border-right: 2px solid @base-theme-color;
             transform: rotateZ(35deg);
             transform: rotate3d(0, 0, 1, 35deg);
         }
     }
 }
 
-$border : 6px solid;
+@border : 6px solid;
 
 .u-icon__arrow-fill {
     width: 0;
     height: 0;
-    border: $border $base-border-color;
+    border: @border @base-border-color;
     transition: border ease .3s;
     transform: rotateZ(45deg);
     // animation: spinner linear 8s infinite ;
     &._active{
-        border-color: $base-theme-color;
+        border-color: @base-theme-color;
     }
 
     &._up {
