@@ -23,7 +23,7 @@ const isIE9 = /MSIE 9/i.test(window.navigator.usergent);
 class Subject {
     constructor() {
         this.observerQueue = [];
-        this.height = 0;
+        this.height = 'auto';
     }
 
     emit(key, value, vm) {
@@ -38,6 +38,7 @@ class Subject {
             callback(this.observerQueue.length);
         }.bind(this);
     }
+
     // window.resize()
     resize() {
         this.observerQueue.forEach(item => {
@@ -54,22 +55,19 @@ class Subject {
 class Row extends React.Component {
     constructor(props) {
         super(props);
-
         // 创建Subject对象
-        let syncObj = props.syncRowMap[props.rowIndex];
-
+        let syncObj = props.syncQueue[props.rowIndex];
         if (props.needSync) {
             this.expandTr = React.createRef();
             if (!syncObj) {
                 syncObj = new Subject();
-                props.syncRowMap[props.rowIndex] = syncObj;
+                props.syncQueue[props.rowIndex] = syncObj;
             }
             this.removeObjserver = syncObj.addObserver(this);
             this.syncObj = syncObj;
         }
 
         const isChecked = props.checkStatus === CHECKED;
-
         props.onChecked(props.rowData, isChecked, props.rowIndex, false);
 
         this.state = {
@@ -81,7 +79,6 @@ class Row extends React.Component {
             isHover: false,      // 鼠标移入
             trHeight: props.isFixed ? syncObj.height : null       // 行宽度
         };
-
         this.mounted = false;
         this.toggleCheck = this.toggleCheck.bind(this);
         this.getTrHeight = this.getTrHeight.bind(this);
@@ -129,9 +126,7 @@ class Row extends React.Component {
 
     componentWillUnmount() {
         this.removeObjserver && this.removeObjserver(len => {
-            if(len===0) {
-                delete this.props.syncRowMap[this.props.rowIndex];
-            }
+            len === 0 && (this.props.syncQueue[this.props.rowIndex] = null);
         });
     }
 
@@ -184,7 +179,9 @@ class Row extends React.Component {
     clickRow(colIndex, prop, e) {
         const props = this.props;
         props.onClick(e, props.rowData, props.rowIndex, prop, colIndex);
-
+        if (props.disabled) {
+            return;
+        }
         // 如果表格为 checkbox 或 radio， 则点击行时， 选中改行
         if (props.checkState !== checkType.NONE) {
             this.toggleCheck(e);
@@ -199,7 +196,6 @@ class Row extends React.Component {
             return;
         }
         e && e.stopPropagation();
-
         const isChecked = !this.state.isChecked;  // 是否选中
 
         const props = this.props;
@@ -312,7 +308,7 @@ class Row extends React.Component {
             this.props.columns.map((col, j) => {
                 return (
                     <td key={j}
-                        className={cn('u-td', col.type ? '_align-center' : (col.align ? `_align-${col.align}` : ''), col.className)}
+                        className={cn('u-td', col.type ? '_align-center' : (col.align ? `_align-${col.align}` : '', col.className))}
                         onClick={this.clickRow.bind(this, j, col.prop)}
                     >{this.renderTdContent(col)}</td>
                 );

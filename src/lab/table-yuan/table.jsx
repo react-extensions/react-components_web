@@ -9,15 +9,15 @@ import {
 import cn from './utils/class-name';
 import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
 
+import BigDataRender from '../big-data-render-pro';
 
-import useBigDataRender from '../big-data-render-pro/hooks';
+import useHooks from './hooks'
 
 const ASC = '_asc';  //正序
 const DESC = '_desc'; //反序
 
 const {CHECKED, NOT_CHECKED, HALF_CHECKED} = checkStatus;
 const {RADIO, CHECKBOX, NONE} = checkType;
-
 
 class Table extends React.Component {
     constructor(props) {
@@ -57,7 +57,7 @@ class Table extends React.Component {
      *
      * */
     initialize(props) {
-        this.syncRowMap = {};
+        this.syncQueue = [];
         this.tableWidth = {plain: '100%', left: 0, right: 0, total: 0};
         // 多选或单选表格， 选中的表格行
         this.checkedList = [];
@@ -158,7 +158,6 @@ class Table extends React.Component {
     /**
      * 表格数据rows更新后，重新计算布局
      */
-    //TODO: 流程待优化
     componentDidUpdate(prevProps) {
         const currentProps = this.props;
 
@@ -246,7 +245,7 @@ class Table extends React.Component {
 
     /**
      * Row渲染之前
-     * @param {object} data : rowData
+     * @param {rowData} data
      * @param {number} index
      */
     beforeRowMount(data, index) {
@@ -271,14 +270,7 @@ class Table extends React.Component {
         this.resizeTimer = setTimeout(() => {
             this._initStructure();
             this.forceUpdate(() => {
-                const queue = this.syncRowMap;
-                for (let item in queue) {
-                    if (!queue.hasOwnProperty(item)) {
-                        continue;
-                    }
-                    queue[item].resize();
-                }
-                // this.syncRowMap.forEach(item => item.resize());
+                this.syncQueue.forEach(item => item.resize());
             });
         }, 500);
     }
@@ -505,7 +497,7 @@ class Table extends React.Component {
     }
 
     /**
-     * 固定在底部的表格mounted之后会触发该事件
+     * 固定在底部的表格mountd之后会触发该事件
      * */
     handleBottomMount(el) {
         if (!el) return;
@@ -513,9 +505,7 @@ class Table extends React.Component {
         this.bottomTableHeight = el.clientHeight;
     }
 
-    /**
-     * 调整表格列大小
-     * */
+    /*--- 调整表格列大小 ---*/
     getOffsetLeft(e) {
         const C = this.containerEl.current;
         const P = C.getBoundingClientRect();
@@ -537,9 +527,7 @@ class Table extends React.Component {
         document.addEventListener('mouseup', this.resizeCol);
     }
 
-    /**
-     * 移动指示器位置
-     * */
+    /*--- 修改指示器位置 ---*/
     moveSign(e) {
         this.setState({
             signOffset: this.getOffsetLeft(e)
@@ -590,7 +578,7 @@ class Table extends React.Component {
 
     /**
      * *表格排序
-     * @param {object} col
+     * @param {columns => col} col
      */
     sortData(col) {
         const key = col.prop;
@@ -631,16 +619,313 @@ class Table extends React.Component {
         const state = this.state;
         const props = this.props;
         const columns = this.columns;
-        // 表格排序
+        const tableWidth = this.tableWidth;
+        const hasData = props.rows.length > 0;
+
+        // 排序
+        const sortMap = state.sortMap;
+        // 表格宽度
+        const plainTableWidth = tableWidth.plain;
+        const leftTableWidth = tableWidth.left;
+        const rightTableWidth = tableWidth.right;
+
+
+        // 固定 右 | 左 两侧表格的高度
+        const fixedTableHeight = (this.HAS_FIXED && props.tableHeight && props.tableHeight !== 0) ?
+            (props.tableHeight - this.scrollBarX - this.bottomTableHeight) :
+            'auto';
+
         let rows = props.rows;
-        if (
-            !props.databaseSort &&
-            state.sortMap.current &&
-            rows.length > 0
-        ) {
+        // 表格排序
+        if (!props.databaseSort && sortMap.current && rows.length > 0) {
             rows = this.sortRows(rows);
         }
+
+        // 固定右侧的占位符
+        const rightPlaceholder = this.HAS_RIGHT && (
+            <div className={'u-table-right-placeholder'}
+                 style={{width: rightTableWidth, height: 1, visibility: 'hidden'}}
+            >
+            </div>
+        );
+
+        /**
+         *
+         * 渲染 colgroup 元素
+         *
+         */
+        const renderColumns = (columns) => (
+            !state.complete ? null : (
+                <colgroup>
+                    {columns.map(col => <col key={col.__i__} style={{
+                        minWidth: col.minWidth,
+                        width: this.USE_TILE_LAYOUT ? col.maxWidthInCol : col.minWidth
+                    }}/>)}
+                </colgroup>
+            )
+        );
+        /**
+         * 渲染 thead
+         * @param {array} columns  this.columns
+         */
+        const renderTHead = (columns) => {
+
+            const renderPlainTh = (col) => (
+                <React.Fragment>
+                    <span ref={this.onThMount.bind(this, col)} className='u-th-content'>
+                        {col.title}
+                        {
+                            col.needSort && (
+                                <span
+                                    onClick={this.sortData.bind(this, col)}
+                                    className={'sort-sign ' + (sortMap.current === col.prop ? sortMap.order : 'un-active')}
+                                >
+                                    <Icon type='arrow-fill' className='_up'/>
+                                    <Icon type='arrow-fill' className='_down'/>
+                                </span>
+                            )
+                        }
+                    </span>
+                    {
+                        (props.dragAble && !col.fixed) && (
+                            <i
+                                className='u-table-resize-btn'
+                                onMouseDown={e => this.prepareResizeCol(e, col)}>
+                            </i>
+                        )
+                    }
+                </React.Fragment>
+            );
+
+
+            return (
+                <thead>
+                <tr className='u-tr'>
+                    {
+                        columns.map((col) => {
+                            const type = col.type;
+                            return (
+                                <th className={cn('u-th', type ? '_align-center' : (col.align ? `_align-${col.align}` : ''), col.className)}
+                                    key={col.__i__}
+                                >
+                                    {
+                                        // ie中不能将td th作为绝对定位的参照节点，
+                                        // 所以如果 在th td内有绝对定位的元素，样式会出问题
+                                        // 加一层div, 并将其style设置为position:relative ，来标准化这一样式
+                                    }
+                                    <div className={'u-th-content-wrap'}>
+                                        {
+                                            (type === 'expand' || type === 'radio') ?
+                                                null :
+                                                type === 'checkbox' ?
+                                                    (
+                                                        <Icon
+                                                            type={'square'}
+                                                            className={state.checkStatus}
+                                                            onClick={this.checkedAll}
+                                                        />
+                                                    ) :
+                                                    type === 'index' ? '#' : renderPlainTh(col)
+                                        }
+                                    </div>
+                                </th>
+                            );
+                        })
+                    }
+                </tr>
+                </thead>
+            );
+        };
+
+        const renderTBody = (columns, data, tType) => {
+            const isBottom = tType === 'bottom';
+            const isNormal = tType === 'normal';
+            return (
+                <tbody>
+                {
+                    hasData ?
+                        data.map((rowData, i) => {
+                            const customerProps = this.beforeRowMount(rowData, i);
+                            return (
+                                <Row
+                                    {...customerProps}
+                                    key={i}
+                                    rowIndex={isBottom ? ('bottom-' + i) : i}
+                                    rowData={rowData}
+                                    columns={columns}
+                                    checkState={this.checkState}
+                                    bgColor={props.zebra && (i % 2 === 0 ? '_lighten' : '_darken')}
+                                    isFixed={!isNormal && !isBottom}
+                                    isBottom={isBottom}
+                                    needSync={this.HAS_FIXED}
+                                    checkStatus={state.checkStatus}
+                                    onRowMount={this.onRowMount}
+                                    onChecked={this.handleRowChecked}
+                                    syncQueue={this.syncQueue}
+                                />
+                            );
+                        }) :
+                        isNormal ? (
+                            <tr>
+                                <td colSpan={columns.length} className='u-table-empty-tip-wrap'>
+                                    {props.emptyTip || (<div className='u-table-empty-tip'>暂无数据</div>)}
+                                </td>
+                            </tr>
+                        ) : null
+                }
+                </tbody>
+            );
+        };
+
+        const renderTable = (colGroup, tHead, tBody, style) => {
+            return (
+                <table className={'u-table'} border='0' cellSpacing='0' cellPadding='0' style={style}>
+                    {colGroup}
+                    {tHead}
+                    {tBody}
+                </table>
+            );
+        };
+
+        const renderSplitLayoutTable = () => {
+            const colGroup = renderColumns(columns.plain);
+
+            return (
+                <div className='u-plain__table u-main__table'>
+                    <div className={'u-header__track' + (state.topShadow ? '  _shadow ' : '')}
+                         style={{paddingLeft: `${leftTableWidth}px`, overflowY: this.scrollBarY ? 'scroll' : 'hidden'}}
+                         ref={this.plainTableHeadTrackEl}
+                    >
+                        <div className="u-table-header">
+                            {renderTable(colGroup, renderTHead(columns.plain), null, {width: plainTableWidth})}
+                        </div>
+                        {/* 右侧固定列占位符 */}
+                        {rightPlaceholder}
+                    </div>
+
+                    <BigDataRender
+                        forwardRef={this.plainTableBodyTrackEl}
+                        className={'u-body__track'}
+                        height={props.tableHeight}
+                        style={{height: props.tableHeight, paddingLeft: `${leftTableWidth}px`}}
+                        data={props.rows}
+                        onScroll={this.syncScroll}
+                        trackClassName={'u-table-body'}
+                        render={
+                            <React.Fragment>
+                                {
+                                    // 在有些浏览器中，padding-bottom 和 padding-right的布局标准有些怪异，
+                                    // 导致不会计入 scrollWidth | scrollHeight,
+                                    // 所以需要使用空div占位符代替以统一布局
+                                }
+                                {rightPlaceholder}
+                                {
+                                    this.HAS_BOTTOM && <div style={{height: this.bottomTableHeight}}>&nbsp;</div>
+                                }
+                            </React.Fragment>
+                        }
+                    >
+                        {
+                            data => renderTable(colGroup, null, renderTBody(columns.plain, data, 'normal'), {width: plainTableWidth})
+                        }
+                    </BigDataRender>
+
+                </div>
+            );
+        };
+
+        const renderLeftTable = () => {
+            const colGroup = renderColumns(columns.left);
+            return (
+                <div className={'u-fixed-left__table' + (state.leftShadow ? ' _shadow' : '')}
+                     style={{width: leftTableWidth}}>
+                    <div className={'u-table-header' + (state.topShadow ? ' _shadow ' : '')}>
+                        {renderTable(colGroup, renderTHead(columns.left))}
+                    </div>
+                    <BigDataRender
+                        height={fixedTableHeight}
+                        forwardRef={this.leftTableBodyEl}
+                        data={props.rows}
+                        className="u-table-body"
+                        style={{height: fixedTableHeight}}
+                    >
+                        {
+                            data => renderTable(colGroup, null, renderTBody(columns.left, data, 'left'))
+                        }
+                    </BigDataRender>
+                </div>
+            );
+        };
+
+        const renderRightTable = () => {
+            const colGroup = renderColumns(columns.right);
+            return (
+                <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
+                     style={{width: rightTableWidth, right: (this.scrollBarY)}}>
+                    <div className={'u-table-header ' + (state.topShadow ? '_shadow ' : '')}>
+                        {renderTable(colGroup, renderTHead(columns.right))}
+                    </div>
+                    <BigDataRender
+                        height={fixedTableHeight}
+                        forwardRef={this.rightTableBodyEl}
+                        data={props.rows}
+                        className="u-table-body"
+                        style={{height: fixedTableHeight}}
+                    >
+                        {
+                            data => renderTable(colGroup, null, renderTBody(columns.right, data, 'right'))
+                        }
+                    </BigDataRender>
+                </div>
+            );
+        };
+
+        const renderBottomTable = () => {
+            return (
+                <div className='u-fixed-bottom__table' style={{bottom: this.scrollBarX, right: this.scrollBarY}}>
+                    <div className='u-plain__table'
+                         style={{paddingLeft: leftTableWidth}}
+                         ref={this.handleBottomMount}
+                    >
+                        <div className="u-table-body" style={{width: plainTableWidth}}>
+                            {renderTable(renderColumns(columns.plain), null, renderTBody(columns.plain, props.fixedRows, 'bottom'))}
+                        </div>
+                        {rightPlaceholder}
+                    </div>
+
+                    {
+                        this.HAS_LEFT && (
+                            <div className={'u-fixed-left__table ' + (state.leftShadow ? '_shadow ' : '')}
+                                 style={{width: leftTableWidth}}>
+                                <div className="u-table-body">
+                                    {renderTable(renderColumns(columns.left), null, renderTBody(columns.left, props.fixedRows, 'bottom'))}
+                                </div>
+                            </div>
+                        )
+                    }
+                    {
+                        this.HAS_RIGHT && (
+                            <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
+                                 style={{width: rightTableWidth}}
+                            >
+                                <div className="u-table-body">
+                                    {renderTable(renderColumns(columns.right), null, renderTBody(columns.right, props.fixedRows, 'bottom'))}
+                                </div>
+                            </div>
+                        )
+                    }
+                </div>
+            );
+
+        };
+
+        /**
+         *
+         * 根节点
+         *
+         */
         return (
+            /* 总容器 */
             <div
                 className={
                     cn(
@@ -655,475 +940,38 @@ class Table extends React.Component {
             >
                 {
                     props.dragAble && (
-                        <div className="resize-col-sign"
-                             style={{
-                                 display: state.signOffset ? 'block' : 'none',
-                                 left: state.signOffset
-                             }}>
+                        <div className="resize-col-sign" style={{
+                            display: state.signOffset ? 'block' : 'none',
+                            left: state.signOffset
+                        }}>
                         </div>
                     )
                 }
-                {
-                    props.loading ?
-                        (
-                            <div className='u-table-loading-wrap'>
-                                <Icon type='loading'/>
-                            </div>
-                        ) :
-                        null
-                }
+
+
+                {props.loading ? <div className='u-table-loading-wrap'><Icon type='loading'/></div> : null}
 
                 {/* 普通表格 */}
                 {
-                    this.USE_SPLIT_LAYOUT ?
-                        renderSplitLayoutTable.call(this, columns.plain, rows) :
-                        renderTable(
-                            renderColumns.call(this, columns.plain),
-                            renderTHead.call(this, columns.plain),
-                            renderTBody.call(this, columns.plain, rows, 'normal')
-                        )
+                    this.USE_SPLIT_LAYOUT
+                        ? renderSplitLayoutTable()
+                        : renderTable(renderColumns(columns.plain), renderTHead(columns.plain), renderTBody(columns.plain, rows, 'normal'))
                 }
+
                 {/* 左固定表格 */}
-                {
-                    this.HAS_LEFT && renderLeftTable.call(this, columns.left, rows)
-                }
+                {this.HAS_LEFT && renderLeftTable()}
+
                 {/* 右固定表格 */}
-                {
-                    this.HAS_RIGHT && renderRightTable.call(this, columns.right, rows)
-                }
+                {this.HAS_RIGHT && renderRightTable()}
+
                 {/* 下固定表格 */}
-                {
-                    this.HAS_BOTTOM && renderBottomTable()
-                }
+                {this.HAS_BOTTOM && renderBottomTable()}
+
             </div>
         );
     }
 
 }
-
-
-/**
- * 渲染固定右侧的占位符
- * */
-const rightPlaceholder = function () {
-    return this.HAS_RIGHT && (
-        <div className={'u-table-right-placeholder'}
-             style={{
-                 height: 1,
-                 width: this.tableWidth.right,
-                 visibility: 'hidden'
-             }}
-        >
-        </div>
-    );
-};
-
-/**
- * 渲染 colgroup 元素
- */
-const renderColumns = function (columns) {
-    return !this.state.complete ? null : (
-        <colgroup>
-            {
-                columns.map(col => (
-                    <col key={col.__i__}
-                         style={{
-                             minWidth: col.minWidth,
-                             width: this.USE_TILE_LAYOUT ? col.maxWidthInCol : col.minWidth
-                         }}
-                    />
-                ))
-            }
-        </colgroup>
-    );
-};
-
-
-/**
- * 渲染普通的 TH 元素
- * */
-const renderPlainTh = function (col) {
-    return <React.Fragment>
-                    <span ref={this.onThMount.bind(this, col)} className='u-th-content'>
-                        {col.title}
-                        {
-                            col.needSort && (
-                                <span
-                                    onClick={this.sortData.bind(this, col)}
-                                    className={'sort-sign ' + (this.state.sortMap.current === col.prop ? this.state.sortMap.order : 'un-active')}
-                                >
-                                    <Icon type='arrow-fill' className='_up'/>
-                                    <Icon type='arrow-fill' className='_down'/>
-                                </span>
-                            )
-                        }
-                    </span>
-        {
-            (this.props.dragAble && !col.fixed) && (
-                <i
-                    className='u-table-resize-btn'
-                    onMouseDown={e => this.prepareResizeCol(e, col)}>
-                </i>
-            )
-        }
-    </React.Fragment>;
-};
-/**
- * 渲染 thead
- * @param {array} columns
- */
-const renderTHead = function (columns) {
-
-    return (
-        <thead>
-        <tr className='u-tr'>
-            {
-                columns.map((col) => {
-                    const type = col.type;
-                    return (
-                        <th
-                            key={col.__i__}
-                            className={
-                                cn('u-th',
-                                    type ? '_align-center' : (col.align ? `_align-${col.align}` : ''),
-                                    col.className
-                                )
-                            }
-                        >
-                            {
-                                // ie中不能将td th作为绝对定位的参照节点，
-                                // 所以如果 在th td内有绝对定位的元素，样式会出问题
-                                // 加一层div, 并将其style设置为position:relative ，来标准化这一样式
-                            }
-                            <div className={'u-th-content-wrap'}>
-                                {
-                                    (type === 'expand' || type === 'radio') ?
-                                        null :
-                                        type === 'checkbox' ?
-                                            (
-                                                <Icon
-                                                    type={'square'}
-                                                    onClick={this.checkedAll}
-                                                    className={this.state.checkStatus}
-                                                />
-                                            ) :
-                                            type === 'index' ? '#' : renderPlainTh.call(this, col)
-                                }
-                            </div>
-                        </th>
-                    );
-                })
-            }
-        </tr>
-        </thead>
-    );
-};
-
-/**
- * 渲染 tobody
- * */
-const renderTBody = function (columns, data, startIndex, tType) {
-    const {state, props} = this;
-    const isBottom = tType === 'bottom';
-    const isNormal = tType === 'normal';
-    const hasData = props.rows.length > 0;
-
-    return (
-        <tbody>
-        {
-            hasData ?
-                data.map((rowData, i) => {
-                    const index = i + startIndex;
-
-                    const customerProps = this.beforeRowMount(rowData, index);
-                    const key = props.rowKey ? rowData[props.rowKey] : index;
-
-                    return (
-                        <Row
-                            {...customerProps}
-                            key={key}
-                            rowData={rowData}
-                            columns={columns}
-                            isBottom={isBottom}
-                            needSync={this.HAS_FIXED}
-                            checkState={this.checkState} // 表格 多选 还是单选
-                            isFixed={!isNormal && !isBottom}
-                            // 样式
-                            bgColor={props.zebra && (index % 2 === 0 ? '_lighten' : '_darken')}
-                            // check
-                            rowIndex={isBottom ? ('b-' + key) : key}
-                            checkStatus={state.checkStatus}
-                            onChecked={this.handleRowChecked}
-                            // 同步状态
-                            syncRowMap={this.syncRowMap}
-                            // 计算布局
-                            onRowMount={this.onRowMount}
-                        />
-                    );
-                }) :
-                isNormal ? (
-                    <tr>
-                        <td colSpan={columns.length} className='u-table-empty-tip-wrap'>
-                            {props.emptyTip || (<div className='u-table-empty-tip'>暂无数据</div>)}
-                        </td>
-                    </tr>
-                ) : null
-        }
-        </tbody>
-    );
-};
-
-
-/**
- * 渲染表格table
- * */
-const renderTable = function (colGroup, tHead, tBody, style) {
-    return (
-        <table className={'u-table'} border='0' cellSpacing='0' cellPadding='0' style={style}>
-            {colGroup}
-            {tHead}
-            {tBody}
-        </table>
-    );
-};
-
-// 固定 右 | 左 两侧表格的高度
-const getFixedTableHeight = function () {
-    const props = this.props;
-    return (this.HAS_FIXED && props.tableHeight && props.tableHeight !== 0) ?
-        (props.tableHeight - this.scrollBarX - this.bottomTableHeight) :
-        'auto';
-};
-
-/**
- * 渲染左侧固定表格
- * */
-const renderLeftTable = function (columns, rows) {
-    const state = this.state;
-    const colGroup = renderColumns.call(this, columns);
-    const leftTableWidth = this.tableWidth.left;
-    const fixedTableHeight = getFixedTableHeight.call(this);
-    const obj = {
-        parent: this,
-        rows,
-        height: fixedTableHeight,
-        columns,
-        colGroup,
-        forwardRef: this.leftTableBodyEl,
-        tType: 'left'
-    };
-    return (
-        <div className={'u-fixed-left__table' + (state.leftShadow ? ' _shadow' : '')}
-             style={{width: leftTableWidth}}>
-            <div className={'u-table-header' + (state.topShadow ? ' _shadow ' : '')}>
-                {renderTable(colGroup, renderTHead.call(this, columns))}
-            </div>
-
-            <FixedTableBody {...obj} />
-        </div>
-    );
-};
-/**
- * 渲染右侧固定表格
- * */
-const renderRightTable = function (columns, rows) {
-    const state = this.state;
-    const colGroup = renderColumns.call(this, columns);
-    const fixedTableHeight = getFixedTableHeight.call(this);
-    const obj = {
-        parent: this,
-        rows,
-        height: fixedTableHeight,
-        columns,
-        colGroup,
-        forwardRef: this.rightTableBodyEl,
-        tType: 'right'
-    };
-    return (
-        <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
-             style={{width: this.tableWidth.right, right: (this.scrollBarY)}}>
-            <div className={'u-table-header ' + (state.topShadow ? '_shadow ' : '')}>
-                {renderTable(colGroup, renderTHead.call(this, columns))}
-            </div>
-            <FixedTableBody {...obj} />
-        </div>
-    );
-};
-
-
-const FixedTableBody = function ({parent, rows, height, columns, colGroup, forwardRef, tType}) {
-    const range = parent.props.bigDataRenderRange;
-    const {
-        // 容器
-        containerStyle,
-        handleContainerScroll,
-        // 轨道
-        trackHeight,
-        //  内容
-        contentRef,
-        contentStyle,
-        data,
-        step,
-        // 状态及数据
-        shouldRenderDirectly,
-    } = useBigDataRender({
-        data: rows,
-        height,
-        range
-    });
-
-    const extendStyle = Object.assign({}, containerStyle, {
-        height,
-    });
-
-    return <div
-        onScroll={handleContainerScroll}
-        style={extendStyle}
-        className={'u-table-body'}
-        ref={forwardRef}
-    >
-        <div style={shouldRenderDirectly ? null : {height: trackHeight}}>
-            <div
-                ref={contentRef}
-                style={contentStyle}
-            >
-                {renderTable(colGroup, null, renderTBody.call(parent, columns, data, step * range, tType))}
-            </div>
-        </div>
-
-    </div>;
-};
-
-const SplitLayoutTableBody = function ({parent, rows, height, columns, colGroup, forwardRef}) {
-    const range = parent.props.bigDataRenderRange;
-    const {left, plain} = parent.tableWidth;
-    const {
-        // 容器
-        containerStyle,
-        handleContainerScroll,
-        // 轨道
-        trackHeight,
-        //  内容
-        contentRef,
-        contentStyle,
-        data,
-        step,
-        // 状态及数据
-        shouldRenderDirectly,
-    } = useBigDataRender({
-        data: rows,
-        height,
-        range
-    });
-
-    const extendStyle = Object.assign({}, containerStyle, {
-        height,
-        paddingLeft: `${left}px`
-    });
-
-    return <div
-        onScroll={e => {
-            parent.syncScroll(e);
-            handleContainerScroll(e);
-        }}
-        style={extendStyle}
-        className={'u-body__track'}
-        ref={forwardRef}
-    >
-        <div className={'u-table-body'} style={shouldRenderDirectly ? null : {height: trackHeight}}>
-            <div
-                ref={contentRef}
-                style={contentStyle}
-            >
-                {renderTable(colGroup, null, renderTBody.call(parent, columns, data, step * range, 'normal'), {width: plain})}
-            </div>
-        </div>
-        {
-            // 在有些浏览器中，padding-bottom 和 padding-right的布局标准有些怪异，
-            // 导致不会计入 scrollWidth | scrollHeight,
-            // 所以需要使用空div占位符代替以统一布局
-        }
-        {rightPlaceholder.call(parent)}
-    </div>;
-};
-
-
-/**
- * 渲染分体式的表格
- * */
-const renderSplitLayoutTable = function (columns, rows) {
-    const {props, state} = this;
-    const {left, plain} = this.tableWidth;
-    const colGroup = renderColumns.call(this, columns);
-
-    const obj = {
-        parent: this,
-        rows,
-        columns,
-        colGroup,
-        height: props.tableHeight,
-        forwardRef: this.plainTableBodyTrackEl
-    };
-    return (
-        <div className='u-plain__table u-main__table'>
-            <div className={'u-header__track' + (state.topShadow ? '  _shadow ' : '')}
-                 style={{paddingLeft: `${left}px`, overflowY: this.scrollBarY ? 'scroll' : 'hidden'}}
-                 ref={this.plainTableHeadTrackEl}
-            >
-                <div className="u-table-header">
-                    {renderTable(colGroup, renderTHead.call(this, columns), null, {width: plain})}
-                </div>
-                {/* 右侧固定列占位符 */}
-                {rightPlaceholder.call(this)}
-            </div>
-            <SplitLayoutTableBody {...obj}/>
-        </div>
-    );
-};
-
-
-/**
- * 渲染底部表格
- * */
-const renderBottomTable = function (columns, leftTableWidth, plainTableWidth, rightTableWidth) {
-    const {state, props} = this;
-    return (
-        <div className='u-fixed-bottom__table' style={{bottom: this.scrollBarX, right: this.scrollBarY}}>
-            <div className='u-plain__table'
-                 style={{paddingLeft: leftTableWidth}}
-                 ref={this.handleBottomMount}
-            >
-                <div className="u-table-body" style={{width: plainTableWidth}}>
-                    {renderTable(renderColumns.call(this, columns.plain), null, renderTBody.call(this, columns.plain, props.fixedRows, 'bottom'))}
-                </div>
-                {rightPlaceholder.call(this)}
-            </div>
-
-            {
-                this.HAS_LEFT && (
-                    <div className={'u-fixed-left__table ' + (state.leftShadow ? '_shadow ' : '')}
-                         style={{width: leftTableWidth}}>
-                        <div className="u-table-body">
-                            {renderTable(renderColumns.call(this, columns.left), null, renderTBody.call(this, columns.left, props.fixedRows, 'bottom'))}
-                        </div>
-                    </div>
-                )
-            }
-            {
-                this.HAS_RIGHT && (
-                    <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
-                         style={{width: rightTableWidth}}
-                    >
-                        <div className="u-table-body">
-                            {renderTable(renderColumns.call(this, columns.right), null, renderTBody.call(this, columns.right, props.fixedRows, 'bottom'))}
-                        </div>
-                    </div>
-                )
-            }
-        </div>
-    );
-
-};
 
 const noWork = () => null;
 
@@ -1133,21 +981,19 @@ Table.defaultProps = {
     align: 'center',
     fixedRows: [],
     rows: [],
-    rowKey: 'key',
     databaseSort: false,  // 是否使用数据库排序, 默认是表格自动排序
     dragAble: false,  // 允许用户拖拽设置表格列宽
     useSplitLayout: false, // 使用分体布局
     onSortChange: noWork,
     onSelectRowChange: noWork,
     onRow: noWork,
-    clearStateWhenRowsChange: false,
-    bigDataRenderRange: 30, // 大数据渲染 一屏的数据范围
+    clearStateWhenRowsChange: false
 };
 
 Table.propTypes = {
     columns: PropTypes.array,     // 列配置
     tableHeight: PropTypes.number,    // 表格体高度
-    type: PropTypes.oneOf(['tile', 'stretch']), // 平铺 拉伸布局
+    type: PropTypes.oneOf(['tile', 'stretch']),
 
     useSplitLayout: PropTypes.bool, // 使用分体布局
     zebra: PropTypes.bool,        // 是否需要斑马线
@@ -1162,9 +1008,7 @@ Table.propTypes = {
     align: PropTypes.oneOf(['left', 'right', 'center']), // 表格内文本对齐
     rows: PropTypes.array,
     fixedRows: PropTypes.array,
-    rowKey: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // 表格行 key 的取值，可以是字符串或数值
 
-    bigDataRenderRange: PropTypes.number, // 大数据渲染 一屏的数据范围
     clearStateWhenRowsChange: PropTypes.bool
 };
 

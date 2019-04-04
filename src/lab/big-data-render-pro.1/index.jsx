@@ -20,6 +20,7 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
+
 class BigDataRender extends Component {
     constructor(props) {
         super(props);
@@ -28,6 +29,7 @@ class BigDataRender extends Component {
             totalHeight: 0,
             step: 0
         };
+
         this.containerEl = React.createRef();
         this.handleScroll = this.handleScroll.bind(this);
     }
@@ -121,7 +123,6 @@ class BigDataRender extends Component {
     }
 
     render() {
-        console.log('render big-data-render')
         const {
             data,
             range,
@@ -174,8 +175,6 @@ class BigDataRender extends Component {
         );
     }
 }
-
-
 
 BigDataRender.defaultProps = {
     range: 20, // 一页展示项目的数量, 要求项目总高度要大于容器高度
