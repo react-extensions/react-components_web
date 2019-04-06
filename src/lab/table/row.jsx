@@ -38,6 +38,7 @@ class Subject {
             callback(this.observerQueue.length);
         }.bind(this);
     }
+
     // window.resize()
     resize() {
         this.observerQueue.forEach(item => {
@@ -199,7 +200,6 @@ class Row extends React.Component {
             return;
         }
         e && e.stopPropagation();
-
         const isChecked = !this.state.isChecked;  // 是否选中
 
         const props = this.props;

@@ -1015,6 +1015,7 @@ const SplitLayoutTableBody = function ({parent, rows, height, columns, colGroup,
         height,
         range
     });
+    console.log(step)
 
     const extendStyle = Object.assign({}, containerStyle, {
         height,

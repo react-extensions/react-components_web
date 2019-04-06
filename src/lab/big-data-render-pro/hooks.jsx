@@ -19,70 +19,96 @@
 
 import React, {useState, useEffect} from 'react';
 
-function useBigDataRender({data=[], range=50, height=300}) {
+function useBigDataRender({data = [], range = 50, height = 300}) {
 
     const [step, setStep] = useState(0);
     const [offsetTop, setOffsetTop] = useState(0);
     const [totalHeight, setTotalHeight] = useState(0);
     const [prevScrollTop, setPrevScrollTop] = useState(0);
     // const [prevScrollLeft, setPrevScrollLeft] = useState(0);
+    const [prevTime, setPrevTime] = useState(0);
+    const [timer, setTimer] = useState(null);
     const contentRef = React.createRef();
     const shouldRenderDirectly = data.length < range;
+    const setStepAndOffsetTop = (nextStep, halfContainerHeight) => {
 
+        if ((nextStep + 2) * range > data.length) {
+
+        }
+        setOffsetTop(halfContainerHeight * nextStep);
+        setStep(nextStep);
+    };
     const handleScroll = function (e) {
 
         if (shouldRenderDirectly) {
             return;
         }
         const wrapEl = e.target;
-        // const scrollLeft = wrapEl.scrollLeft;
         const scrollTop = wrapEl.scrollTop;
 
+        const minDistance = 0; //this.props.distance
+        const containerEl = contentRef.current;
+        const containerHeight = containerEl.clientHeight;
+        const halfContainerHeight = containerHeight / 2;
+        // const scrollLeft = wrapEl.scrollLeft;
         // if(Math.abs(scrollLeft-prevScrollLeft )> Math.abs(scrollTop-prevScrollTop)) {
         //     setPrevScrollLeft(scrollLeft);
         //     return;
         // }
 
-        // const time = + new Date();
-        // const prevTime = this.time || time;
-
+        const time = +new Date();
+        setPrevTime(time);
         setPrevScrollTop(scrollTop);
-        // this.time = time;
+        if (Math.abs(scrollTop - prevScrollTop) / (time - prevTime) > 20) {
+            clearTimeout(timer);
+            let newTimer = null;
 
-        // if(Math.abs(scrollTop-prevScrollTop)/ (time-prevTime) > 30) {
-        //     clearTimeout(this.timer);
-        //     this.timer = setTimeout(()=>{
-        //         // console.log('reset')
-        //     },32);
-        //     return;
-        // }
+            if (scrollTop > prevScrollTop) {
+                newTimer = setTimeout(() => {
+                    const diff = containerHeight -
+                        scrollTop -
+                        height;
+                    let curDistance = offsetTop + diff;
+                    let nextStep = step;
+                    while (curDistance <= minDistance) {
+                        nextStep += 1;
+                        curDistance = diff + halfContainerHeight * nextStep;
+                    }
+                    setStepAndOffsetTop(nextStep, halfContainerHeight);
+                }, 100);
 
+            } else {
+                newTimer = setTimeout(() => {
+                    let curDistance = scrollTop - offsetTop;
+                    let nextStep = step;
+                    while (curDistance <= minDistance) {
+                        nextStep -= 1;
+                        curDistance = scrollTop - halfContainerHeight * nextStep;
+                    }
+                    setStepAndOffsetTop(nextStep, halfContainerHeight);
+                }, 32);
+            }
 
-        const minDistance = 0; //this.props.distance
-        const containerEl = contentRef.current;
+            setTimer(newTimer);
+            return;
+        }
 
         // 向下滚动，内容上移
         if (scrollTop > prevScrollTop) {
-
             // 距最底部内容滚动到视口小于 dist 距离长度时，更换数据
             const curDistance = offsetTop +
-                containerEl.clientHeight -
+                containerHeight -
                 scrollTop -
                 height;
-
             if (curDistance < minDistance) {
-                const nextStep = step + 1;
-                setOffsetTop((containerEl.clientHeight / 2) * nextStep);
-                setStep(nextStep);
+                setStepAndOffsetTop(step + 1, halfContainerHeight);
             }
         }
         // 向上滚动，内容下移
         else {
             const curDistance = scrollTop - offsetTop;
             if (curDistance < minDistance) {
-                const nextStep = step - 1;
-                setOffsetTop((containerEl.clientHeight / 2) * nextStep);
-                setStep(nextStep);
+                setStepAndOffsetTop(step - 1, halfContainerHeight);
             }
         }
     };
@@ -91,8 +117,8 @@ function useBigDataRender({data=[], range=50, height=300}) {
         if (shouldRenderDirectly) {
             return;
         }
-        if(process.env.NODE_ENV==='development') {
-            console.log('重新计算总高度');
+        if (process.env.NODE_ENV === 'development') {
+            // console.log('重新计算总高度');
         }
         setTotalHeight(contentRef.current.clientHeight / 2 * (data.length / range));
     };
