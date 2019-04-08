@@ -4,7 +4,7 @@ import BigData from './lab/big-data-render-pro';
 import Table from './lab/table';
 
 let rows = [];
-for (let i = 0; i < 1000; i++) {
+for (let i = 0; i < 200; i++) {
     rows.push({
         one: i,
         two: i,
@@ -55,12 +55,12 @@ const columns = [
     {
         prop: 'five',
         title: '第五行',
-        fixed: 'right',
+        // fixed: 'right',
 
     },
     {
         title: '操作',
-        fixed: 'right',
+        // fixed: 'right',
         filter: () => (
             <div style={{color: 'blue', cursor: 'pointer'}}>编辑</div>
         )

@@ -21,7 +21,7 @@ import React, {useState, useEffect} from 'react';
 
 function useBigDataRender({data = [], range = 50, height = 300}) {
 
-    const [step, setStep] = useState(0);
+    const [index, setIndex] = useState(0);
     const [offsetTop, setOffsetTop] = useState(0);
     const [totalHeight, setTotalHeight] = useState(0);
     const [prevScrollTop, setPrevScrollTop] = useState(0);
@@ -30,16 +30,26 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
     const [timer, setTimer] = useState(null);
     const contentRef = React.createRef();
     const shouldRenderDirectly = data.length < range;
-    const setStepAndOffsetTop = (nextStep, halfContainerHeight) => {
 
-        if ((nextStep + 2) * range > data.length) {
-
+    const setStepAndOffsetTop = (nextIndex, halfContainerHeight) => {
+        // 最底部
+        if (nextIndex + (2*range) > data.length-1) {
+            setIndex(data.length - (2*range));
+            setOffsetTop(totalHeight - halfContainerHeight * 2);
         }
-        setOffsetTop(halfContainerHeight * nextStep);
-        setStep(nextStep);
+        // 顶部
+        else if(nextIndex<=0) {
+            setIndex(0);
+            setOffsetTop(0);
+        }
+        // 中间
+        else {
+            setOffsetTop(halfContainerHeight * Math.ceil(nextIndex/range));
+            setIndex(nextIndex);
+        }
     };
-    const handleScroll = function (e) {
 
+    const handleScroll = function (e) {
         if (shouldRenderDirectly) {
             return;
         }
@@ -50,6 +60,9 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
         const containerEl = contentRef.current;
         const containerHeight = containerEl.clientHeight;
         const halfContainerHeight = containerHeight / 2;
+
+        setPrevScrollTop(scrollTop);
+
         // const scrollLeft = wrapEl.scrollLeft;
         // if(Math.abs(scrollLeft-prevScrollLeft )> Math.abs(scrollTop-prevScrollTop)) {
         //     setPrevScrollLeft(scrollLeft);
@@ -58,34 +71,33 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
 
         const time = +new Date();
         setPrevTime(time);
-        setPrevScrollTop(scrollTop);
         if (Math.abs(scrollTop - prevScrollTop) / (time - prevTime) > 20) {
             clearTimeout(timer);
             let newTimer = null;
-
+            // TODO: 算法不精确
             if (scrollTop > prevScrollTop) {
                 newTimer = setTimeout(() => {
                     const diff = containerHeight -
                         scrollTop -
                         height;
                     let curDistance = offsetTop + diff;
-                    let nextStep = step;
+                    let nextIndex = index;
                     while (curDistance <= minDistance) {
-                        nextStep += 1;
-                        curDistance = diff + halfContainerHeight * nextStep;
+                        nextIndex += range;
+                        curDistance = diff + halfContainerHeight  * Math.ceil(nextIndex/range);
                     }
-                    setStepAndOffsetTop(nextStep, halfContainerHeight);
+                    setStepAndOffsetTop(nextIndex, halfContainerHeight);
                 }, 100);
 
             } else {
                 newTimer = setTimeout(() => {
                     let curDistance = scrollTop - offsetTop;
-                    let nextStep = step;
+                    let nextIndex = index;
                     while (curDistance <= minDistance) {
-                        nextStep -= 1;
-                        curDistance = scrollTop - halfContainerHeight * nextStep;
+                        nextIndex -= range;
+                        curDistance = scrollTop - halfContainerHeight * Math.ceil(nextIndex/range);
                     }
-                    setStepAndOffsetTop(nextStep, halfContainerHeight);
+                    setStepAndOffsetTop(nextIndex, halfContainerHeight);
                 }, 32);
             }
 
@@ -101,52 +113,50 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
                 scrollTop -
                 height;
             if (curDistance < minDistance) {
-                setStepAndOffsetTop(step + 1, halfContainerHeight);
+                setStepAndOffsetTop(index + range, halfContainerHeight);
             }
         }
         // 向上滚动，内容下移
         else {
             const curDistance = scrollTop - offsetTop;
             if (curDistance < minDistance) {
-                setStepAndOffsetTop(step - 1, halfContainerHeight);
+                setStepAndOffsetTop(index - range, halfContainerHeight);
             }
         }
     };
 
-    const computeSize = () => {
+   // 计算总高度
+    useEffect(() => {
         if (shouldRenderDirectly) {
             return;
         }
-        if (process.env.NODE_ENV === 'development') {
-            // console.log('重新计算总高度');
-        }
         setTotalHeight(contentRef.current.clientHeight / 2 * (data.length / range));
-    };
-
-    useEffect(() => {
-        computeSize();
     });
 
-    const containerStyle = {
-        height: height,
-        position: 'relative',
-        overflowY: 'auto',
-        // overflowX: 'hidden'
-    };
+
+
 
     return {
-        // 容器
-        containerStyle,
-        handleContainerScroll: handleScroll,
         // 轨道
         trackHeight: totalHeight,
+
         // 内容
         contentRef,
         contentStyle: {transform: `translate3d(0,${offsetTop}px,0)`},
-        data: shouldRenderDirectly ? data : data.slice(step * range, (step + 2) * range),
+        data: shouldRenderDirectly ? data : data.slice(index, index + (range*2)),
+
         // 状态及数据
-        step: step,
-        shouldRenderDirectly
+        index: index,
+        shouldRenderDirectly,
+
+        // 容器
+        containerStyle: {
+            height: height,
+            position: 'relative',
+            overflowY: 'auto',
+            // overflowX: 'hidden'
+        },
+        handleContainerScroll: handleScroll,
     };
 
 }
