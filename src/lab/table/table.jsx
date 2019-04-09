@@ -8,9 +8,9 @@ import {
 } from './const-data';
 import cn from './utils/class-name';
 import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
-
-
 import useBigDataRender from '../big-data-render-pro/hooks';
+import Checkbox from '../../ui/components/checkbox';
+
 
 const ASC = '_asc';  //正序
 const DESC = '_desc'; //反序
@@ -59,8 +59,6 @@ class Table extends React.Component {
     initialize(props) {
         this.syncRowMap = {};
         this.tableWidth = {plain: '100%', left: 0, right: 0, total: 0};
-        // 多选或单选表格， 选中的表格行
-        this.checkedList = [];
 
         this.scrollBarY = 0;
         this.scrollBarX = 0;
@@ -191,54 +189,29 @@ class Table extends React.Component {
 
     // ----------------------------------------start------------------------------------------------
     // ----------------------------------------start------------------------------------------------
+    mapSelection() {
+        if (!this.clearWhenPropsChange) {
+            this.clearWhenPropsChange = this.props.rows.filter((item, index) => {
+                const obj = this.props.rowSelection.getCheckboxProps(item, index);
+                return !obj.disabled;
+            });
+        }
+        return this.clearWhenPropsChange;
+    }
+
     /**
      * 切换表格全选中
      * */
     checkedAll() {
-        const props = this.props;
-        const rows = props.rows;
-        const isChecked = this.state.checkStatus === CHECKED;
-        this.checkedList = isChecked || (!rows || rows.length === 0) ? [] : [...rows];
-        this.setState({
-            checkStatus: isChecked ? NOT_CHECKED : CHECKED
-        }, () => {
-            props.onSelectRowChange(this.checkedList);
-        });
+
+
     }
 
-    /**
-     * 切换表格行选中状态
-     * @param {object} row 表格行数据
-     * @param {boolean} isChecked 是否是选中状态
-     * @param {number} rowIndex 表格行索引
-     * @param {boolean} shouldEmit 是否需要向外层发送
-     * */
-    handleRowChecked(row, isChecked, rowIndex, shouldEmit = true) {
-        const emitChange = this.props.onSelectRowChange;
-        if (this.checkState === RADIO) { // 单选表格
-            emitChange([row]);
-            return;
+    handleRowChecked(checkedRowValues) {
+        console.log(checkedRowValues.length, this.mapSelection().length);
+        if (checkedRowValues.length === this.mapSelection().length) {
+            console.log('权限');
         }
-        const oldList = this.checkedList;
-        // 根据选中还是不选择, 从checkedList 添加 或  清除 该项
-        oldList[rowIndex] = isChecked ? row : null;
-
-        if (!shouldEmit) {
-            return;
-        }
-        // 格式化结构用于向外层发送
-        const arr = oldList.filter(item => !!item);
-        // 判断总体选中状态  全选中, quanweixuanz
-        const len = arr.length;
-        const max = this.props.rows.length;
-        const newStatus = max === len ? CHECKED : (len === 0 ? NOT_CHECKED : HALF_CHECKED);
-
-        if (this.state.checkStatus !== newStatus) {
-            this.setState({
-                checkStatus: newStatus
-            });
-        }
-        emitChange(arr);
     }
 
     // ----------------------------------------end------------------------------------------------
@@ -672,35 +645,35 @@ class Table extends React.Component {
                         ) :
                         null
                 }
-
-                {/* 普通表格 */}
-                {
-                    this.USE_SPLIT_LAYOUT ?
-                        renderSplitLayoutTable.call(this, columns.plain, rows) :
-                        renderTable(
-                            renderColumns.call(this, columns.plain),
-                            renderTHead.call(this, columns.plain),
-                            renderTBody.call(this, columns.plain, rows, 'normal')
-                        )
-                }
-                {/* 左固定表格 */}
-                {
-                    this.HAS_LEFT && renderLeftTable.call(this, columns.left, rows)
-                }
-                {/* 右固定表格 */}
-                {
-                    this.HAS_RIGHT && renderRightTable.call(this, columns.right, rows)
-                }
-                {/* 下固定表格 */}
-                {
-                    this.HAS_BOTTOM && renderBottomTable()
-                }
+                <Checkbox.Group onChange={this.handleRowChecked}>
+                    {/* 普通表格 */}
+                    {
+                        this.USE_SPLIT_LAYOUT ?
+                            renderSplitLayoutTable.call(this, columns.plain, rows) :
+                            renderTable(
+                                renderColumns.call(this, columns.plain),
+                                renderTHead.call(this, columns.plain),
+                                renderTBody.call(this, columns.plain, rows, 'normal')
+                            )
+                    }
+                    {/* 左固定表格 */}
+                    {
+                        this.HAS_LEFT && renderLeftTable.call(this, columns.left, rows)
+                    }
+                    {/* 右固定表格 */}
+                    {
+                        this.HAS_RIGHT && renderRightTable.call(this, columns.right, rows)
+                    }
+                    {/* 下固定表格 */}
+                    {
+                        this.HAS_BOTTOM && renderBottomTable()
+                    }
+                </Checkbox.Group>
             </div>
         );
     }
 
 }
-
 
 /**
  * 渲染固定右侧的占位符
@@ -769,7 +742,7 @@ const renderPlainTh = function (col) {
     </React.Fragment>;
 };
 /**
- * 渲染 thead
+ * 渲染 tHead
  * @param {array} columns
  */
 const renderTHead = function (columns) {
@@ -842,18 +815,22 @@ const renderTBody = function (columns, data, startIndex, tType) {
                         <Row
                             {...customerProps}
                             key={key}
+                            rowKey={key}
+                            rowIndex={isBottom ? ('b-' + index) : index}
                             rowData={rowData}
                             columns={columns}
                             isBottom={isBottom}
                             needSync={this.HAS_FIXED}
-                            checkState={this.checkState} // 表格 多选 还是单选
                             isFixed={!isNormal && !isBottom}
                             // 样式
                             bgColor={props.zebra && (index % 2 === 0 ? '_lighten' : '_darken')}
+
                             // check
-                            rowIndex={isBottom ? ('b-' + key) : key}
+                            checkState={this.checkState} // 表格 多选 还是单选
                             checkStatus={state.checkStatus}
                             onChecked={this.handleRowChecked}
+                            rowSelection={props.rowSelection}
+
                             // 同步状态
                             syncRowMap={this.syncRowMap}
                             // 计算布局
@@ -1144,6 +1121,8 @@ Table.defaultProps = {
     onRow: noWork,
     clearStateWhenRowsChange: false,
     bigDataRenderRange: 30, // 大数据渲染 一屏的数据范围
+
+    rowSelection: {}
 };
 
 Table.propTypes = {
@@ -1165,6 +1144,8 @@ Table.propTypes = {
     rows: PropTypes.array,
     fixedRows: PropTypes.array,
     rowKey: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // 表格行 key 的取值，可以是字符串或数值
+
+    rowSelection: PropTypes.object,
 
     bigDataRenderRange: PropTypes.number, // 大数据渲染 一屏的数据范围
     clearStateWhenRowsChange: PropTypes.bool

@@ -1,12 +1,16 @@
 import React from 'react';
 import Icon from '../../ui/components/icon';
 import ExpandRow from './expand-row';
-// import Checkbox from '../../ui/components/checkbox';
 import Checkbox from './checkbox';
 import PropTypes from 'prop-types';
+
+import {
+    checkType,
+    checkStatus
+} from './const-data';
 import cn from './utils/class-name';
 
-
+const {CHECKED, HALF_CHECKED, NOT_CHECKED} = checkStatus;
 // 状态
 const CHECK = 'CHECK';
 //
@@ -45,24 +49,34 @@ class Subject {
 }
 
 
+/**
+ *
+ * @prop [array] rowIndex
+ */
 class Row extends React.Component {
     constructor(props) {
         super(props);
 
         // 创建Subject对象
-        let syncObj = props.syncRowMap[props.rowKey];
+        let syncObj = props.syncRowMap[props.rowIndex];
 
         if (props.needSync) {
             this.expandTr = React.createRef();
             if (!syncObj) {
                 syncObj = new Subject();
-                props.syncRowMap[props.rowKey] = syncObj;
+                props.syncRowMap[props.rowIndex] = syncObj;
             }
             this.removeObjserver = syncObj.addObserver(this);
             this.syncObj = syncObj;
         }
 
+        const isChecked = props.checkStatus === CHECKED;
+
+        props.onChecked(props.rowData, isChecked, props.rowIndex, false);
+
         this.state = {
+            isChecked: isChecked,  // 选中
+
             isCollapse: true,  // 折叠
             expandContent: null, // 扩展行内容
             expandTrHeight: 0,   // 扩展行 高度
@@ -71,12 +85,58 @@ class Row extends React.Component {
         };
 
         this.mounted = false;
+        this.toggleCheck = this.toggleCheck.bind(this);
         this.getTrHeight = this.getTrHeight.bind(this);
+
     }
 
     componentDidMount() {
         this.mounted = true;
     }
+
+    // TODO: 把单选多选这种东西提取成独立的部分
+    /**
+     * 表格行选中 切换
+     * */
+    toggleCheck(e) {
+        if (this.props.disabled) {
+            return;
+        }
+        e && e.stopPropagation();
+        const isChecked = !this.state.isChecked;  // 是否选中
+
+        const props = this.props;
+
+        // 发送数据给table
+        props.onChecked(props.rowData, isChecked, props.rowIndex);
+
+        this.setState({isChecked: isChecked});
+
+        if (props.needSync) {
+            this.syncObj.emit(CHECK, isChecked, this);
+        }
+
+    }
+
+    static getDerivedStateFromProps({checkStatus}) {
+        if (checkStatus !== HALF_CHECKED) {
+            return {
+                isChecked: checkStatus === CHECKED
+            };
+        }
+        return null;
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        // 变成全选
+        // 或 变成全不选
+        if (prevState.isChecked !== this.state.isChecked) {
+            if (this.props.disabled) {
+                this.props.onChecked(this.props.rowData, false, this.props.rowIndex, false);
+            }
+        }
+}
+
 
     shouldComponentUpdate(N_P, N_S) {
         const C_P = this.props;
@@ -86,10 +146,9 @@ class Row extends React.Component {
             C_P.columns !== N_P.columns ||
             C_P.rowData !== N_P.rowData ||
             C_P.rowIndex !== N_P.rowIndex ||
-            C_P.rowKey !== N_P.rowKey ||
-            // C_P.checkStatus !== N_P.checkStatus ||
+            C_P.checkStatus !== N_P.checkStatus ||
             C_P.disabled !== N_P.disabled ||
-            // N_S.isChecked !== C_S.isChecked ||
+            N_S.isChecked !== C_S.isChecked ||
             N_S.isCollapse !== C_S.isCollapse ||
             N_S.expandTrHeight !== C_S.expandTrHeight ||
             N_S.trHeight !== C_S.trHeight;
@@ -99,7 +158,7 @@ class Row extends React.Component {
     componentWillUnmount() {
         this.removeObjserver && this.removeObjserver(len => {
             if (len === 0) {
-                delete this.props.syncRowMap[this.props.rowKey];
+                delete this.props.syncRowMap[this.props.rowIndex];
             }
         });
     }
@@ -118,9 +177,9 @@ class Row extends React.Component {
             case HOVER:
                 this.setState({isHover: value});
                 break;
-            // case CHECK:
-            //     this.setState({isChecked: value});
-            //     break;
+            case CHECK:
+                this.setState({isChecked: value});
+                break;
             case EXPAND:
                 this.setState({
                     isCollapse: value.isCollapse,
@@ -220,17 +279,9 @@ class Row extends React.Component {
         const props = this.props;
         if (!props.rowData) return null;
         const state = this.state;
-        return props.isBottom ?
-            (
-                <tr
-                    className={'u-tr'}
-                    ref={this.getTrHeight}
-                    style={{height: state.trHeight}}
-                >
-                    {this.mapRow()}
-                </tr>
-            ) :
-            (
+        return props.isBottom
+            ? (<tr className={'u-tr'} ref={this.getTrHeight} style={{height: state.trHeight}}>{this.mapRow()}</tr>)
+            : (
                 <React.Fragment>
                     <tr className={
                         cn(
@@ -284,20 +335,14 @@ const renderTdContentWrap = function (col, child) {
 };
 
 const renderTdContent = function (col) {
-    const {rowData, rowIndex,rowKey, isBottom, rowSelection} = this.props;
-    const {isCollapse} = this.state;
+    const {rowData, rowIndex, isBottom} = this.props;
+    const { isCollapse} = this.state;
 
     return isBottom ?
         renderTdContentWrap.call(this, col, rowData[col.type || col.prop] || null) :
         (col.type === 'checkbox' || col.type === 'radio') ?
             (
-                <Checkbox
-                    type={col.type}
-                    value={rowKey}
-                    rowData={rowData}
-                    rowIndex={rowIndex}
-                    getCheckboxProps={rowSelection.getCheckboxProps}
-                />
+                <Checkbox />
             ) :
             col.type === 'expand' ?
                 (
@@ -314,15 +359,12 @@ const renderTdContent = function (col) {
                             col,
                             (
                                 col.filter ?
-                                    col.filter(
-                                        rowData[col.prop],
-                                        Object.assign({}, rowData),
-                                        rowIndex
-                                    ) :
+                                    col.filter(rowData[col.prop], Object.assign({}, rowData), rowIndex) :
                                     rowData[col.prop]
                             )
                         )
                     );
+
 };
 
 const mapRow = function () {

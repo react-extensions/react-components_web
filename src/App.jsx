@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
 import './style.less';
-import BigData from './lab/big-data-render-pro';
 import Table from './lab/table';
+import {Checkbox} from './ui';
+
 
 let rows = [];
-for (let i = 0; i < 200; i++) {
+for (let i = 0; i < 10; i++) {
     rows.push({
         one: i,
         two: i,
@@ -18,7 +19,7 @@ for (let i = 0; i < 200; i++) {
 const columns = [
     {
         type: 'expand',
-        content: ()=>(
+        content: () => (
             <div>
                 <h1>1111111</h1>
                 <h1>wwwwwwwwwwwwww</h1>
@@ -71,28 +72,44 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            bool: true
+            bool: false,
+            arr: []
         };
+        this.handleChange  = this.handleChange.bind(this)
     }
 
     toggle() {
         this.setState({
-            bool: !this.state.bool
+            bool: !this.state.bool,
+            // arr: !this.state.bool ? rows.map(row=>row.id) : []
         });
     }
-
+    handleChange(v){
+        this.setState({arr:v})
+    }
     render() {
+
 
         return (
             <div className="App">
+                {/*<Checkbox.Group value={this.state.arr} onChange={this.handleChange}>*/}
+                    {/*{*/}
+                        {/*rows.map((row,i)=>{*/}
+                            {/*return <Checkbox*/}
+                                {/*key={row.id}*/}
+                                {/*value={row.id}*/}
+                                {/*disabled={this.state.bool ? (i%2)===0: i%3===0}*/}
+                            {/*>{row.id}</Checkbox>*/}
+                        {/*})*/}
+                    {/*}*/}
+                {/*</Checkbox.Group>*/}
+
+
                 <button type={'button'} onClick={this.toggle.bind(this)}>toggle</button>
                 <p>{String(this.state.bool)}</p>
                 <Table columns={columns}
                        rows={rows}
                        tableHeight={600}
-                       onSelectRowChange={(v) => {
-                           console.log(v);
-                       }}
                        onRow={
                            (data, index) => {
                                if (index === 2) {
@@ -104,25 +121,12 @@ class App extends Component {
                            }
                        }
                        rowKey={'id'}
-                       disabledRows={[]}
+                       rowSelection={{
+                           getCheckboxProps: (data)=> ({
+                               disabled: data.id===1
+                           })
+                       }}
                 />
-                <BigData data={rows}>
-                    {
-                        data => (
-                            <table>
-                                <tbody>
-                                {
-                                    data.map(item => (
-                                        <tr key={item.one}>
-                                            <td>{item.one}</td>
-                                        </tr>
-                                    ))
-                                }
-                                </tbody>
-                            </table>
-                        )
-                    }
-                </BigData>
             </div>
         );
     }

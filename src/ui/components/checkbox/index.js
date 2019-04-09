@@ -1,6 +1,7 @@
-import './style.scss';
 import Checkbox from './checkbox';
-import Group from './checkbox-group';
+import Group from './group';
+import './style.less';
+
 
 Checkbox.Group = Group;
 

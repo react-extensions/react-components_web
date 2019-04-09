@@ -1,7 +1,7 @@
 
 // import Notification from './components/notification/notification'
 // import Transition from './components/transition/transition'
-// import Checkbox from './components/checkbox/checkbox'
+import Checkbox from './components/checkbox'
 // import Tooltip from './components/tooltip/tooltip'
 // import Select from './components/select/index'
 // import View from './components/button/button'
@@ -20,7 +20,7 @@ import Input from './components/input';
 export {
     // Notification,
     // Transition,
-    // Checkbox,
+    Checkbox,
     // Tooltip,
     // Select,
     // View,
