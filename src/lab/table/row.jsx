@@ -297,6 +297,7 @@ const renderTdContent = function (col) {
                     rowData={rowData}
                     rowIndex={rowIndex}
                     getCheckboxProps={rowSelection.getCheckboxProps}
+                    
                 />
             ) :
             col.type === 'expand' ?

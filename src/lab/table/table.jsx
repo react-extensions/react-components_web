@@ -203,15 +203,19 @@ class Table extends React.Component {
      * 切换表格全选中
      * */
     checkedAll() {
-
+        
+        
 
     }
 
     handleRowChecked(checkedRowValues) {
+        console.log(checkedRowValues);
+
         console.log(checkedRowValues.length, this.mapSelection().length);
         if (checkedRowValues.length === this.mapSelection().length) {
             console.log('权限');
         }
+
     }
 
     // ----------------------------------------end------------------------------------------------
