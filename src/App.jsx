@@ -5,7 +5,7 @@ import {Checkbox} from './ui';
 
 
 let rows = [];
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 200; i++) {
     rows.push({
         one: i,
         two: i,
@@ -56,12 +56,11 @@ const columns = [
     {
         prop: 'five',
         title: '第五行',
-        // fixed: 'right',
-
+        fixed: 'right',
     },
     {
         title: '操作',
-        // fixed: 'right',
+        fixed: 'right',
         filter: () => (
             <div style={{color: 'blue', cursor: 'pointer'}}>编辑</div>
         )
@@ -104,17 +103,16 @@ class App extends Component {
                     {/*}*/}
                 {/*</Checkbox.Group>*/}
 
-
                 <button type={'button'} onClick={this.toggle.bind(this)}>toggle</button>
                 <p>{String(this.state.bool)}</p>
                 <Table columns={columns}
                        rows={rows}
                        tableHeight={600}
                        onRow={
-                           (data, index) => {
-                               if (index === 2) {
+                           (data) => {
+                               if (data.id===1) {
                                    return {
-                                       disabled: this.state.bool,
+                                       className:'disabled',
                                    };
                                }
                                return null;
@@ -124,9 +122,13 @@ class App extends Component {
                        rowSelection={{
                            getCheckboxProps: (data)=> ({
                                disabled: data.id===1
-                           })
+                           }),
+                           onChange:v=>{this.handleChange(v); console.log(v)},
+                           // selectedRowKeys: this.state.arr
+                           selectedRowKeys: this.state.arr
                        }}
                 />
+
             </div>
         );
     }

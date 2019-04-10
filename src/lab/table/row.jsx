@@ -1,28 +1,22 @@
 import React from 'react';
-import Icon from '../../ui/components/icon';
 import ExpandRow from './expand-row';
-// import Checkbox from '../../ui/components/checkbox';
 import Checkbox from './checkbox';
 import PropTypes from 'prop-types';
 import cn from './utils/class-name';
+import Icon from '../../ui/components/icon';
 
-
-// 状态
-const CHECK = 'CHECK';
-//
-const HEIGHT = 'HEIGHT';
 const HOVER = 'HOVER';
+const HEIGHT = 'HEIGHT';
 const EXPAND = 'EXPAND';
 const EXPAND_HEIGHT = 'EXPAND_HEIGHT';
 
 const isIE9 = /MSIE 9/i.test(window.navigator.usergent);
 
 class Subject {
-    constructor() {
+    constructor(height) {
         this.observerQueue = [];
-        this.height = 0;
+        this.height = height || 60;
     }
-
     emit(key, value, vm) {
         key === HEIGHT && (this.height = value);
         this.observerQueue.forEach(item => item !== vm && item.updateSync(key, value));
@@ -35,8 +29,6 @@ class Subject {
             callback(this.observerQueue.length);
         }.bind(this);
     }
-
-    // window.resize()
     resize() {
         this.observerQueue.forEach(item => {
             item.forceUpdate();
@@ -55,7 +47,7 @@ class Row extends React.Component {
         if (props.needSync) {
             this.expandTr = React.createRef();
             if (!syncObj) {
-                syncObj = new Subject();
+                syncObj = new Subject(props.height);
                 props.syncRowMap[props.rowKey] = syncObj;
             }
             this.removeObjserver = syncObj.addObserver(this);
@@ -67,7 +59,7 @@ class Row extends React.Component {
             expandContent: null, // 扩展行内容
             expandTrHeight: 0,   // 扩展行 高度
             isHover: false,      // 鼠标移入
-            trHeight: props.isFixed ? syncObj.height : null       // 行宽度
+            trHeight: syncObj.height       // 行宽度
         };
 
         this.mounted = false;
@@ -87,9 +79,6 @@ class Row extends React.Component {
             C_P.rowData !== N_P.rowData ||
             C_P.rowIndex !== N_P.rowIndex ||
             C_P.rowKey !== N_P.rowKey ||
-            // C_P.checkStatus !== N_P.checkStatus ||
-            C_P.disabled !== N_P.disabled ||
-            // N_S.isChecked !== C_S.isChecked ||
             N_S.isCollapse !== C_S.isCollapse ||
             N_S.expandTrHeight !== C_S.expandTrHeight ||
             N_S.trHeight !== C_S.trHeight;
@@ -118,9 +107,6 @@ class Row extends React.Component {
             case HOVER:
                 this.setState({isHover: value});
                 break;
-            // case CHECK:
-            //     this.setState({isChecked: value});
-            //     break;
             case EXPAND:
                 this.setState({
                     isCollapse: value.isCollapse,
@@ -152,20 +138,12 @@ class Row extends React.Component {
     clickRow(colIndex, prop, e) {
         const props = this.props;
         props.onClick(e, props.rowData, props.rowIndex, prop, colIndex);
-
-        // // 如果表格为 checkbox 或 radio， 则点击行时， 选中改行
-        // if (props.checkState !== checkType.NONE) {
-        //     this.toggleCheck(e);
-        // }
     }
 
 
     // 具有扩展功能的表格
     expand(expandContent, e) {
-        if (this.props.disabled) {
-            return;
-        }
-        // 阻止触发 check
+        // 阻止触发 click
         e.stopPropagation();
         const props = this.props;
         const isCollapse = !this.state.isCollapse;
@@ -185,7 +163,9 @@ class Row extends React.Component {
      * 获取
      */
     getExpandRowHeight() {
-        if (this.props.isFixed || this.state.isCollapse || !this.props.needSync) return;
+        if (this.props.isFixed || this.state.isCollapse || !this.props.needSync) {
+            return;
+        }
         //this.expandTr.current.clientHeight  在ie9中获取不到值
         //.getBoundingClientRect().height    在普通浏览器中又获取不到值
         const el = this.expandTr.current;
@@ -197,9 +177,6 @@ class Row extends React.Component {
      * 鼠标移入移出样式
      */
     toggleRowBG(isOn) {
-        if (this.props.disabled) {
-            return;
-        }
         this.setState({isHover: isOn > 0});
         if (this.props.needSync) {
             this.syncObj.emit(HOVER, isOn > 0, this);
@@ -218,8 +195,13 @@ class Row extends React.Component {
 
     render() {
         const props = this.props;
-        if (!props.rowData) return null;
+
+        if (!props.rowData) {
+            return null;
+        }
+
         const state = this.state;
+
         return props.isBottom ?
             (
                 <tr
@@ -236,7 +218,8 @@ class Row extends React.Component {
                         cn(
                             'u-tr',
                             props.bgColor,
-                            (state.isHover || state.isChecked) && '_active', props.disabled && '_disabled'
+                            state.isHover && '_active',
+                            props.className
                         )
                     }
                         ref={(props.needSync && !props.isFixed) && this.getTrHeight.bind(this)}
@@ -284,21 +267,24 @@ const renderTdContentWrap = function (col, child) {
 };
 
 const renderTdContent = function (col) {
-    const {rowData, rowIndex,rowKey, isBottom, rowSelection} = this.props;
+    const {rowData, rowIndex, rowKey, isBottom, rowSelection} = this.props;
     const {isCollapse} = this.state;
 
     return isBottom ?
         renderTdContentWrap.call(this, col, rowData[col.type || col.prop] || null) :
-        (col.type === 'checkbox' || col.type === 'radio') ?
+        col.type === 'checkbox' ?
             (
                 <Checkbox
-                    type={col.type}
                     value={rowKey}
                     rowData={rowData}
                     rowIndex={rowIndex}
                     getCheckboxProps={rowSelection.getCheckboxProps}
                 />
-            ) :
+            ):
+            col.type === 'radio' ?
+                (
+                    null
+                ):
             col.type === 'expand' ?
                 (
                     <Icon type='arrow-fill'
@@ -332,7 +318,9 @@ const mapRow = function () {
                 <td key={j}
                     className={cn('u-td', col.type ? '_align-center' : (col.align ? `_align-${col.align}` : ''), col.className)}
                     onClick={this.clickRow.bind(this, j, col.prop)}
-                >{renderTdContent.call(this, col)}</td>
+                >
+                    {renderTdContent.call(this, col)}
+                </td>
             );
         })
     );
@@ -340,10 +328,10 @@ const mapRow = function () {
 
 
 const noWork = () => null;
+
 Row.defaultProps = {
     disabled: false,
     onClick: noWork,
-
 };
 
 Row.propTypes = {

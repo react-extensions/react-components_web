@@ -1,5 +1,5 @@
 import React from 'react';
-import Icon from '../../ui/components/icon';
+
 import Row from './row';
 import PropTypes from 'prop-types';
 import {
@@ -9,7 +9,9 @@ import {
 import cn from './utils/class-name';
 import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
 import useBigDataRender from '../big-data-render-pro/hooks';
+
 import Checkbox from '../../ui/components/checkbox';
+import Icon from '../../ui/components/icon';
 
 
 const ASC = '_asc';  //正序
@@ -25,11 +27,11 @@ class Table extends React.Component {
 
         this.state = {
             complete: false,
-            signOffset: 0,  // 调整表格列宽时, 指示器样式
+            signOffset: 0,  // 调整表格列宽时, 指示器 距左侧的位置
             leftShadow: false,  // 阴影
             rightShadow: true,
             topShadow: false,
-            checkStatus: NOT_CHECKED,  // -1 全不选中  0 部分  1全选
+            checkStatus: NOT_CHECKED,   // NOT_CHECKED 全不选中  HALF_CHECKED 部分  CHECKED全选
             sortMap: {current: '', order: ASC} // 表格排序, current 为当前行的prop. order  ASC正序 DESC 反序
         };
 
@@ -39,7 +41,7 @@ class Table extends React.Component {
         this.plainTableBodyTrackEl = {current: null};
         this.plainTableHeadTrackEl = {current: null};
 
-        // 根据colums数据， 进行预处理
+        // 根据columns数据， 进行预处理
         this.initialize(props);
 
         this.resize = this.resize.bind(this);
@@ -47,9 +49,15 @@ class Table extends React.Component {
         this.resizeCol = this.resizeCol.bind(this);
         this.syncScroll = this.syncScroll.bind(this);
         this.onRowMount = this.onRowMount.bind(this);
-        this.checkedAll = this.checkedAll.bind(this);
         this.handleBottomMount = this.handleBottomMount.bind(this);
         this.handleRowChecked = this.handleRowChecked.bind(this);
+    }
+
+    static getDerivedStateFromProps(props) {
+        return {
+            // rowSelection 是否受控
+            isSelectionControlled: props.rowSelection.hasOwnProperty('selectedRowKeys'),
+        };
     }
 
     /**
@@ -164,7 +172,6 @@ class Table extends React.Component {
             this.initialize(currentProps);
             this.setState({
                 complete: false,
-                checkStatus: NOT_CHECKED,
                 sortMap: {current: '', order: ASC}
             }, () => {
                 // 重新计算
@@ -173,11 +180,6 @@ class Table extends React.Component {
         }
         // rows 数据更新后, 重新设置col宽度
         else if (prevProps.rows !== currentProps.rows) {
-            // 将所有 checkbox状态清空
-            if (currentProps.clearStateWhenRowsChange) {
-                this.checkedList = [];
-                this.setState({checkStatus: NOT_CHECKED});
-            }
             this._initStructure();
             this.forceUpdate();
         }
@@ -191,27 +193,53 @@ class Table extends React.Component {
     // ----------------------------------------start------------------------------------------------
     mapSelection() {
         if (!this.clearWhenPropsChange) {
-            this.clearWhenPropsChange = this.props.rows.filter((item, index) => {
-                const obj = this.props.rowSelection.getCheckboxProps(item, index);
-                return !obj.disabled;
+            const {rows, rowSelection} = this.props;
+            const {getCheckboxProps} = rowSelection;
+            const selectedRowKeys = [];
+            rows.forEach((item, index) => {
+                const obj = getCheckboxProps(item, index);
+                if (obj && obj.disabled) {
+                    return;
+                }
+                selectedRowKeys.push(item[this.props.rowKey]);
             });
+            this.clearWhenPropsChange = selectedRowKeys;
         }
         return this.clearWhenPropsChange;
+    }
+
+    computeCheckStatus(selectedRowKeys) {
+        const selectedRowKeysLen = selectedRowKeys.length;
+        const allRowKeysLen = this.mapSelection().length;
+        let checkStatus = CHECKED;
+        if (allRowKeysLen === selectedRowKeysLen) {
+            checkStatus = CHECKED;
+        } else if (selectedRowKeysLen === 0) {
+            checkStatus = NOT_CHECKED;
+        } else {
+            checkStatus = HALF_CHECKED;
+        }
+        return checkStatus;
     }
 
     /**
      * 切换表格全选中
      * */
-    checkedAll() {
-
-
+    checkedAll(curCheckStatus) {
+        let selectedRowKeys = curCheckStatus !== CHECKED ? this.mapSelection() : [];
+        this.emitAndChangeState(selectedRowKeys);
     }
 
     handleRowChecked(checkedRowValues) {
-        console.log(checkedRowValues.length, this.mapSelection().length);
-        if (checkedRowValues.length === this.mapSelection().length) {
-            console.log('权限');
+        this.emitAndChangeState(checkedRowValues);
+    }
+
+    emitAndChangeState(selectedRowKeys) {
+        this.props.rowSelection.onChange(selectedRowKeys);
+        if (this.state.isSelectionControlled) {
+            return;
         }
+        this.setState({selectedRowKeys});
     }
 
     // ----------------------------------------end------------------------------------------------
@@ -262,7 +290,6 @@ class Table extends React.Component {
      * */
     initStructureWhenUpdated() {
         this._initStructure();
-
         // 首次渲染完成
         setTimeout(() => {
             this.setState({complete: true}, () => {
@@ -312,11 +339,12 @@ class Table extends React.Component {
      * */
     analyseScroll() {
         const track = this.plainTableBodyTrackEl.current;
-
         if (track) {
             this.scrollBarY = track.offsetWidth - track.clientWidth;
-            // this.HAS_FIXED 有左右固定列
-            this.USE_TILE_LAYOUT && (this.scrollBarX = track.offsetHeight - track.clientHeight);
+            // this.HAS_FIXED
+            if (this.USE_TILE_LAYOUT) {
+                this.scrollBarX = track.offsetHeight - track.clientHeight;
+            }
         }
     }
 
@@ -324,14 +352,12 @@ class Table extends React.Component {
     * 计算结构
     * */
     _initStructure() {
-
         // 初始化 横向结构, 列宽,
         this.analyseScroll();
-
-        if (!this.USE_TILE_LAYOUT) return;
-
+        if (!this.USE_TILE_LAYOUT) {
+            return;
+        }
         this.computeColWidth();
-
     }
 
     /**
@@ -339,20 +365,18 @@ class Table extends React.Component {
      * */
     computeColWidth() {
         // 容器宽度（物理宽度）
-        const containerWidth = this.containerEl.current.clientWidth - this.scrollBarY;
-
-        const columns = this.columns.all;
-
-        let totalWidth = 0;
         let hasZero = 0;
+        let totalWidth = 0;
         let cannotExpandMap = {};
         let cannotExpandTotalWidth = 0;
+        const columns = this.columns.all;
+        const containerWidth = this.containerEl.current.clientWidth - this.scrollBarY;
+
 
         // - 将maxColWidthList所有值相加，得出总宽度（计算总宽度）
         // - 记录maxColWidthList中为0的项的数量
         // - 将不允许扩展宽度的列的宽度相加
         // - 记录不允许扩展宽度列的索引
-
         (function () {
             let colWidth = 0;
             for (let i = 0, len = columns.length; i < len; i++) {
@@ -369,20 +393,16 @@ class Table extends React.Component {
             }
         }());
 
-        // console.log(hasZero)
-
-
         // 如果表格 物理宽度 大于 计算宽度   diff > 0
         const diff = containerWidth - totalWidth;
-
-        let minWidth = 0; // minColWidthList的项
-        let maxWidthInCol = 0;
-        let minWidthExact = 0;    // 计算出的每列最小宽度
-        let lastWidth = 0;    // 最终计算出的列宽
         let plainW = 0;
         let leftW = 0;
         let rightW = 0;
         let fixed = null;
+        let minWidth = 0;       // minColWidthList的项
+        let lastWidth = 0;      // 最终计算出的列宽
+        let maxWidthInCol = 0;
+        let minWidthExact = 0;    // 计算出的每列最小宽度
 
         const allColumns = columns.map((col, i) => {
 
@@ -409,7 +429,6 @@ class Table extends React.Component {
                 // 最小宽度
                 lastWidth < minWidthExact && (lastWidth = minWidthExact);
             }
-
 
             fixed = col.fixed;
 
@@ -448,8 +467,8 @@ class Table extends React.Component {
      * */
     syncScroll(e) {
         const state = this.state;
-        const left = e.currentTarget.scrollLeft;
         const top = e.currentTarget.scrollTop;
+        const left = e.currentTarget.scrollLeft;
 
         if (this.plainTableHeadTrackEl.current) {
             this.plainTableHeadTrackEl.current.scrollLeft = left;
@@ -470,11 +489,20 @@ class Table extends React.Component {
 
         if (this.HAS_RIGHT) {
             this.rightTableBodyEl.current.scrollTop = top;
-            if (state.rightShadow !== (this.containerEl.current.clientWidth + left - this.scrollBarY - this.tableWidth.total < -5)) {
+            if (
+                state.rightShadow !==
+                (
+                    (
+                        this.containerEl.current.clientWidth +
+                        left -
+                        this.scrollBarY -
+                        this.tableWidth.total
+                    ) < -5
+                )
+            ) {
                 this.setState({rightShadow: !state.rightShadow});
             }
         }
-
     }
 
     /**
@@ -498,14 +526,11 @@ class Table extends React.Component {
     prepareResizeCol(e, col) {
         e.preventDefault();
         e.stopPropagation();
-
         // 记录调整的  1. 列索引  2. 初始位置
-
         this.resizeData = {
             col: col,
             offset: this.getOffsetLeft(e)
         };
-
         document.addEventListener('mousemove', this.moveSign);
         document.addEventListener('mouseup', this.resizeCol);
     }
@@ -585,7 +610,11 @@ class Table extends React.Component {
      */
     sortRows(rows) {
         // 如果排序规则没变, 表格数据没变, 且有 已经排序过的 rows数据, 则直接用已经排序过的
-        if (!this.sortedRows || this.rows !== this.props.rows || this.sortMap !== this.state.sortMap) {
+        if (
+            !this.sortedRows ||
+            this.rows !== this.props.rows ||
+            this.sortMap !== this.state.sortMap
+        ) {
             // 缓存上次状态
             this.rows = this.props.rows;
             this.sortMap = this.state.sortMap;
@@ -613,6 +642,27 @@ class Table extends React.Component {
         ) {
             rows = this.sortRows(rows);
         }
+        const render = () => {
+            return (
+                <React.Fragment>
+                    {/* 普通表格 */}
+                    {
+                        this.USE_SPLIT_LAYOUT ?
+                            renderSplitLayoutTable.call(this, columns.plain, rows) :
+                            renderTable(
+                                renderColumns.call(this, columns.plain),
+                                renderTHead.call(this, columns.plain),
+                                renderTBody.call(this, columns.plain, rows, 'normal')
+                            )
+                    }
+                    {/* 左固定表格 */}
+                    {this.HAS_LEFT && renderLeftTable.call(this, columns.left, rows)}
+                    {/* 右固定表格 */}
+                    {this.HAS_RIGHT && renderRightTable.call(this, columns.right, rows)}
+                    {this.HAS_BOTTOM && renderBottomTable()}
+                </React.Fragment>
+            );
+        };
         return (
             <div
                 className={
@@ -645,35 +695,31 @@ class Table extends React.Component {
                         ) :
                         null
                 }
-                <Checkbox.Group onChange={this.handleRowChecked}>
-                    {/* 普通表格 */}
-                    {
-                        this.USE_SPLIT_LAYOUT ?
-                            renderSplitLayoutTable.call(this, columns.plain, rows) :
-                            renderTable(
-                                renderColumns.call(this, columns.plain),
-                                renderTHead.call(this, columns.plain),
-                                renderTBody.call(this, columns.plain, rows, 'normal')
-                            )
-                    }
-                    {/* 左固定表格 */}
-                    {
-                        this.HAS_LEFT && renderLeftTable.call(this, columns.left, rows)
-                    }
-                    {/* 右固定表格 */}
-                    {
-                        this.HAS_RIGHT && renderRightTable.call(this, columns.right, rows)
-                    }
-                    {/* 下固定表格 */}
-                    {
-                        this.HAS_BOTTOM && renderBottomTable()
-                    }
-                </Checkbox.Group>
+                {
+                    this.checkState === CHECKBOX ?
+                        (
+                            <Checkbox.Group
+                                onChange={this.handleRowChecked}
+                                value={
+                                    state.isSelectionControlled ?
+                                        props.rowSelection.selectedRowKeys :
+                                        state.selectedRowKeys
+                                }
+                            >
+                                {render()}
+                            </Checkbox.Group>
+                        ) :
+                        this.checkState === RADIO ?
+                            (
+                                null
+                            ) :
+                            render()
+                }
             </div>
         );
     }
-
 }
+
 
 /**
  * 渲染固定右侧的占位符
@@ -690,6 +736,7 @@ const rightPlaceholder = function () {
         </div>
     );
 };
+
 
 /**
  * 渲染 colGroup 元素
@@ -746,10 +793,22 @@ const renderPlainTh = function (col) {
  * @param {array} columns
  */
 const renderTHead = function (columns) {
+    const renderCheckbox = () => {
+        const selectedRowKeys = this.state.isSelectionControlled ?
+            this.props.rowSelection.selectedRowKeys :
+            this.state.selectedRowKeys;
+        const checkStatus = this.computeCheckStatus(selectedRowKeys);
 
+        return <Icon
+            type={'square'}
+            onClick={this.checkedAll.bind(this, checkStatus)}
+            className={checkStatus}
+        />;
+    };
+    const {height, ...headRowProps} = this.props.onHeaderRow();
     return (
         <thead>
-        <tr className='u-tr'>
+        <tr className='u-tr' style={{height: height}} {...headRowProps}>
             {
                 columns.map((col) => {
                     const type = col.type;
@@ -773,13 +832,7 @@ const renderTHead = function (columns) {
                                     (type === 'expand' || type === 'radio') ?
                                         null :
                                         type === 'checkbox' ?
-                                            (
-                                                <Icon
-                                                    type={'square'}
-                                                    onClick={this.checkedAll}
-                                                    className={this.state.checkStatus}
-                                                />
-                                            ) :
+                                            renderCheckbox() :
                                             type === 'index' ? '#' : renderPlainTh.call(this, col)
                                 }
                             </div>
@@ -807,9 +860,8 @@ const renderTBody = function (columns, data, startIndex, tType) {
             hasData ?
                 data.map((rowData, i) => {
                     const index = i + startIndex;
-
                     const customerProps = this.beforeRowMount(rowData, index);
-                    const key = props.rowKey ? rowData[props.rowKey] : index;
+                    const key = /*!props.rowKey ? index : */rowData[props.rowKey];
 
                     return (
                         <Row
@@ -1117,16 +1169,20 @@ Table.defaultProps = {
     dragAble: false,  // 允许用户拖拽设置表格列宽
     useSplitLayout: false, // 使用分体布局
     onSortChange: noWork,
-    onSelectRowChange: noWork,
-    onRow: noWork,
-    clearStateWhenRowsChange: false,
-    bigDataRenderRange: 30, // 大数据渲染 一屏的数据范围
 
-    rowSelection: {}
+    onRow: ()=>({height: 60}),
+
+    onHeaderRow: ()=>({height: 60}),
+
+    bigDataRenderRange: 30, // 大数据渲染 一屏的数据范围
+    rowSelection: {
+        onChange: noWork,
+        getCheckboxProps: noWork
+    }
 };
 
 Table.propTypes = {
-    columns: PropTypes.array,     // 列配置
+    columns: PropTypes.array,      // 列配置
     tableHeight: PropTypes.number,    // 表格体高度
     type: PropTypes.oneOf(['tile', 'stretch']), // 平铺 拉伸布局
 
@@ -1137,7 +1193,6 @@ Table.propTypes = {
     databaseSort: PropTypes.bool, // 排序方式，表格自身排序 | 数据库排序（有onSortChange事件）
 
     onSortChange: PropTypes.func, // 选择数据库排序，排序变化时触发
-    onSelectRowChange: PropTypes.func, // 表格行选中改变
 
     emptyTip: PropTypes.node,     // 定义表格为空数据时要显示的提示
     align: PropTypes.oneOf(['left', 'right', 'center']), // 表格内文本对齐
@@ -1145,10 +1200,16 @@ Table.propTypes = {
     fixedRows: PropTypes.array,
     rowKey: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // 表格行 key 的取值，可以是字符串或数值
 
-    rowSelection: PropTypes.object,
+    onHeaderRow: PropTypes.func,
+    onRow: PropTypes.func, // 在Row 创建之前被调用，要求返回对象， 对象中的每个键将作为props传给 Row
+
+    rowSelection: PropTypes.shape({
+        onChange: PropTypes.func,
+        selectedRowKeys: PropTypes.array,  // 表格行选中改变
+        getCheckboxProps: PropTypes.func,
+    }),
 
     bigDataRenderRange: PropTypes.number, // 大数据渲染 一屏的数据范围
-    clearStateWhenRowsChange: PropTypes.bool
 };
 
 export default Table;

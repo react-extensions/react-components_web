@@ -25,27 +25,37 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
     const [offsetTop, setOffsetTop] = useState(0);
     const [totalHeight, setTotalHeight] = useState(0);
     const [prevScrollTop, setPrevScrollTop] = useState(0);
-    // const [prevScrollLeft, setPrevScrollLeft] = useState(0);
+    const [isBottom, setIsBottom] = useState(false);
     const [prevTime, setPrevTime] = useState(0);
+    const [overSpeed, setOverSpeed] = useState(false);
+    // const [prevScrollLeft, setPrevScrollLeft] = useState(0);
+
     const [timer, setTimer] = useState(null);
     const contentRef = React.createRef();
     const shouldRenderDirectly = data.length < range;
 
     const setStepAndOffsetTop = (nextIndex, halfContainerHeight) => {
         // 最底部
-        if (nextIndex + (2*range) > data.length-1) {
-            setIndex(data.length - (2*range));
-            setOffsetTop(totalHeight - halfContainerHeight * 2);
+        if (nextIndex + (2 * range) > data.length - 1) {
+            if (isBottom) {
+                return;
+            }
+            setIsBottom(true);
+            setIndex(nextIndex);
+            setOffsetTop(halfContainerHeight * Math.ceil(nextIndex / range));
+            // setIndex(data.length - (2 * range));
+            // setOffsetTop(totalHeight - halfContainerHeight * 2);
         }
         // 顶部
-        else if(nextIndex<=0) {
+        else if (nextIndex <= 0) {
             setIndex(0);
             setOffsetTop(0);
         }
         // 中间
         else {
-            setOffsetTop(halfContainerHeight * Math.ceil(nextIndex/range));
+            setIsBottom(false);
             setIndex(nextIndex);
+            setOffsetTop(halfContainerHeight * Math.ceil(nextIndex / range));
         }
     };
 
@@ -54,13 +64,12 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
             return;
         }
         const wrapEl = e.target;
-        const scrollTop = wrapEl.scrollTop;
-
         const minDistance = 0; //this.props.distance
+        const scrollTop = wrapEl.scrollTop;
         const containerEl = contentRef.current;
         const containerHeight = containerEl.clientHeight;
         const halfContainerHeight = containerHeight / 2;
-
+        // 保存滚动位置
         setPrevScrollTop(scrollTop);
 
         // const scrollLeft = wrapEl.scrollLeft;
@@ -69,39 +78,17 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
         //     return;
         // }
 
+        // 超速了， 没必要渲染，等停下再渲染
         const time = +new Date();
         setPrevTime(time);
         if (Math.abs(scrollTop - prevScrollTop) / (time - prevTime) > 20) {
+            setOverSpeed(true);
             clearTimeout(timer);
-            let newTimer = null;
-            // TODO: 算法不精确
-            if (scrollTop > prevScrollTop) {
-                newTimer = setTimeout(() => {
-                    const diff = containerHeight -
-                        scrollTop -
-                        height;
-                    let curDistance = offsetTop + diff;
-                    let nextIndex = index;
-                    while (curDistance <= minDistance) {
-                        nextIndex += range;
-                        curDistance = diff + halfContainerHeight  * Math.ceil(nextIndex/range);
-                    }
-                    setStepAndOffsetTop(nextIndex, halfContainerHeight);
-                }, 100);
-
-            } else {
-                newTimer = setTimeout(() => {
-                    let curDistance = scrollTop - offsetTop;
-                    let nextIndex = index;
-                    while (curDistance <= minDistance) {
-                        nextIndex -= range;
-                        curDistance = scrollTop - halfContainerHeight * Math.ceil(nextIndex/range);
-                    }
-                    setStepAndOffsetTop(nextIndex, halfContainerHeight);
-                }, 32);
-            }
-
-            setTimer(newTimer);
+            setTimer(setTimeout(() => {
+                setOverSpeed(false);
+                const ranges = Math.floor(scrollTop / halfContainerHeight);
+                setStepAndOffsetTop(ranges * range, halfContainerHeight);
+            }, 100));
             return;
         }
 
@@ -125,15 +112,13 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
         }
     };
 
-   // 计算总高度
+    // 计算总高度
     useEffect(() => {
         if (shouldRenderDirectly) {
             return;
         }
         setTotalHeight(contentRef.current.clientHeight / 2 * (data.length / range));
-    });
-
-
+    }, [data]);
 
 
     return {
@@ -143,7 +128,7 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
         // 内容
         contentRef,
         contentStyle: {transform: `translate3d(0,${offsetTop}px,0)`},
-        data: shouldRenderDirectly ? data : data.slice(index, index + (range*2)),
+        data: shouldRenderDirectly ? shouldRenderDirectly : data.slice(index, index + (2 * range)),
 
         // 状态及数据
         index: index,
@@ -157,6 +142,7 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
             // overflowX: 'hidden'
         },
         handleContainerScroll: handleScroll,
+        overSpeed: overSpeed
     };
 
 }
