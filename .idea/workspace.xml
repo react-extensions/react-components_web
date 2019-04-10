@@ -2,18 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8dfa0fa1-eee2-4670-9a51-20ee614d09cf" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lab/table/row.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lab/table/row.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lab/table/table.1.jsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/lab/table/table.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/lab/table/table.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/style.less" beforeDir="false" afterPath="$PROJECT_DIR$/src/style.less" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/checkbox/checkbox-group.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/checkbox/group.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/components/checkbox/checkbox.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/checkbox/checkbox.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/checkbox/checkbox.scss" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/checkbox/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/checkbox/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/checkbox/style.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/checkbox/style.less" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/index.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -63,7 +54,7 @@
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="js" value="399" />
-          <entry key="jsx" value="14394" />
+          <entry key="jsx" value="14402" />
           <entry key="less" value="385" />
           <entry key="md" value="118" />
           <entry key="scss" value="17" />
@@ -71,7 +62,7 @@
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="JSX Harmony" value="14394" />
+          <entry key="JSX Harmony" value="14402" />
           <entry key="JavaScript" value="399" />
           <entry key="Less" value="385" />
           <entry key="Markdown" value="118" />
@@ -82,11 +73,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/lab/table/table.jsx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="628">
-              <caret line="780" column="50" lean-forward="true" selection-start-line="780" selection-start-column="50" selection-end-line="780" selection-end-column="50" />
+            <state relative-caret-position="940">
+              <caret line="691" column="2" lean-forward="true" selection-start-line="691" selection-start-column="2" selection-end-line="691" selection-end-column="2" />
               <folding>
                 <element signature="e#0#26#0" expanded="true" />
               </folding>
@@ -97,8 +88,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ui/components/checkbox/checkbox.jsx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-222">
-              <caret line="43" selection-start-line="43" selection-end-line="43" />
+            <state relative-caret-position="1745">
+              <caret line="96" column="24" selection-start-line="96" selection-start-column="24" selection-end-line="96" selection-end-column="24" />
             </state>
           </provider>
         </entry>
@@ -106,8 +97,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/ui/components/checkbox/group.jsx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1056">
-              <caret line="46" lean-forward="true" selection-start-line="46" selection-end-line="46" />
+            <state relative-caret-position="72">
+              <caret line="24" column="23" selection-start-line="24" selection-start-column="22" selection-end-line="24" selection-end-column="23" />
               <folding>
                 <element signature="e#0#26#0" expanded="true" />
               </folding>
@@ -115,10 +106,10 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/lab/table/row.jsx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="264">
+            <state relative-caret-position="480">
               <caret line="281" column="14" lean-forward="true" selection-start-line="281" selection-start-column="14" selection-end-line="281" selection-end-column="14" />
               <folding>
                 <element signature="e#0#26#0" expanded="true" />
@@ -141,15 +132,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/lab/table/const-data.js">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/App.jsx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="168">
-              <caret line="7" column="22" selection-start-line="7" selection-start-column="22" selection-end-line="7" selection-end-column="22" />
+            <state relative-caret-position="-840">
+              <caret line="7" column="21" selection-start-line="7" selection-start-column="21" selection-end-line="7" selection-end-column="21" />
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
               </folding>
@@ -235,10 +221,10 @@
         <option value="$PROJECT_DIR$/src/ui/index.js" />
         <option value="$PROJECT_DIR$/src/style.less" />
         <option value="$PROJECT_DIR$/src/ui/components/checkbox/style.less" />
-        <option value="$PROJECT_DIR$/src/ui/components/checkbox/checkbox.jsx" />
         <option value="$PROJECT_DIR$/src/lab/table/row.jsx" />
         <option value="$PROJECT_DIR$/src/lab/table/checkbox.jsx" />
         <option value="$PROJECT_DIR$/src/ui/components/checkbox/group.jsx" />
+        <option value="$PROJECT_DIR$/src/ui/components/checkbox/checkbox.jsx" />
         <option value="$PROJECT_DIR$/src/App.jsx" />
         <option value="$PROJECT_DIR$/src/lab/table/table.jsx" />
       </list>
@@ -417,12 +403,12 @@
       <option name="presentableId" value="Default" />
       <updated>1554279921580</updated>
       <workItem from="1554279922897" duration="55161000" />
-      <workItem from="1554686186275" duration="51640000" />
+      <workItem from="1554686186275" duration="52998000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="106801000" />
+    <option name="totallyTimeSpent" value="108159000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="581" y="0" width="1342" height="1047" extended-state="0" />
@@ -693,6 +679,26 @@
     <entry file="file://$PROJECT_DIR$/src/ui/components/checkbox/context.js">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/lab/table/check-context.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="2" column="35" selection-start-line="2" selection-start-column="35" selection-end-line="2" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/lab/table/const-data.js">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/App.jsx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-840">
+          <caret line="7" column="21" selection-start-line="7" selection-start-column="21" selection-end-line="7" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/lab/table/checkbox.jsx">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="96">
@@ -703,20 +709,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/App.jsx">
+    <entry file="file://$PROJECT_DIR$/src/lab/table/row.jsx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="7" column="22" selection-start-line="7" selection-start-column="22" selection-end-line="7" selection-end-column="22" />
+        <state relative-caret-position="480">
+          <caret line="281" column="14" lean-forward="true" selection-start-line="281" selection-start-column="14" selection-end-line="281" selection-end-column="14" />
           <folding>
-            <element signature="e#0#39#0" expanded="true" />
+            <element signature="e#0#26#0" expanded="true" />
+            <element signature="e#166#218#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/lab/table/table.jsx">
+    <entry file="file://$PROJECT_DIR$/src/ui/components/checkbox/group.jsx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="628">
-          <caret line="780" column="50" lean-forward="true" selection-start-line="780" selection-start-column="50" selection-end-line="780" selection-end-column="50" />
+        <state relative-caret-position="72">
+          <caret line="24" column="23" selection-start-line="24" selection-start-column="22" selection-end-line="24" selection-end-column="23" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
           </folding>
@@ -725,38 +732,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/ui/components/checkbox/checkbox.jsx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-222">
-          <caret line="43" selection-start-line="43" selection-end-line="43" />
+        <state relative-caret-position="1745">
+          <caret line="96" column="24" selection-start-line="96" selection-start-column="24" selection-end-line="96" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/lab/table/check-context.js">
+    <entry file="file://$PROJECT_DIR$/src/lab/table/table.jsx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="48">
-          <caret line="2" column="35" selection-start-line="2" selection-start-column="35" selection-end-line="2" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/ui/components/checkbox/group.jsx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1056">
-          <caret line="46" lean-forward="true" selection-start-line="46" selection-end-line="46" />
+        <state relative-caret-position="940">
+          <caret line="691" column="2" lean-forward="true" selection-start-line="691" selection-start-column="2" selection-end-line="691" selection-end-column="2" />
           <folding>
             <element signature="e#0#26#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lab/table/const-data.js">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/lab/table/row.jsx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="264">
-          <caret line="281" column="14" lean-forward="true" selection-start-line="281" selection-start-column="14" selection-end-line="281" selection-end-column="14" />
-          <folding>
-            <element signature="e#0#26#0" expanded="true" />
-            <element signature="e#166#218#0" expanded="true" />
           </folding>
         </state>
       </provider>

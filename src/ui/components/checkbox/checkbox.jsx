@@ -90,7 +90,11 @@ export default function (props) {
             {
                 ({onChange, value, isGroup} = {} )=> {
                     return isGroup ?
-                        <Checkbox  {...props} checked={value.includes(props.value)} onChange={onChange}/> :
+                        <Checkbox
+                            {...props}
+                            checked={value.includes(props.value)}
+                            onChange={onChange}
+                        /> :
                         <Checkbox  {...props} />
                 }
             }

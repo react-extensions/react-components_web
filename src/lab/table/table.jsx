@@ -692,7 +692,7 @@ const rightPlaceholder = function () {
 };
 
 /**
- * 渲染 colgroup 元素
+ * 渲染 colGroup 元素
  */
 const renderColumns = function (columns) {
     return !this.state.complete ? null : (
