@@ -110,12 +110,9 @@ class App extends Component {
                        tableHeight={600}
                        onRow={
                            (data) => {
-                               if (data.id===1) {
-                                   return {
-                                       className:'disabled',
-                                   };
+                               return {
+                                   onClick: (...args)=>{console.log(...args)}
                                }
-                               return null;
                            }
                        }
                        rowKey={'id'}

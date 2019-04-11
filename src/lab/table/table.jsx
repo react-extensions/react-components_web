@@ -1037,6 +1037,7 @@ const SplitLayoutTableBody = function ({parent, rows, height, columns, colGroup,
         contentStyle,
         data,
         step,
+        // overSpeed,
         // 状态及数据
         shouldRenderDirectly,
     } = useBigDataRender({
@@ -1044,38 +1045,37 @@ const SplitLayoutTableBody = function ({parent, rows, height, columns, colGroup,
         height,
         range
     });
-    // console.log(step)
 
     const extendStyle = Object.assign({}, containerStyle, {
         height,
         paddingLeft: `${left}px`
     });
 
-    return <div
-        onScroll={e => {
-            parent.syncScroll(e);
-            handleContainerScroll(e);
-        }}
-        style={extendStyle}
-        className={'u-body__track'}
-        ref={forwardRef}
-    >
-        <div className={'u-table-body'} style={shouldRenderDirectly ? null : {height: trackHeight}}>
-            <div
-                ref={contentRef}
-                style={contentStyle}
-            >
-                {renderTable(colGroup, null, renderTBody.call(parent, columns, data, step * range, 'normal'), {width: plain})}
+    return  <div
+            onScroll={e => {
+                parent.syncScroll(e);
+                handleContainerScroll(e);
+            }}
+            style={extendStyle}
+            className={'u-body__track'}
+            ref={forwardRef}
+        >
+            <div className={'u-table-body'} style={shouldRenderDirectly ? null : {height: trackHeight}}>
+                <div
+                    ref={contentRef}
+                    style={contentStyle}
+                >
+                    {renderTable(colGroup, null, renderTBody.call(parent, columns, data, step * range, 'normal'), {width: plain})}
+                </div>
             </div>
-        </div>
 
-        {
-            // 在有些浏览器中，padding-bottom 和 padding-right的布局标准有些怪异，
-            // 导致不会计入 scrollWidth | scrollHeight,
-            // 所以需要使用空div占位符代替以统一布局
-        }
-        {rightPlaceholder.call(parent)}
-    </div>;
+            {
+                // 在有些浏览器中，padding-bottom 和 padding-right的布局标准有些怪异，
+                // 导致不会计入 scrollWidth | scrollHeight,
+                // 所以需要使用空div占位符代替以统一布局
+            }
+            {rightPlaceholder.call(parent)}
+        </div>
 };
 
 
@@ -1170,7 +1170,9 @@ Table.defaultProps = {
     useSplitLayout: false, // 使用分体布局
     onSortChange: noWork,
 
-    onRow: ()=>({height: 60}),
+    onRow: ()=>({
+        height: 60
+    }),
 
     onHeaderRow: ()=>({height: 60}),
 

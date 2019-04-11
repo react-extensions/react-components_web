@@ -294,13 +294,13 @@ const renderTdContent = function (col) {
                 col.type === 'index' ?
                     (rowIndex + 1) :
                     (
-                        (rowData[col.prop] || rowData[col.prop] === 0 || col.filter) &&
+                        (rowData[col.prop] || rowData[col.prop] === 0 || col.render) &&
                         renderTdContentWrap.call(
                             this,
                             col,
                             (
-                                col.filter ?
-                                    col.filter(
+                                col.render ?
+                                    col.render(
                                         rowData[col.prop],
                                         Object.assign({}, rowData),
                                         rowIndex
