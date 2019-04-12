@@ -15,8 +15,9 @@ const isIE9 = /MSIE 9/i.test(window.navigator.usergent);
 class Subject {
     constructor(height) {
         this.observerQueue = [];
-        this.height = height || 60;
+        this.height = height;
     }
+
     emit(key, value, vm) {
         key === HEIGHT && (this.height = value);
         this.observerQueue.forEach(item => item !== vm && item.updateSync(key, value));
@@ -29,6 +30,7 @@ class Subject {
             callback(this.observerQueue.length);
         }.bind(this);
     }
+
     resize() {
         this.observerQueue.forEach(item => {
             item.forceUpdate();
@@ -59,7 +61,7 @@ class Row extends React.Component {
             expandContent: null, // 扩展行内容
             expandTrHeight: 0,   // 扩展行 高度
             isHover: false,      // 鼠标移入
-            trHeight: syncObj.height       // 行宽度
+            trHeight: syncObj ? syncObj.height : null       // 行宽度
         };
 
         this.mounted = false;
@@ -269,7 +271,6 @@ const renderTdContentWrap = function (col, child) {
 const renderTdContent = function (col) {
     const {rowData, rowIndex, rowKey, isBottom, rowSelection} = this.props;
     const {isCollapse} = this.state;
-
     return isBottom ?
         renderTdContentWrap.call(this, col, rowData[col.type || col.prop] || null) :
         col.type === 'checkbox' ?
@@ -280,35 +281,35 @@ const renderTdContent = function (col) {
                     rowIndex={rowIndex}
                     getCheckboxProps={rowSelection.getCheckboxProps}
                 />
-            ):
+            ) :
             col.type === 'radio' ?
                 (
                     null
-                ):
-            col.type === 'expand' ?
-                (
-                    <Icon type='arrow-fill'
-                          className={'_expand-btn ' + (isCollapse ? '_right' : '_down')}
-                          onClick={this.expand.bind(this, col.content)}/>
                 ) :
-                col.type === 'index' ?
-                    (rowIndex + 1) :
+                col.type === 'expand' ?
                     (
-                        (rowData[col.prop] || rowData[col.prop] === 0 || col.render) &&
-                        renderTdContentWrap.call(
-                            this,
-                            col,
-                            (
-                                col.render ?
-                                    col.render(
-                                        rowData[col.prop],
-                                        Object.assign({}, rowData),
-                                        rowIndex
-                                    ) :
-                                    rowData[col.prop]
+                        <Icon type='arrow-fill'
+                              className={'_expand-btn ' + (isCollapse ? '_right' : '_down')}
+                              onClick={this.expand.bind(this, col.content)}/>
+                    ) :
+                    col.type === 'index' ?
+                        (rowIndex + 1) :
+                        (
+                            (rowData[col.prop] || rowData[col.prop] === 0 || col.render) &&
+                            renderTdContentWrap.call(
+                                this,
+                                col,
+                                (
+                                    col.render ?
+                                        col.render(
+                                            rowData[col.prop],
+                                            Object.assign({}, rowData),
+                                            rowIndex
+                                        ) :
+                                        rowData[col.prop]
+                                )
                             )
-                        )
-                    );
+                        );
 };
 
 const mapRow = function () {
@@ -332,12 +333,13 @@ const noWork = () => null;
 Row.defaultProps = {
     disabled: false,
     onClick: noWork,
+    height: 60
 };
 
 Row.propTypes = {
     disabled: PropTypes.bool,
     onClick: PropTypes.func,
-
+    height: PropTypes.number
 };
 
 export default Row;

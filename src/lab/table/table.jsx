@@ -235,7 +235,13 @@ class Table extends React.Component {
     }
 
     emitAndChangeState(selectedRowKeys) {
-        this.props.rowSelection.onChange(selectedRowKeys);
+        const subRowKeys = [...selectedRowKeys];
+        const rowKey = this.props.rowKey;
+        const selectedRows = this.props.rows.filter(item=> {
+            return subRowKeys.includes(item[rowKey])
+        });
+        this.props.rowSelection.onChange(selectedRowKeys, selectedRows);
+
         if (this.state.isSelectionControlled) {
             return;
         }
@@ -862,6 +868,7 @@ const renderTBody = function (columns, data, startIndex, tType) {
                     const index = i + startIndex;
                     const customerProps = this.beforeRowMount(rowData, index);
                     const key = /*!props.rowKey ? index : */rowData[props.rowKey];
+                    // console.log(startIndex)
 
                     return (
                         <Row
@@ -992,7 +999,7 @@ const FixedTableBody = function ({parent, rows, height, columns, colGroup, forwa
         contentRef,
         contentStyle,
         data,
-        step,
+        index,
         // 状态及数据
         shouldRenderDirectly,
     } = useBigDataRender({
@@ -1016,7 +1023,7 @@ const FixedTableBody = function ({parent, rows, height, columns, colGroup, forwa
                 ref={contentRef}
                 style={contentStyle}
             >
-                {renderTable(colGroup, null, renderTBody.call(parent, columns, data, step * range, tType))}
+                {renderTable(colGroup, null, renderTBody.call(parent, columns, data,index, tType))}
             </div>
         </div>
 
@@ -1036,7 +1043,7 @@ const SplitLayoutTableBody = function ({parent, rows, height, columns, colGroup,
         contentRef,
         contentStyle,
         data,
-        step,
+        index,
         // overSpeed,
         // 状态及数据
         shouldRenderDirectly,
@@ -1065,7 +1072,7 @@ const SplitLayoutTableBody = function ({parent, rows, height, columns, colGroup,
                     ref={contentRef}
                     style={contentStyle}
                 >
-                    {renderTable(colGroup, null, renderTBody.call(parent, columns, data, step * range, 'normal'), {width: plain})}
+                    {renderTable(colGroup, null, renderTBody.call(parent, columns, data, index, 'normal'), {width: plain})}
                 </div>
             </div>
 

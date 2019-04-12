@@ -61,9 +61,9 @@ const columns = [
     {
         title: '操作',
         fixed: 'right',
-        filter: () => (
-            <div style={{color: 'blue', cursor: 'pointer'}}>编辑</div>
-        )
+        render: (...args) => {
+            return <div style={{color: 'blue', cursor: 'pointer'}}>编辑</div>
+        }
     }
 ];
 
@@ -111,7 +111,8 @@ class App extends Component {
                        onRow={
                            (data) => {
                                return {
-                                   onClick: (...args)=>{console.log(...args)}
+                                   // onClick: (...args)=>{console.log(...args)}
+
                                }
                            }
                        }
@@ -120,7 +121,7 @@ class App extends Component {
                            getCheckboxProps: (data)=> ({
                                disabled: data.id===1
                            }),
-                           onChange:v=>{this.handleChange(v); console.log(v)},
+                           onChange:(v, x)=>{this.handleChange(v); console.log(v, x)},
                            // selectedRowKeys: this.state.arr
                            selectedRowKeys: this.state.arr
                        }}
