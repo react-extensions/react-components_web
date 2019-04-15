@@ -1,0 +1,132 @@
+@import '../../style/theme.scss';
+@import '../../style/animation.scss';
+
+.border{
+  border:1px solid #d9d9d9;
+  border-radius:2px;
+}
+.select{
+  position: relative;
+  user-select: none;
+  cursor: pointer;
+  background:#fff;
+  &.disabled{
+    .select-input{
+      cursor: not-allowed !important;
+      background:#f6f6f6;
+      color:#666;
+    }
+  }
+  
+ .checkbox-icon{
+    @extend .border !optional;
+    border-color:$color;
+    font-size: 13px !important;
+    margin-right:11px;
+    color: transparent;
+    &.is-checked{
+      color: #fff;
+      background: $color;
+    }
+  }
+}
+
+
+.select-input{
+  @extend .border !optional;
+}
+.select-input__exact{
+  padding:5px 8px;
+  line-height:20px;
+  user-select: none;
+}
+
+
+  .select-search__input-wrap{padding: 4px;}
+  .select-search__input{ 
+    width:100%;
+    line-height: 28px;
+    height:30px;
+    padding: 4px;
+    @extend .border !optional;
+  }
+  
+  .select-dropdown{
+    position: absolute;
+    left:0;
+    z-index: 1900;
+    display: none;
+    @extend .border !optional;
+
+    padding: 4px 0;
+    background:#fff;
+    box-shadow: 2px 2px 5px 0 rgba(0,0,0,0.2);
+    min-width:100%;
+    animation: bounceOut ease .3s;
+
+    &.bottom {
+      top:100%;
+      margin-top:3px;
+      transform-origin: top;
+    }
+    &.top{
+      bottom: 100%;
+      margin-bottom: 3px;
+      transform-origin: bottom;
+    }
+    &.is-active{ display: block;}
+  }
+  .select-dropdown__track{
+    overflow-y: auto;
+    max-height: 8*32px;
+  }
+  
+  /* Option */
+  .select-group__title,
+  .select-option{
+    line-height:32px;
+    padding:0 8px;
+    &:hover{
+      background:#eee;
+    }
+  }
+  .select-option{
+    &.selected{
+      background: $color;
+      color:#fff;
+    }
+    
+  }
+  /* option-group */
+  .select-group__wrap{
+    list-style: none;
+  }
+  .select-group{
+    padding-left:16px;
+  }
+  
+  /* multiple */
+  .select-multiple-wrap{
+    // position: absolute;
+    top:0;left:0;
+    width:100%;
+    white-space: wrap;
+    padding: 0 6px;
+    line-height:30px;
+  }
+  .select-multiple-tag{
+    background: rgba(32,160,255,0.10);
+    border: 1px solid rgba(32,160,255,0.20);
+    border-radius: 4px; 
+    color: $color;
+    padding:0 6px 0 8px;
+    line-height:22px;
+    display: inline-block;
+    margin-right: 10px;
+   
+  }
+  .icon__select-reduce{
+    font-size:8px !important;
+    margin-left:8px;
+  }
+

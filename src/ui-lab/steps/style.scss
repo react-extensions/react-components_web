@@ -1,0 +1,70 @@
+@import '~@styles/config.scss';
+
+.n-steps {
+    white-space: nowrap;
+    display: table;
+    width: 100%;
+}
+
+._responsive {
+    display: table-cell;
+    width: 100%;
+}
+
+._static,
+._responsive .n-step-item {
+    float: left;
+}
+
+._responsive .n-step-item {
+    &:after {
+        display: block;
+        content: '\0020';
+        height: 1px;
+        width: 100%;
+        background: #d9d9d9;
+        position: absolute;
+        top: $size/2;
+    }
+
+}
+
+
+.n-step-item {
+    position: relative;
+    .n-step-node {
+        display: inline-block;
+        position: relative;
+        z-index: 2;
+        background: #fff;
+        padding: 0 $padding;
+    }
+
+    .n-step-sym {
+        // display: block;
+        height: $size;
+        width: $size;
+        line-height: $size;
+        margin-right: 14px;
+
+        &._index {
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            color: #ccc;
+            font-size: 14px;
+            text-align: center;
+        }
+    }
+
+    .n-step-sym,
+    .n-step-text {
+        display: inline-block;
+        position: relative;
+    }
+    .n-step-note-text{
+        // position: absolute;
+        white-space: normal;
+
+    }
+
+}

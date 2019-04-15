@@ -1,0 +1,29 @@
+const React = require('react')
+// const { PropTypes } = React
+require('./tag.scss')
+
+class Tag extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  parent() {
+    return this.context.Select
+  }
+  
+  /* componentDidUpdate() {
+    console.log('更新了', this.props.label)
+  } */
+  render() {
+    const { label } = this.props
+    return (
+      <div className='tag-wrap'>
+        {
+
+        }
+      </div>
+    )
+  }
+}
+
+
+module.exports = Tag

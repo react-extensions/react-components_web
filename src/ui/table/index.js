@@ -1,5 +1,8 @@
-import './style.scss';
+import './style.less';
+import Table from './table';
 
-import View from './table';
+import config from './config';
 
-export default View;
+Table.config = config;
+
+export default Table;
