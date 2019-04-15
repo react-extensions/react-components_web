@@ -1,0 +1,166 @@
+@import '~@styles/config.scss';
+
+.n-pagination {
+    user-select: none;
+    // overflow: hidden;
+}
+
+// ~~~~~~~~~~~~~~~
+//       尺寸
+// ~~~~~~~~~~~~~~~
+.n-pagination {
+    height: $size;
+
+    ._btn {
+        min-width: $size;
+        height: $size;
+        line-height: $size - 2;
+    }
+
+    .n-pagination-info {
+        line-height: $size;
+    }
+
+    .n-pagination-input {
+        height: $size;
+        line-height: $size - 2;
+    }
+}
+
+.n-pagination._small {
+    height: $smallSize;
+
+    ._btn {
+        min-width: $smallSize;
+        height: $smallSize;
+        line-height: $smallSize;
+        border: none !important;
+    }
+
+    .n-pagination-info {
+        line-height: $smallSize;
+    }
+
+    .n-pagination-input {
+        height: $smallSize;
+        line-height: $smallSize - 2;
+    }
+}
+
+
+// ~~~~~~~~~~~~~
+//     主功能区
+// ~~~~~~~~~~~~~
+.n-pagination-item-wrapper {
+    list-style: none;
+    float: left;
+}
+
+.n-pagination-item {
+    float: left;
+
+    &:not(:last-of-type) {
+        margin-right: 8px;
+    }
+
+    /* 普通按钮 */
+    ._btn {
+        outline: none;
+        cursor: pointer;
+        box-sizing: border-box;
+        text-align: center;
+        border: 1px solid $borderColor;
+        border-radius: 6px;
+        background: #fff;
+
+        &:hover,
+        &:focus {
+            color: $themeColor;
+            border-color: $themeColor;
+        }
+
+        &._active {
+            background: $themeColor;
+            border-color: $themeColor;
+            color: #fff;
+        }
+
+    }
+    /* 缩略按钮 */
+    ._ellipsis {
+        border-color: transparent !important;
+        color: #ccc;
+        overflow: hidden;
+        .n-icon {
+            display: none;
+        }
+        &:hover,
+        &:focus{
+            .n-icon{
+                display: block !important;
+            }
+        }
+    }
+   
+    /* 上一页、下一页按钮 */
+    ._prev,
+    ._next {
+        &:disabled {
+            color: #CCC !important;
+            border-color: $borderColor !important;
+            cursor: not-allowed;
+        }
+    }
+    
+    &._simple{
+        .n-pagination-input{
+            margin:0 !important;
+        }
+    }
+    ._symbol{
+        margin: 0 16px;
+    }
+    
+}
+
+// ~~~~~~~~~~~~~~~
+//     辅功能区 
+// ~~~~~~~~~~~~~~~
+.n-pagination-tool {
+    margin-left: 16px;
+    float: left;
+}
+
+// ~~~~~~~~~~~~~~~
+// 输入框快捷跳转
+// ~~~~~~~~~~~~~~~
+
+.n-pagination-input {
+    box-sizing: border-box;
+    margin: 0 8px;
+    border: 1px solid $borderColor;
+    width: 48px;
+    padding: 0 5px;
+    background: #ffffff;
+    border-radius: 4px;
+    &:hover,
+    &:focus{
+        border-color: $themeColor;
+    }
+}
+
+
+
+// .pager-select .select-input__exact,
+// .pager-select .select-input,
+// .pager-input {
+//     padding-top: 1px;
+//     padding-bottom: 1px;
+//     height: 24px !important;
+//     line-height: 22px;
+// }
+// .pager-select {
+//     width: 82px !important;
+//     float: left;
+// }
+
