@@ -1,6 +1,6 @@
 {
     "name": "nuo-ui",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "description": "React Components For Web",
     "main": "index.js",
     "scripts": {
@@ -16,10 +16,6 @@
     ],
     "author": "LiZ2z <fitz-i@foxmail.com>",
     "license": "ISC",
-    "devDependencies": {
-        "less": "^3.9.0",
-        "less-loader": "^4.1.0"
-    },
     "dependencies": {
         "classnames": "^2.2.6"
     }

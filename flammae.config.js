@@ -4,9 +4,6 @@ function resolveApp (src) {
 }
 
 module.exports = {
-    style: {
-        lang: 'less'
-    },
     alias: {
         '@comps': resolveApp('src/components'),
         '@styles': resolveApp('src/styles'),
