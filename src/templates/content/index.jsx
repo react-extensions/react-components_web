@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import './style.less'
-import Header from '@comps/header'
-import Menu from '@comps/menu'
+import './style.less';
+import Header from '@comps/header';
+import Menu from '@comps/menu';
 
 class Content extends Component {
     render() {

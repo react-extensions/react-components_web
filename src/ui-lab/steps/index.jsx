@@ -10,7 +10,7 @@ class Steps extends React.Component {
         const width = (100 / stepsLen) + '%';
 
         const renderStep = function (isPre, step, index) {
-            if (!step) return;
+            if (!step) {return;}
             if (typeof step !== 'object') {
                 step = {
                     text: step,

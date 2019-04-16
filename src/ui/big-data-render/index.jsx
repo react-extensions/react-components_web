@@ -21,11 +21,11 @@ import React from 'react';
 import useBigDataRender from './hooks';
 
 function BigDataRender({
-                           data,
-                           height,
-                           range,
-                           children
-                       }) {
+    data,
+    height,
+    range,
+    children
+}) {
 
     const {
         // 容器

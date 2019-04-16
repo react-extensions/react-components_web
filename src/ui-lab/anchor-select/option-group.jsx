@@ -3,26 +3,26 @@ import PropTypes from 'prop-types';
 import {
     Consumer,
     Provider
-} from './context'
+} from './context';
 
 class AnchorSelectGroup extends Component {
     shouldComponentUpdate(nextProps) {
-        return nextProps.selectedMap !== this.props.selectedMap
+        return nextProps.selectedMap !== this.props.selectedMap;
     }
     componentDidMount() {
-        this.emit(true)
+        this.emit(true);
     }
     componentWillUnmount() {
-        this.emit(false)
+        this.emit(false);
     }
     emit(isActive) {
-        this.props.parent.toggleActiveAnchor(this.props.anchor, isActive)
+        this.props.parent.toggleActiveAnchor(this.props.anchor, isActive);
     }
     render() {
         const {
             parent, selectedMap,
             anchor, children
-        } = this.props
+        } = this.props;
         return (
             <div className='_options-group' key={anchor}>
                 <div className='_options-anchor'
@@ -43,7 +43,7 @@ class AnchorSelectGroup extends Component {
 AnchorSelectGroup.propTypes = {
     anchor: PropTypes.string.isRequired,
     // children: PropTypes.arrayOf(PropTypes.instanceOf(Option)).isRequired
-}
+};
 
 
 export default function AnchorSelectGroupConsumer(props) {
@@ -51,5 +51,5 @@ export default function AnchorSelectGroupConsumer(props) {
         <Consumer>
             {obj => <AnchorSelectGroup {...props} {...obj} />}
         </Consumer>
-    )
+    );
 }

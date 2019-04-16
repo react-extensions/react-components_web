@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import cn from 'classnames'
-import PropTypes from 'prop-types'
-import './style.less'
-import './iconfont.css'
+import cn from 'classnames';
+import PropTypes from 'prop-types';
+import './style.less';
+import './iconfont.css';
 
 class Icon extends Component {
     render() {
@@ -10,7 +10,7 @@ class Icon extends Component {
             type,
             className,
             ...rest
-        } = this.props
+        } = this.props;
         return (
             <i className={cn('r-iconfont', `icon-${type}`, className)} {...rest}></i>
         );
@@ -19,6 +19,6 @@ class Icon extends Component {
 
 Icon.propTypes = {
     type: PropTypes.string.isRequired
-}
+};
 
 export default Icon;

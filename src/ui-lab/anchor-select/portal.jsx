@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+
 export default function(View) {
     return class Portal extends React.PureComponent{
         constructor(props){

@@ -2,10 +2,13 @@
 // title: 'Table'
 
 import React, {Component} from 'react';
-import {Table} from '@/ui';
+import {
+    Table,
+    Button
+} from '@/ui';
 
 let rows = [];
-let rows2 = []
+let rows2 = [];
 for (let i = 0; i < 200; i++) {
     rows.push({
         one: i,
@@ -22,7 +25,7 @@ for (let i = 0; i < 200; i++) {
         four: i+40,
         five: i+40,
         id: i+40
-    })
+    });
 }
 
 const columns = [
@@ -53,7 +56,7 @@ const columns = [
         title: '第三行',
         width: 600,
         render: (v)=>{
-            return <div style={{color: 'red'}}>{v}</div>
+            return <div style={{color: 'red'}}>{v}</div>;
         }
     },
     {
@@ -73,7 +76,7 @@ const columns = [
         title: '操作',
         fixed: 'right',
         render: (...args) => {
-            return <div style={{color: 'blue', cursor: 'pointer'}}>编辑</div>
+            return <div style={{color: 'blue', cursor: 'pointer'}}>编辑</div>;
         }
     }
 ];
@@ -85,7 +88,7 @@ export default class TableExample extends Component {
             bool: false,
             arr: []
         };
-        this.handleChange  = this.handleChange.bind(this)
+        this.handleChange  = this.handleChange.bind(this);
     }
 
     toggle() {
@@ -95,45 +98,37 @@ export default class TableExample extends Component {
         });
     }
     handleChange(v){
-        this.setState({arr:v})
+        this.setState({arr:v});
     }
     render() {
         return (
             <div className="table-example">
-                {/*<Checkbox.Group value={this.state.arr} onChange={this.handleChange}>*/}
-                    {/*{*/}
-                        {/*rows.map((row,i)=>{*/}
-                            {/*return <Checkbox*/}
-                                {/*key={row.id}*/}
-                                {/*value={row.id}*/}
-                                {/*disabled={this.state.bool ? (i%2)===0: i%3===0}*/}
-                            {/*>{row.id}</Checkbox>*/}
-                        {/*})*/}
-                    {/*}*/}
-                {/*</Checkbox.Group>*/}
+             
 
-                <button type={'button'} onClick={this.toggle.bind(this)}>toggle</button>
+                <Button type='primary' onClick={this.toggle.bind(this)}>toggle</Button>
+                <br/>
                 <p>{String(this.state.bool)}</p>
+                <br/>
                 <Table columns={columns}
-                       rows={this.state.bool ? rows : rows2}
-                       tableHeight={600}
-                       // onRow={
-                       //     (data) => {
-                       //         return {
-                       //             // onClick: (...args)=>{console.log(...args)}
-                       //
-                       //         }
-                       //     }
-                       // }
-                       rowKey={'id'}
-                       rowSelection={{
-                           getCheckboxProps: (data)=> ({
-                               disabled: data.id===1
-                           }),
-                           onChange:(v, x)=>{this.handleChange(v); console.log(v, x)},
-                           // selectedRowKeys: this.state.arr
-                           selectedRowKeys: this.state.arr
-                       }}
+                    rows={this.state.bool ? rows : rows2}
+                    tableHeight={600}
+                    // onRow={
+                    //     (data) => {
+                    //         return {
+                    //             // onClick: (...args)=>{console.log(...args)}
+                    //
+                    //         }
+                    //     }
+                    // }
+                    rowKey={'id'}
+                    rowSelection={{
+                        getCheckboxProps: (data)=> ({
+                            disabled: data.id===1
+                        }),
+                        onChange:(v, x)=>{this.handleChange(v); console.log(v, x);},
+                        // selectedRowKeys: this.state.arr
+                        selectedRowKeys: this.state.arr
+                    }}
                 />
 
             </div>

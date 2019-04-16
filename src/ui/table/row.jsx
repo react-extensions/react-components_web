@@ -128,7 +128,7 @@ class Row extends React.Component {
      */
     getTrHeight(el) {
         if (!el){
-             return;
+            return;
         }
         const height = el.clientHeight;
         if (this.syncObj.height !== height) {
@@ -211,7 +211,7 @@ class Row extends React.Component {
         return props.isBottom ?
             (
                 <tr
-                    className={'u-tr'}
+                    className={'r-tr'}
                     ref={this.getTrHeight}
                     style={{height: state.trHeight}}
                 >
@@ -222,25 +222,25 @@ class Row extends React.Component {
                 <React.Fragment>
                     <tr className={
                         cn(
-                            'u-tr',
+                            'r-tr',
                             props.bgColor,
                             state.isHover && '_active',
                             props.className
                         )
                     }
-                        ref={(props.needSync && !props.isFixed) && this.getTrHeight.bind(this)}
-                        onMouseLeave={this.toggleRowBG.bind(this, -1)}
-                        onMouseEnter={this.toggleRowBG.bind(this, 1)}
-                        style={{height: state.trHeight}}
+                    ref={(props.needSync && !props.isFixed) && this.getTrHeight.bind(this)}
+                    onMouseLeave={this.toggleRowBG.bind(this, -1)}
+                    onMouseEnter={this.toggleRowBG.bind(this, 1)}
+                    style={{height: state.trHeight}}
                     >
                         {mapRow.call(this)}
                     </tr>
                     {
                         !state.isCollapse && (
-                            <tr className='u-expand-tr'
+                            <tr className='r-expand-tr'
                                 ref={this.expandTr}
                                 style={props.isFixed ? {height: state.expandTrHeight} : null}>
-                                <td colSpan={props.columns.length} className='u-expand-td'>
+                                <td colSpan={props.columns.length} className='r-expand-td'>
                                     {
                                         !props.isFixed ?
                                             (
@@ -265,8 +265,8 @@ class Row extends React.Component {
 const renderTdContentWrap = function (col, child) {
     return (
         <div title={(typeof child === 'string' || typeof child === 'number') ? child : ''}
-             className={cn('u-td-content', (col.width ? '_fill' : ''))}
-             ref={!this.mounted && this.collectWidth.bind(this, col)}>
+            className={cn('r-td-content', (col.width ? '_fill' : ''))}
+            ref={!this.mounted && this.collectWidth.bind(this, col)}>
             {child}
         </div>
     );
@@ -293,8 +293,8 @@ const renderTdContent = function (col) {
                 col.type === 'expand' ?
                     (
                         <Icon type='arrow-fill'
-                              className={'_expand-btn ' + (isCollapse ? '_right' : '_down')}
-                              onClick={this.expand.bind(this, col.content)}/>
+                            className={'_expand-btn ' + (isCollapse ? '_right' : '_down')}
+                            onClick={this.expand.bind(this, col.content)}/>
                     ) :
                     col.type === 'index' ?
                         (rowIndex + 1) :
@@ -321,7 +321,7 @@ const mapRow = function () {
         this.props.columns.map((col, j) => {
             return (
                 <td key={j}
-                    className={cn('u-td', col.type ? '_align-center' : (col.align ? `_align-${col.align}` : ''), col.className)}
+                    className={cn('r-td', col.type ? '_align-center' : (col.align ? `_align-${col.align}` : ''), col.className)}
                     onClick={this.clickRow.bind(this, j, col.prop)}
                 >
                     {renderTdContent.call(this, col)}

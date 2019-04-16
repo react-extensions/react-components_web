@@ -31,7 +31,7 @@ function render(options) {
     contentEl.innerText = String(options.text);
 
     // 5. 设置定时器, 定时消失
-    if(options.duration === 0) return; // duration为0时, 不消失
+    if(options.duration === 0) {return;} // duration为0时, 不消失
     timer = setTimeout(() => {
         addClass(ToastEl, 'hidden');
     }, options.duration || config.duration);

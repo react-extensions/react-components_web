@@ -1,6 +1,6 @@
 @import '~@styles/config.less';
 
-.n-pagination {
+.r-pagination {
     user-select: none;
     // overflow: hidden;
 }
@@ -8,7 +8,7 @@
 // ~~~~~~~~~~~~~~~
 //       尺寸
 // ~~~~~~~~~~~~~~~
-.n-pagination {
+.r-pagination {
     height: @size;
 
     ._btn {
@@ -17,17 +17,17 @@
         line-height: @size - 2;
     }
 
-    .n-pagination-info {
+    .r-pagination-info {
         line-height: @size;
     }
 
-    .n-pagination-input {
+    .r-pagination-input {
         height: @size;
         line-height: @size - 2;
     }
 }
 
-.n-pagination._small {
+.r-pagination._small {
     height: @smallSize;
 
     ._btn {
@@ -37,11 +37,11 @@
         border: none !important;
     }
 
-    .n-pagination-info {
+    .r-pagination-info {
         line-height: @smallSize;
     }
 
-    .n-pagination-input {
+    .r-pagination-input {
         height: @smallSize;
         line-height: @smallSize - 2;
     }
@@ -51,12 +51,12 @@
 // ~~~~~~~~~~~~~
 //     主功能区
 // ~~~~~~~~~~~~~
-.n-pagination-item-wrapper {
+.r-pagination-item-wrapper {
     list-style: none;
     float: left;
 }
 
-.n-pagination-item {
+.r-pagination-item {
     float: left;
 
     &:not(:last-of-type) {
@@ -91,12 +91,12 @@
         border-color: transparent !important;
         color: #ccc;
         overflow: hidden;
-        .n-icon {
+        .r-iconfont {
             display: none;
         }
         &:hover,
         &:focus{
-            .n-icon{
+            .r-iconfont{
                 display: block !important;
             }
         }
@@ -113,7 +113,7 @@
     }
     
     &._simple{
-        .n-pagination-input{
+        .r-pagination-input{
             margin:0 !important;
         }
     }
@@ -126,7 +126,7 @@
 // ~~~~~~~~~~~~~~~
 //     辅功能区 
 // ~~~~~~~~~~~~~~~
-.n-pagination-tool {
+.r-pagination-tool {
     margin-left: 16px;
     float: left;
 }
@@ -135,7 +135,7 @@
 // 输入框快捷跳转
 // ~~~~~~~~~~~~~~~
 
-.n-pagination-input {
+.r-pagination-input {
     box-sizing: border-box;
     margin: 0 8px;
     border: 1px solid @borderColor;

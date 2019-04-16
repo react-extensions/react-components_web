@@ -12,7 +12,7 @@
 @dangerColorDark: #CF1322;
 
 /* 基础 */
-.n-btn {
+.r-btn {
     outline: none;
     box-sizing: border-box;
     cursor: pointer;
@@ -24,16 +24,16 @@
     vertical-align: middle;
     transition: ease .2s all;
     white-space: nowrap;
-    &._prefix .n-btn-text{
+    &._prefix .r-btn-text{
         margin-left:8px;
     }
-    &._suffix .n-btn-text{
+    &._suffix .r-btn-text{
         margin-right:8px;
     }
 }
 
 /* 形状 */
-.n-btn {
+.r-btn {
     &._size-small {
         padding: 0 (@smallPadding - 1);
         height: @smallSize;
@@ -67,19 +67,19 @@
 
 /* 色调 */
 
-.n-btn:disabled {
+.r-btn:disabled {
     border-color: @borderColor !important;
     background: #f5f5f5 !important;
     color: #CCC !important;
     cursor: not-allowed !important;
 }
 
-.n-btn._ghost,
-.n-btn._ghost:disabled {
+.r-btn._ghost,
+.r-btn._ghost:disabled {
     background: transparent !important;
 }
 
-.n-btn {
+.r-btn {
     &._type-dashed {
         border-style: dashed;
     }
@@ -182,18 +182,18 @@
 //                  group
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.n-btn-group {
+.r-btn-group {
     display: inline-block;
     position: relative;
 
   
-    .n-btn[class*='_shape']{
+    .r-btn[class*='_shape']{
         border-radius: 0;
         width: auto;
         // padding: 0;
     }
 
-    .n-btn {
+    .r-btn {
         border-radius: 0;
         margin: 0 !important;
 
@@ -206,11 +206,11 @@
         }
     }
 
-    .n-btn:not(:first-of-type) {
+    .r-btn:not(:first-of-type) {
         margin-left: -1px !important;
     }
 
-    .n-btn{
+    .r-btn{
         &:first-of-type {
             border-top-left-radius: @radius;
             border-bottom-left-radius: @radius;

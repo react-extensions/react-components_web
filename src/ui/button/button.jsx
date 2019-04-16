@@ -1,6 +1,6 @@
 import React from 'react';
-import cn from 'classnames'
-import PropTypes from 'prop-types'
+import cn from 'classnames';
+import PropTypes from 'prop-types';
 // import Icon from '../icon'
 
 
@@ -13,12 +13,12 @@ Button.propTypes = {
     htmlType: PropTypes.oneOf(['button', 'submit', 'reset']),
     type: PropTypes.oneOf(['primary', 'dashed', 'default', 'danger']),
     children: PropTypes.node
-}
+};
 
 Button.defaultProps = {
     type: 'default',
     htmlType: 'button'
-}
+};
 
 function Button(props) {
     const {
@@ -32,10 +32,10 @@ function Button(props) {
         prefix,
         suffix,
         ...rest
-    } = props
+    } = props;
 
     const cnStr = cn(
-        'n-btn',
+        'r-btn',
         className,
         type && `_type-${type}`,
         size && `_size-${size}`,
@@ -43,7 +43,7 @@ function Button(props) {
         shape && `_shape-${shape}`,
         prefix && `_prefix`,
         suffix && `_suffix`
-    )
+    );
     return (
         <button
             title={children}
@@ -52,7 +52,7 @@ function Button(props) {
             className={cnStr}
         >
             {prefix}
-            {children && <span className='n-btn-text'>{children}</span>}
+            {children && <span className='r-btn-text'>{children}</span>}
             {suffix}
         </button>
     );

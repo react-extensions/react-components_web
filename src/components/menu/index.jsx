@@ -1,29 +1,29 @@
 import React from 'react';
 // import { Link } from 'react-router-dom'
-import './style.less'
-import { siteData } from 'flammae'
+import './style.less';
+import { siteData } from 'flammae';
 
 
 const menuList = (() => {
     const typeMap = {
         'common': '通用',
         'nav': '导航'
-    }
-    const menuMap = {}
-    const arr = []
+    };
+    const menuMap = {};
+    const arr = [];
     siteData.docs.forEach(item => {
-        const type = item.type
+        const type = item.type;
         if (typeof menuMap[type] === 'undefined') {
-            menuMap[type] = arr.length
+            menuMap[type] = arr.length;
             arr.push({
                 type: type,
                 typeText: typeMap[type],
                 list: []
-            })
+            });
         }
-       arr[menuMap[type]].list.push(item)
-    })
-    return arr
+        arr[menuMap[type]].list.push(item);
+    });
+    return arr;
 })();
 
 
@@ -49,8 +49,8 @@ const Menu = () => {
             }
 
         </ul>
-    )
-}
+    );
+};
 
 
 export default Menu;

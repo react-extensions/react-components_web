@@ -11,7 +11,7 @@ import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
 import useBigDataRender from '../big-data-render/hooks';
 
 import Checkbox from '../checkbox';
-import config from './config'
+import config from './config';
 const {
     ArrowUp,
     ArrowDown,
@@ -117,15 +117,15 @@ class Table extends React.Component {
 
             // 根据fixed 属性， 分配
             switch (col.fixed) {
-                case 'left':
-                    columns.left.push(col);
-                    break;
-                case 'right':
-                    columns.right.push(col);
-                    break;
-                default:
-                    columns.plain.push(col);
-                    break;
+            case 'left':
+                columns.left.push(col);
+                break;
+            case 'right':
+                columns.right.push(col);
+                break;
+            default:
+                columns.plain.push(col);
+                break;
             }
 
             columns.all.push(col);
@@ -248,7 +248,7 @@ class Table extends React.Component {
         const subRowKeys = [...selectedRowKeys];
         const rowKey = this.props.rowKey;
         const selectedRows = this.props.rows.filter(item => {
-            return subRowKeys.includes(item[rowKey])
+            return subRowKeys.includes(item[rowKey]);
         });
         this.props.rowSelection.onChange(selectedRowKeys, selectedRows);
 
@@ -710,7 +710,7 @@ class Table extends React.Component {
             <div
                 className={
                     cn(
-                        'u-table-container',
+                        'r-table-container',
                         props.className,
                         `_align-${props.align}`,
                         `_${props.type}`
@@ -732,7 +732,7 @@ class Table extends React.Component {
                 {
                     props.loading ?
                         (
-                            <div className='u-table-loading-wrap'>
+                            <div className='r-table-loading-wrap'>
                                 <Loading />
                             </div>
                         ) :
@@ -769,7 +769,7 @@ class Table extends React.Component {
  * */
 const rightPlaceholder = function () {
     return this.HAS_RIGHT && (
-        <div className={'u-table-right-placeholder'}
+        <div className={'r-table-right-placeholder'}
             style={{
                 height: 1,
                 width: this.tableWidth.right,
@@ -807,7 +807,7 @@ const renderColumns = function (columns) {
  * */
 const renderPlainTh = function (col) {
     return <React.Fragment>
-        <span ref={this.onThMount.bind(this, col)} className='u-th-content'>
+        <span ref={this.onThMount.bind(this, col)} className='r-th-content'>
             {col.title}
             {
                 col.needSort && (
@@ -824,7 +824,7 @@ const renderPlainTh = function (col) {
         {
             (this.props.dragAble && !col.fixed) && (
                 <i
-                    className='u-table-resize-btn'
+                    className='r-table-resize-btn'
                     onMouseDown={e => this.prepareResizeCol(e, col)}>
                 </i>
             )
@@ -844,17 +844,17 @@ const renderTHead = function (columns) {
 
         let Icon = null;
         switch (checkStatus) {
-            case CHECKED:
-                Icon = Check;
-                break;
-            case NOT_CHECKED:
-                Icon = NotCheck;
-                break;
-            case HALF_CHECKED:
-                Icon = HalfCheck;
-                break;
-            default:
-                break;
+        case CHECKED:
+            Icon = Check;
+            break;
+        case NOT_CHECKED:
+            Icon = NotCheck;
+            break;
+        case HALF_CHECKED:
+            Icon = HalfCheck;
+            break;
+        default:
+            break;
         }
         if (!Icon) {
             return;
@@ -866,7 +866,7 @@ const renderTHead = function (columns) {
     const { height, ...headRowProps } = this.props.onHeaderRow();
     return (
         <thead>
-            <tr className='u-tr' style={{ height: height }} {...headRowProps}>
+            <tr className='r-tr' style={{ height: height }} {...headRowProps}>
                 {
                     columns.map((col) => {
                         const type = col.type;
@@ -874,7 +874,7 @@ const renderTHead = function (columns) {
                             <th
                                 key={col.__i__}
                                 className={
-                                    cn('u-th',
+                                    cn('r-th',
                                         type ? '_align-center' : (col.align ? `_align-${col.align}` : ''),
                                         col.className
                                     )
@@ -885,7 +885,7 @@ const renderTHead = function (columns) {
                                     // 所以如果 在th td内有绝对定位的元素，样式会出问题
                                     // 加一层div, 并将其style设置为position:relative ，来标准化这一样式
                                 }
-                                <div className={'u-th-content-wrap'}>
+                                <div className={'r-th-content-wrap'}>
                                     {
                                         (type === 'expand' || type === 'radio') ?
                                             null :
@@ -951,8 +951,8 @@ const renderTBody = function (columns, data, startIndex, tType) {
                     }) :
                     isNormal ? (
                         <tr>
-                            <td colSpan={columns.length} className='u-table-empty-tip-wrap'>
-                                {props.emptyTip || (<div className='u-table-empty-tip'>暂无数据</div>)}
+                            <td colSpan={columns.length} className='r-table-empty-tip-wrap'>
+                                {props.emptyTip || (<div className='r-table-empty-tip'>暂无数据</div>)}
                             </td>
                         </tr>
                     ) : null
@@ -967,7 +967,7 @@ const renderTBody = function (columns, data, startIndex, tType) {
  * */
 const renderTable = function (colGroup, tHead, tBody, style) {
     return (
-        <table className={'u-table'} border='0' cellSpacing='0' cellPadding='0' style={style}>
+        <table className={'r-table'} border='0' cellSpacing='0' cellPadding='0' style={style}>
             {colGroup}
             {tHead}
             {tBody}
@@ -1001,9 +1001,9 @@ const renderLeftTable = function (columns, rows) {
         tType: 'left'
     };
     return (
-        <div className={'u-fixed-left__table' + (state.leftShadow ? ' _shadow' : '')}
+        <div className={'r-fixed-left__table' + (state.leftShadow ? ' _shadow' : '')}
             style={{ width: leftTableWidth }}>
-            <div className={'u-table-header' + (state.topShadow ? ' _shadow ' : '')}>
+            <div className={'r-table-header' + (state.topShadow ? ' _shadow ' : '')}>
                 {renderTable(colGroup, renderTHead.call(this, columns))}
             </div>
 
@@ -1028,9 +1028,9 @@ const renderRightTable = function (columns, rows) {
         tType: 'right'
     };
     return (
-        <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
+        <div className={'r-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
             style={{ width: this.tableWidth.right, right: (this.scrollBarY) }}>
-            <div className={'u-table-header ' + (state.topShadow ? '_shadow ' : '')}>
+            <div className={'r-table-header ' + (state.topShadow ? '_shadow ' : '')}>
                 {renderTable(colGroup, renderTHead.call(this, columns))}
             </div>
             <FixedTableBody {...obj} />
@@ -1067,7 +1067,7 @@ const FixedTableBody = function ({ parent, rows, height, columns, colGroup, forw
     return <div
         onScroll={handleContainerScroll}
         style={extendStyle}
-        className={'u-table-body'}
+        className={'r-table-body'}
         ref={forwardRef}
     >
         <div style={shouldRenderDirectly ? null : { height: trackHeight }}>
@@ -1116,10 +1116,10 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
             handleContainerScroll(e);
         }}
         style={extendStyle}
-        className={'u-body__track'}
+        className={'r-body__track'}
         ref={forwardRef}
     >
-        <div className={'u-table-body'} style={shouldRenderDirectly ? null : { height: trackHeight }}>
+        <div className={'r-table-body'} style={shouldRenderDirectly ? null : { height: trackHeight }}>
             <div
                 ref={contentRef}
                 style={contentStyle}
@@ -1134,7 +1134,7 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
             // 所以需要使用空div占位符代替以统一布局
         }
         {rightPlaceholder.call(parent)}
-    </div>
+    </div>;
 };
 
 
@@ -1155,12 +1155,12 @@ const renderSplitLayoutTable = function (columns, rows) {
         forwardRef: this.plainTableBodyTrackEl
     };
     return (
-        <div className='u-plain__table u-main__table'>
-            <div className={'u-header__track' + (state.topShadow ? '  _shadow ' : '')}
+        <div className='r-plain__table r-main__table'>
+            <div className={'r-header__track' + (state.topShadow ? '  _shadow ' : '')}
                 style={{ paddingLeft: `${left}px`, overflowY: this.scrollBarY ? 'scroll' : 'hidden' }}
                 ref={this.plainTableHeadTrackEl}
             >
-                <div className="u-table-header">
+                <div className="r-table-header">
                     {renderTable(colGroup, renderTHead.call(this, columns), null, { width: plain })}
                 </div>
                 {/* 右侧固定列占位符 */}
@@ -1178,12 +1178,12 @@ const renderSplitLayoutTable = function (columns, rows) {
 const renderBottomTable = function (columns, leftTableWidth, plainTableWidth, rightTableWidth) {
     const { state, props } = this;
     return (
-        <div className='u-fixed-bottom__table' style={{ bottom: this.scrollBarX, right: this.scrollBarY }}>
-            <div className='u-plain__table'
+        <div className='r-fixed-bottom__table' style={{ bottom: this.scrollBarX, right: this.scrollBarY }}>
+            <div className='r-plain__table'
                 style={{ paddingLeft: leftTableWidth }}
                 ref={this.handleBottomMount}
             >
-                <div className="u-table-body" style={{ width: plainTableWidth }}>
+                <div className="r-table-body" style={{ width: plainTableWidth }}>
                     {renderTable(renderColumns.call(this, columns.plain), null, renderTBody.call(this, columns.plain, props.fixedRows, 'bottom'))}
                 </div>
                 {rightPlaceholder.call(this)}
@@ -1191,9 +1191,9 @@ const renderBottomTable = function (columns, leftTableWidth, plainTableWidth, ri
 
             {
                 this.HAS_LEFT && (
-                    <div className={'u-fixed-left__table ' + (state.leftShadow ? '_shadow ' : '')}
+                    <div className={'r-fixed-left__table ' + (state.leftShadow ? '_shadow ' : '')}
                         style={{ width: leftTableWidth }}>
-                        <div className="u-table-body">
+                        <div className="r-table-body">
                             {renderTable(renderColumns.call(this, columns.left), null, renderTBody.call(this, columns.left, props.fixedRows, 'bottom'))}
                         </div>
                     </div>
@@ -1201,10 +1201,10 @@ const renderBottomTable = function (columns, leftTableWidth, plainTableWidth, ri
             }
             {
                 this.HAS_RIGHT && (
-                    <div className={'u-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
+                    <div className={'r-fixed-right__table ' + (state.rightShadow ? '_shadow ' : '')}
                         style={{ width: rightTableWidth }}
                     >
-                        <div className="u-table-body">
+                        <div className="r-table-body">
                             {renderTable(renderColumns.call(this, columns.right), null, renderTBody.call(this, columns.right, props.fixedRows, 'bottom'))}
                         </div>
                     </div>

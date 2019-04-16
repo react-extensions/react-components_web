@@ -15,11 +15,11 @@ export default function debounce(
     let timer;
     return function (...args) {
         clearTimeout(timer);
-        if(Boolean(argsHandle)) {
+        if(argsHandle) {
             args = argsHandle(...args);
         }
         setTimeout(() => {
-            Boolean(argsHandle) ? fn(args) : fn(...args);
+            argsHandle ? fn(args) : fn(...args);
         }, time);
     };
 }

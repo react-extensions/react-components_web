@@ -9,7 +9,7 @@ class Dropdown extends Component {
             left: rect.left,
             top: rect.bottom,
             width: rect.width
-        }
+        };
     }
     render() {
 

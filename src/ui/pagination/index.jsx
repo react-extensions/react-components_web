@@ -123,7 +123,7 @@ export default function Pagination(props) {
             const isEllipsis = isPrev || isNext;
             const cn = (isEllipsis ? ' _ellipsis' : '') + (active === item ? ' _active' : '');
             return (
-                <li className={'n-pagination-item'}
+                <li className={'r-pagination-item'}
                     key={i}
                     onClick={() => switchPage(item)}
                 >
@@ -150,7 +150,7 @@ export default function Pagination(props) {
                 title={input}
                 value={input}
                 aria-label={`跳转到${input}页`}
-                className='n-pagination-input'
+                className='r-pagination-input'
                 onChange={e => handleInput(e)}
             />
         );
@@ -162,7 +162,7 @@ export default function Pagination(props) {
     const renderSimple = function () {
         const label = `共${pages}页`;
         return (
-            <li className='n-pagination-item _simple' aria-label={`第${input}页`}>
+            <li className='r-pagination-item _simple' aria-label={`第${input}页`}>
                 {renderInput()}
                 <span className='_symbol'>/</span>
                 <span title={label} aira-label={label}>{pages}</span>
@@ -178,14 +178,14 @@ export default function Pagination(props) {
         return (
             <React.Fragment>
                 {/* 信息显示区 */}
-                <div className='n-pagination-tool'>
-                    <span className='n-pagination-info'>{`共${props.total}条`}</span>
+                <div className='r-pagination-tool'>
+                    <span className='r-pagination-info'>{`共${props.total}条`}</span>
                 </div>
                 {/* 输入跳转区 */}
-                <div className='n-pagination-tool'>
+                <div className='r-pagination-tool'>
                     {
                         pages > props.range ? (
-                            <label className='n-pagination-input-wrapper'>
+                            <label className='r-pagination-input-wrapper'>
                                 跳至{renderInput()}页
                             </label>
                         ) : null
@@ -198,11 +198,11 @@ export default function Pagination(props) {
     const isSimple = props.simple;
 
     return (
-        <div className={cn('n-pagination', props.className, (isSimple || props.layoutSize) && '_small')}
+        <div className={cn('r-pagination', props.className, (isSimple || props.layoutSize) && '_small')}
              aria-label='分页'>
             {/* 主功能区 */}
-            <ul className='n-pagination-item-wrapper'>
-                <li className='n-pagination-item'>
+            <ul className='r-pagination-item-wrapper'>
+                <li className='r-pagination-item'>
                     <button
                         title='上一页'
                         htmltype='button'
@@ -217,7 +217,7 @@ export default function Pagination(props) {
                 {
                     isSimple ? renderSimple() : renderBtnList()
                 }
-                <li className='n-pagination-item'>
+                <li className='r-pagination-item'>
                     <button
                         title='下一页'
                         htmltype='button'

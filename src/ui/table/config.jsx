@@ -10,4 +10,4 @@ export default {
         HalfCheck: props => (<Icon type='check-square' {...props} />),
         NotCheck: props => (<Icon type='border' {...props} />)
     }
-}
+};

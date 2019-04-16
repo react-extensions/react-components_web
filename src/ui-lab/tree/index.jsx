@@ -1,14 +1,14 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 
 class view extends Component {
   
-  render() {
-    return (
-      <div>
+    render() {
+        return (
+            <div>
         
-      </div>
-    )
-  }
+            </div>
+        );
+    }
 }
 
-export default view
+export default view;

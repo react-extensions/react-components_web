@@ -52,12 +52,12 @@ class Checkbox extends PureComponent {
             <label className={'r-checkbox-wrapper ' + (className || '')+(disabled? ' _disabled':'')} {...rest} >
                 <span className={'r-checkbox-inner'}>
                     <input type='checkbox'
-                           className='r-checkbox'
-                           onChange={this.toggleCheck}
-                           checked={checked}
-                           disabled={disabled}
+                        className='r-checkbox'
+                        onChange={this.toggleCheck}
+                        checked={checked}
+                        disabled={disabled}
                     />
-                <Icon type={checked ? 'check-square' : 'border'} className={checked ? ' _checked' : ''}/>
+                    <Icon type={checked ? 'check-square' : 'border'} className={checked ? ' _checked' : ''}/>
                 </span>
                 {children &&  <span className='checkbox-children'>{children}</span>}
             </label>
@@ -95,7 +95,7 @@ export default function (props) {
                             checked={value.includes(props.value)}
                             onChange={onChange}
                         /> :
-                        <Checkbox  {...props} />
+                        <Checkbox  {...props} />;
                 }
             }
         </Context.Consumer>

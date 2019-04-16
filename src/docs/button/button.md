@@ -283,15 +283,15 @@ function Demo() {
 ### · API
 通过设置 Button 的属性来产生不同的按钮样式，推荐顺序为：type -> shape -> size -> icon -> disabled。
 
-| 名称       | 说明                                                | 类型      | 默认值   |
-| ---------- | --------------------------------------------------- | --------- | -------- |
+| 名称       | 说明                                               | 类型      | 默认值    |
+| ---------- | --------------------------------------------------| --------- | -------- |
 | `htmlType` | 等同于原生按钮的`type`属性                          | `string`  | `button` |
 | `type`     | 按钮类型。可选`primary`\|`dashed`\|`danger`或不设置 | `string`  | -        |
 | `size`     | 按钮尺寸。可选`large`\|`small`或不设置              | `string`  | -        |
 | `shape`    | 按钮形状。可选`circle`\|`square`或不设置            | `string`  | -        |
-| `icon`     | 定义要在按钮中显示的图标类型                        | `string`  | -        |
+| `icon`     | 定义要在按钮中显示的图标类型                         | `string`  | -        |
 | `ghost`    | 将按钮背景色设为透明                                | `boolean` | `false`  |
-| `disabled` | 禁用按钮                                            | `boolean` | `false`  |
+| `disabled` | 禁用按钮                                           | `boolean` | `false`  |
 
 除了以上的API，其他所有可以传递给原生`button`元素的属性都有效，例如：`onClick`、`className`。
 

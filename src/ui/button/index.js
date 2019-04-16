@@ -1,7 +1,7 @@
-import Button from './button'
-import Group from './group'
-import './style.less'
+import Button from './button';
+import Group from './group';
+import './style.less';
 
-Button.Group = Group
+Button.Group = Group;
 
-export default Button
+export default Button;

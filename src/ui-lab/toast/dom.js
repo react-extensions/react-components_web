@@ -20,12 +20,12 @@ export function createElement(tagName, attributes, children) {
 
 export function addClass(el, className) {
     const oldClass = el.className;
-    if(oldClass.indexOf(className) > -1) return;
+    if(oldClass.indexOf(className) > -1) {return;}
     el.className = oldClass.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '') + ' ' + className;
 }
 
 export function removeClass(el, className) {
-    if(!className) return;
+    if(!className) {return;}
     // 空格判断不完整
     el.className = el.className.replace(new RegExp(`([\\s\\uFEFF\\xA0]?)${className}`, 'g'), '');
 }

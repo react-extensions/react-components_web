@@ -1,18 +1,11 @@
-// path: '/display'
+// path: '/button'
 
 import React, { Component } from 'react';
 import {
     Button,
-    Pagination,
-    // Icon,
-} from '@/ui'
-
-import './style.less'
-
+} from '@/ui';
 class Display extends Component {
-    // constructor() {
-    //     super()
-    // }
+   
     render() {
         return (
             <div
@@ -21,13 +14,6 @@ class Display extends Component {
                     padding: 50,
                     // background: '#00BCD4'
                 }}>
-                <div>
-                    <Pagination total={123} />
-                </div>
-                <br />
-                <br />
-                <br />
-                <br />
                 <div>
                     <Button type='primary' prefix={'loading'}>主按钮</Button>
                     <Button type='danger' ghost>危险按钮</Button>
