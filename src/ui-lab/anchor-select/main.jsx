@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {
     Provider
 } from './context';
+import {animation} from '@/libs/utils';
 
 const anchorList = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'Z', '#'];
 
@@ -161,36 +162,3 @@ AnchorSelect.defaultProps = {
 
 export default AnchorSelect;
 
-
-
-
-/**
- * 缓动函数
- * @param {number} current 当前数值
- * @param {number} target  目标数值
- * @param {func} callback  回调函数
- * @param {number} step    缓动值
- */
-function animation(current, target, callback, step = 3) {
-    let shouldBreak = false;
-    const supportAnimFrame = typeof window !== 'undefined' && window.requestAnimationFrame;
-    const asyncFn = supportAnimFrame ? window.requestAnimationFrame : setTimeout;
-    // 缓动函数
-    const animFn = () => { current += (target - current) / step; };
-    // 帧动画
-    (function doAnim() {
-        if (!shouldBreak && Math.abs(target - current) > 0.5) {
-            animFn();
-            callback(current, false);
-            asyncFn(() => {
-                !shouldBreak && doAnim();
-            }, 17);
-        } else {
-            callback(current, true);
-        }
-    })();
-    // 终止动画
-    return function breakAnim() {
-        shouldBreak = true;
-    };
-}

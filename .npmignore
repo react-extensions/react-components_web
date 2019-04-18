@@ -1,9 +1,16 @@
+# 编辑器
 .idea
 .vscode
-
+# 目录
 node_modules/
 src/
 
+# 日志或配置文件
 flammae.config.js
-
+.eslintrc.js
+.gitignore
+.editorconfig
+.svn
+.git
 *.lock
+

@@ -1,9 +1,9 @@
 module.exports = {
-
+    "root": true,
     "extends": "@78d6/eslint-config-react-app",
     "settings": {
         "react": {
-            // "version": 'detect'
+            "version": ">16.8"
         }
     },
     "rules": {
