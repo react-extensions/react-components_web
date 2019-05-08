@@ -1,6 +1,6 @@
-const path = require('path')
+const path = require('path');
 function resolveApp (src) {
-    return path.resolve(process.cwd(), src)
+    return path.resolve(process.cwd(), src);
 }
 
 module.exports = {
@@ -8,4 +8,4 @@ module.exports = {
         '@comps': resolveApp('src/components'),
         '@styles': resolveApp('src/styles'),
     }
-}
+};
