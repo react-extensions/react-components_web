@@ -3,7 +3,7 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-04-04 13:50:14
- * @LastEditTime: 2019-04-16 16:33:48
+ * @LastEditTime: 2019-05-08 16:31:36
  */
 
 /**
@@ -128,7 +128,7 @@ function useBigDataRender({data = [], range = 50, height = 300}) {
         // 内容
         contentRef,
         contentStyle: {transform: `translate3d(0,${offsetTop}px,0)`},
-        data: shouldRenderDirectly ? shouldRenderDirectly : data.slice(index, index + (2 * range)),
+        data: shouldRenderDirectly ? data : data.slice(index, index + (2 * range)),
 
         // 状态及数据
         index: index,
