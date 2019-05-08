@@ -1,5 +1,5 @@
 import React from 'react';
-
+import memoizeOne from 'memoize-one';
 import Row from './row';
 import PropTypes from 'prop-types';
 import {
@@ -40,7 +40,7 @@ class Table extends React.Component {
             rightShadow: true,
             topShadow: false,
             checkStatus: NOT_CHECKED,   // NOT_CHECKED 全不选中  HALF_CHECKED 部分  CHECKED全选
-            sortMap: { current: '', order: ASC } // 表格排序, current 为当前行的prop. order  ASC正序 DESC 反序
+            sortMap: { current: '', order: ASC }, // 表格排序, current 为当前行的prop. order  ASC正序 DESC 反序
         };
 
         this.containerEl = { current: null };
@@ -117,15 +117,15 @@ class Table extends React.Component {
 
             // 根据fixed 属性， 分配
             switch (col.fixed) {
-            case 'left':
-                columns.left.push(col);
-                break;
-            case 'right':
-                columns.right.push(col);
-                break;
-            default:
-                columns.plain.push(col);
-                break;
+                case 'left':
+                    columns.left.push(col);
+                    break;
+                case 'right':
+                    columns.right.push(col);
+                    break;
+                default:
+                    columns.plain.push(col);
+                    break;
             }
 
             columns.all.push(col);
@@ -166,8 +166,7 @@ class Table extends React.Component {
      * 初次渲染完成后，开始计算布局
      */
     componentDidMount() {
-        this.initStructureWhenUpdated();
-
+        this.initStructureWhenColumnsUpdated();
         window.addEventListener('resize', this.resize);
     }
 
@@ -177,19 +176,21 @@ class Table extends React.Component {
     //TODO: 流程待优化
     componentDidUpdate(prevProps) {
         const currentProps = this.props;
+        const columnsHasChanged = prevProps.columns !== currentProps.columns;
+        const rowsHasChanged = prevProps.rows !== currentProps.rows;
 
-        if (prevProps.columns !== currentProps.columns) {
+        if (columnsHasChanged) {
             this.initialize(currentProps);
             this.setState({
                 complete: false,
                 sortMap: { current: '', order: ASC }
             }, () => {
                 // 重新计算
-                this.initStructureWhenUpdated();
+                this.initStructureWhenColumnsUpdated();
             });
         }
         // rows 数据更新后, 重新设置col宽度
-        else if (prevProps.rows !== currentProps.rows) {
+        else if (rowsHasChanged) {
             this._initStructure();
             this.forceUpdate();
         }
@@ -199,27 +200,42 @@ class Table extends React.Component {
         window.removeEventListener('resize', this.resize);
     }
 
-    // ----------------------------------------start------------------------------------------------
-    // ----------------------------------------start------------------------------------------------
+    /**
+     * 遍历所有 rows，获取 所有 没被disabled的row 组成的数组
+     * 
+     * 通过 执行 this.props.rowSelection.getCheckboxProps
+     * 判断返回的 obj 是否 obj.disabled === true 来判断当前行是否被 disabled
+     * 
+     * 因为大数据情况下遍历要耗费一定时间，所以缓存结果，只有当 props改变之后再重新计算
+     * 
+     */
+    memoizeRowsAndGetCheckboxProps = memoizeOne((rows, getCheckboxProps) => {
+        const selectedRowKeys = [];
+        rows.forEach((item, index) => {
+            const obj = getCheckboxProps(item, index);
+            if (obj && obj.disabled) {
+                return;
+            }
+            selectedRowKeys.push(item[this.props.rowKey]);
+        });
+        return selectedRowKeys;
+    });
     mapSelection() {
-        if (!this.clearWhenPropsChange) {
-            const { rows, rowSelection } = this.props;
-            const { getCheckboxProps } = rowSelection;
-            const selectedRowKeys = [];
-            rows.forEach((item, index) => {
-                const obj = getCheckboxProps(item, index);
-                if (obj && obj.disabled) {
-                    return;
-                }
-                selectedRowKeys.push(item[this.props.rowKey]);
-            });
-            this.clearWhenPropsChange = selectedRowKeys;
-        }
-        return this.clearWhenPropsChange;
+        const { rows, rowSelection: { getCheckboxProps } } = this.props;
+        return this.memoizeRowsAndGetCheckboxProps(rows, getCheckboxProps);
     }
+    /**
+     * 获取所有有效（非disabled）的checkbox 的总数量
+     * 与 当前选中的数量比对 判断 表格整体的选中状态 全不选 部分选 全选
+     */
+    computeCheckStatus() {
 
-    computeCheckStatus(selectedRowKeys) {
+        const selectedRowKeys = this.state.isSelectionControlled ?
+            this.props.rowSelection.selectedRowKeys :
+            this.state.selectedRowKeys;
+
         const selectedRowKeysLen = selectedRowKeys.length;
+
         const allRowKeysLen = this.mapSelection().length;
         let checkStatus = CHECKED;
         if (allRowKeysLen === selectedRowKeysLen) {
@@ -239,11 +255,17 @@ class Table extends React.Component {
         let selectedRowKeys = curCheckStatus !== CHECKED ? this.mapSelection() : [];
         this.emitAndChangeState(selectedRowKeys);
     }
-
+    /**
+     * 单行选中
+     * @param {*} checkedRowValues 
+     */
     handleRowChecked(checkedRowValues) {
         this.emitAndChangeState(checkedRowValues);
     }
-
+    /**
+     * 
+     * @param {*} selectedRowKeys 
+     */
     emitAndChangeState(selectedRowKeys) {
         const subRowKeys = [...selectedRowKeys];
         const rowKey = this.props.rowKey;
@@ -258,8 +280,6 @@ class Table extends React.Component {
         this.setState({ selectedRowKeys });
     }
 
-    // ----------------------------------------end------------------------------------------------
-    // ----------------------------------------end------------------------------------------------
 
     /**
      * Row渲染之前
@@ -304,7 +324,7 @@ class Table extends React.Component {
      * 当 columns 数据更新且渲染后，重新计算结构信息
      *
      * */
-    initStructureWhenUpdated() {
+    initStructureWhenColumnsUpdated() {
         this._initStructure();
         // 首次渲染完成
         setTimeout(() => {
@@ -369,7 +389,7 @@ class Table extends React.Component {
     }
 
     /*
-    * 计算结构
+    * 计算表格结构，滚动条等
     * */
     _initStructure() {
         // 初始化 横向结构, 列宽,
@@ -837,27 +857,25 @@ const renderPlainTh = function (col) {
  */
 const renderTHead = function (columns) {
     const renderCheckbox = () => {
-        const selectedRowKeys = this.state.isSelectionControlled ?
-            this.props.rowSelection.selectedRowKeys :
-            this.state.selectedRowKeys;
-        const checkStatus = this.computeCheckStatus(selectedRowKeys);
+
+        const checkStatus = this.computeCheckStatus();
 
         let Icon = null;
         switch (checkStatus) {
-        case CHECKED:
-            Icon = Check;
-            break;
-        case NOT_CHECKED:
-            Icon = NotCheck;
-            break;
-        case HALF_CHECKED:
-            Icon = HalfCheck;
-            break;
-        default:
-            break;
+            case CHECKED:
+                Icon = Check;
+                break;
+            case NOT_CHECKED:
+                Icon = NotCheck;
+                break;
+            case HALF_CHECKED:
+                Icon = HalfCheck;
+                break;
+            default:
+                break;
         }
         if (!Icon) {
-            return;
+            return null;
         }
         return (
             <Icon onClick={this.checkedAll.bind(this, checkStatus)} />
