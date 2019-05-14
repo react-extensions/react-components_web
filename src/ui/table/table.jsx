@@ -1064,7 +1064,7 @@ const FixedTableBody = function ({ parent, rows, height, columns, colGroup, forw
         containerStyle,
         handleContainerScroll,
         // 轨道
-        trackHeight,
+        placeholderHeight,
         //  内容
         contentRef,
         contentStyle,
@@ -1088,7 +1088,7 @@ const FixedTableBody = function ({ parent, rows, height, columns, colGroup, forw
         className={'r-table-body'}
         ref={forwardRef}
     >
-        <div style={shouldRenderDirectly ? null : { height: trackHeight }}>
+        <div style={shouldRenderDirectly ? null : { height: placeholderHeight }}>
             <div
                 ref={contentRef}
                 style={contentStyle}
@@ -1108,7 +1108,7 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
         containerStyle,
         handleContainerScroll,
         // 轨道
-        trackHeight,
+        placeholderHeight,
         //  内容
         contentRef,
         contentStyle,
@@ -1137,7 +1137,7 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
         className={'r-body__track'}
         ref={forwardRef}
     >
-        <div className={'r-table-body'} style={shouldRenderDirectly ? null : { height: trackHeight }}>
+        <div className={'r-table-body'} style={shouldRenderDirectly ? null : { height: placeholderHeight }}>
             <div
                 ref={contentRef}
                 style={contentStyle}

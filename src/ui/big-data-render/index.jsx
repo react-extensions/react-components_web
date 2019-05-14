@@ -3,7 +3,7 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-03-13 18:14:57
- * @LastEditTime: 2019-04-03 13:39:15
+ * @LastEditTime: 2019-05-14 17:11:04
  */
 
 /**
@@ -31,8 +31,8 @@ function BigDataRender({
         // 容器
         containerStyle,
         handleContainerScroll,
-        // 轨道
-        trackHeight,
+        // 占位div
+        placeholderHeight,
         //  内容
         contentRef,
         contentStyle,
@@ -52,7 +52,7 @@ function BigDataRender({
             onScroll={handleContainerScroll}
             style={containerStyle}
         >
-            <div style={shouldRenderDirectly ? null : {height: trackHeight}}>
+            <div style={shouldRenderDirectly ? null : {height: placeholderHeight}}>
                 {
                     shouldRenderDirectly ?
                         children(data) :
@@ -61,9 +61,7 @@ function BigDataRender({
                                 ref={contentRef}
                                 style={contentStyle}
                             >
-                                {
-                                    children(subData, index)
-                                }
+                                { children(subData, index) }
                             </div>
                         )
                 }
