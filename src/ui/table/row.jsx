@@ -3,7 +3,10 @@ import ExpandRow from './expand-row';
 import Checkbox from './checkbox';
 import PropTypes from 'prop-types';
 import cn from './utils/class-name';
-import Icon from '../icon';
+import config from './config';
+const {
+    ArrowDown,
+} = config.icon;
 
 const HOVER = 'HOVER';
 const HEIGHT = 'HEIGHT';
@@ -292,7 +295,7 @@ const renderTdContent = function (col) {
                 ) :
                 col.type === 'expand' ?
                     (
-                        <Icon type='arrow-fill'
+                        <ArrowDown 
                             className={'_expand-btn ' + (isCollapse ? '_right' : '_down')}
                             onClick={this.expand.bind(this, col.content)}/>
                     ) :

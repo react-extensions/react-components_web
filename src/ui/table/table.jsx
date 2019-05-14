@@ -733,7 +733,8 @@ class Table extends React.Component {
                         'r-table-container',
                         props.className,
                         `_align-${props.align}`,
-                        `_${props.type}`
+                        `_${props.type}`,
+                        !state.complete && '_un-complete',
                     )
                 }
                 ref={this.containerEl}
@@ -744,7 +745,7 @@ class Table extends React.Component {
                         <div className="resize-col-sign"
                             style={{
                                 display: state.signOffset ? 'block' : 'none',
-                                left: state.signOffset
+                                left: state.signOffset,
                             }}>
                         </div>
                     )

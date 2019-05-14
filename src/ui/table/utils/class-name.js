@@ -1,12 +1,6 @@
-export default function (name, ...args) {
-    let i = 0;
-    let len = args.length;
-    for (; i < len; i++) {
-        name += (args[i] ? (' ' + args[i]) : '');
+export default function (...args) {
+    if(!args.length || args.length === 1){
+        return args[0];
     }
-    return name;
-}
-
-// function (name, preFix){
-//     return name ? (' '+(preFix||'')+ name) : '';
-// }
+    return args.filter(Boolean).join(` `);
+};
