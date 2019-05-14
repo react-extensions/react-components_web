@@ -1,4 +1,4 @@
-// path: '/button'
+// path: '/page/button'
 
 import React, { Component } from 'react';
 import {

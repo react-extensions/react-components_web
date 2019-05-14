@@ -1,0 +1,43 @@
+@height: 64px;
+
+.header-content-wrap {
+    box-sizing: content-box;
+    height: @height;
+    background: #fff;
+    border-bottom: 1px solid #E9EAEF;
+
+    ._brand {
+        line-height: @height;
+        display: inline-block;
+    }
+
+    ._tools-bar {
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    ._search-input {
+        min-width: 245px;
+        height: 32px;
+        border: 1px solid #C8CBDA;
+        box-sizing: border-box;
+        border-radius: 16px;
+        padding: 0 16px;
+    }
+
+    /* tab */
+    .n-tab {
+        overflow: hidden;
+    }
+
+    .n-tab-panel {
+        float: left;
+        width: 88px;
+        height: @height;
+        line-height: @height;
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+    }
+}

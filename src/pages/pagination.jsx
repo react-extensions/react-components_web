@@ -1,4 +1,4 @@
-// path: '/pagination'
+// path: '/page/pagination'
 
 import React, { Component } from 'react';
 import {

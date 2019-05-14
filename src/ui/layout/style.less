@@ -1,0 +1,68 @@
+@headerHeight: 65px;
+@asideWidth: 240px;
+@background: #fff;
+
+/**********************/
+/*       Container       */
+/**********************/
+.r-layout-container{
+    position: relative;
+    &._cover{
+        height: 100vh;
+        width: 100%;
+        overflow: auto;
+    }
+}
+
+/**********************/
+/*       Header       */
+/**********************/
+.r-layout-header {
+    position: relative;
+    z-index: 10;
+    height: @headerHeight;
+    background: @background;
+    &._fixed{
+        position: fixed;
+        left: 0;
+        right: 0;
+    }
+}
+
+/* fixed Header */
+.r-layout-header._fixed ~ .r-layout-main:not(._fixed){
+    padding-top: @headerHeight;
+}
+
+/**********************/
+/*       Aside      */
+/**********************/
+.r-layout-aside {
+    position: absolute;
+    top:0;
+    left: 0;
+    z-index: 9;
+    width: @asideWidth;
+    background: @background;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    &._fixed{
+        position: fixed;
+        bottom: 0;
+    }
+}
+.r-layout-header {
+    & ~ .r-layout-aside{
+        top: @headerHeight;
+    }
+}
+
+/**********************/
+/*        Main        */
+/**********************/
+.r-layout-aside {
+    & ~ .r-layout-main{
+        padding-left: @asideWidth;
+    }
+}

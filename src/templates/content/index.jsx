@@ -1,22 +1,29 @@
 import React, { Component } from 'react';
 import './style.less';
-import Header from '@comps/header';
+import HeaderContent from '@comps/header-content';
+import {
+    Layout,
+} from '@/ui';
 import Menu from '@comps/menu';
+
+const {Header, Aside, Main, Container} = Layout;
 
 class Content extends Component {
     render() {
         return (
-            <div className='page content-page'>
-                <Header/>
-                <div className='page-body'>
-                    <div className='_page-side-bar'>
-                        <Menu/>
-                    </div>
-                    <div className='_page-content'>
+            <Container className='content-page' cover={true}>
+                <Header fixed={true}>
+                    <HeaderContent />
+                </Header>
+                <Aside fixed={true}>
+                    <Menu />
+                </Aside>
+                <Main >
+                    <div className='markdown-content-wrap'>
                         {this.props.renderMarkdown()}
                     </div>
-                </div>
-            </div>
+                </Main>
+            </Container>
         );
     }
 }

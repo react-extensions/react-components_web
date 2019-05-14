@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import BigDataRender from '@/ui/big-data-render';
-
+import Mock from 'mockjs';
 const list = [];
 for(let i = 0; i < 3010; i++) {
-    list.push(i);
+    list.push({
+        index: i,
+        num: Mock.Random.natural(30, 100),
+    });
 }
 
 class index extends Component {
@@ -15,8 +18,8 @@ class index extends Component {
                     <BigDataRender data={list} range={30}>
                         {
                             (subData) =>{
-                                return subData.map(item=>(
-                                    <div key={item}>{item}</div>
+                                return subData.map((item)=>(
+                                    <div key={item.index} style={{height: item.num}}>{item.index}</div>
                                 ));
                             }
                         }

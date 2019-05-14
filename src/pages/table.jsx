@@ -1,4 +1,4 @@
-// path: '/table'
+// path: '/page/table'
 // title: 'Table'
 
 import React, {Component} from 'react';

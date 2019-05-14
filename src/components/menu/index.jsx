@@ -1,5 +1,5 @@
 import React from 'react';
-// import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import './style.less';
 import { siteData } from 'flammae';
 
@@ -40,7 +40,9 @@ const Menu = () => {
                         <ul className='n-menu__sub'>
                             {
                                 item.list.map(subItem => (
-                                    <li className='n-menu__sub-item' key={subItem.path}>{subItem.title}</li>
+                                    <li className='n-menu__sub-item' key={subItem.path}>
+                                        <Link to={subItem.path}>{subItem.title}</Link>
+                                    </li>
                                 ))
                             }
                         </ul>
