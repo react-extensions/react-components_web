@@ -11,15 +11,8 @@ import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
 import useBigDataRender from '../big-data-render/hooks';
 
 import Checkbox from '../checkbox';
-import config from './config';
-const {
-    ArrowUp,
-    ArrowDown,
-    Loading,
-    Check,
-    HalfCheck,
-    NotCheck
-} = config.icon;
+import tableConfig from './config';
+
 
 
 const ASC = '_asc';  //正序
@@ -726,6 +719,7 @@ class Table extends React.Component {
                 </React.Fragment>
             );
         };
+        const Loading = tableConfig.icon.Loading;
         return (
             <div
                 className={
@@ -827,6 +821,8 @@ const renderColumns = function (columns) {
  * 渲染普通的 TH 元素
  * */
 const renderPlainTh = function (col) {
+    const ArrowUp = tableConfig.icon.ArrowUp;
+    const ArrowDown = tableConfig.icon.ArrowDown;
     return <React.Fragment>
         <span ref={this.onThMount.bind(this, col)} className='r-th-content'>
             {col.title}
@@ -864,13 +860,13 @@ const renderTHead = function (columns) {
         let Icon = null;
         switch (checkStatus) {
             case CHECKED:
-                Icon = Check;
+                Icon = tableConfig.icon.Check;
                 break;
             case NOT_CHECKED:
-                Icon = NotCheck;
+                Icon = tableConfig.icon.NotCheck;
                 break;
             case HALF_CHECKED:
-                Icon = HalfCheck;
+                Icon = tableConfig.icon.HalfCheck;
                 break;
             default:
                 break;

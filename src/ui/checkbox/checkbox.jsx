@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import Context from './context';
-import Icon from '../icon';
+import config from './config';
 
 class Checkbox extends PureComponent {
     constructor(props) {
@@ -38,6 +38,8 @@ class Checkbox extends PureComponent {
             onChange,
             value,
             disabled,
+            checkedIcon,
+            notCheckedIcon,
             ...rest
         } = this.props;
 
@@ -47,6 +49,7 @@ class Checkbox extends PureComponent {
         } = this.state;
 
         const checked = isControlled ? propsChecked : stateChecked;
+        const Icon = checked ? (checkedIcon || config.icon.Check) : (notCheckedIcon || config.icon.NotCheck);
 
         return (
             <label className={'r-checkbox-wrapper ' + (className || '')+(disabled? ' _disabled':'')} {...rest} >
@@ -57,7 +60,7 @@ class Checkbox extends PureComponent {
                         checked={checked}
                         disabled={disabled}
                     />
-                    <Icon type={checked ? 'check-square' : 'border'} className={checked ? ' _checked' : ''}/>
+                    <Icon className={checked ? ' _checked' : ''}/>
                 </span>
                 {children &&  <span className='checkbox-children'>{children}</span>}
             </label>
@@ -72,6 +75,8 @@ Checkbox.propTypes = {
     checked: PropTypes.bool,
     defaultChecked: PropTypes.bool, // 初始默认选中
     className: PropTypes.string,    // 自定义类名
+    checkedIcon: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
+    notCheckedIcon: PropTypes.oneOfType([PropTypes.func, PropTypes.element]),
 };
 
 Checkbox.defaultProps = {

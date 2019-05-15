@@ -3,14 +3,22 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-04-04 13:50:14
- * @LastEditTime: 2019-05-15 15:22:39
+ * @LastEditTime: 2019-05-15 09:12:16
  */
+
 
 /**
- * 该组件要求每个项目高度相同
+ * 不确定变量：
+ * 1. 视口高度
+ * 2. 每个节点高度
+ *
+ * 体验：
+ * 1. 在什么位置替换节点
+ * 2. 替换节点后的处理
+ *
  */
 
-import { createRef, useState, useEffect, useMemo } from 'react';
+import { createRef, useState, useEffect } from 'react';
 
 export default function useBigDataRender({ data = [], range = 50, height = 300 }) {
 
@@ -23,7 +31,6 @@ export default function useBigDataRender({ data = [], range = 50, height = 300 }
     const [prevTime, setPrevTime] = useState(0);
     const [overSpeed, setOverSpeed] = useState(false);
     const [timer, setTimer] = useState(null);
-    // const [memoData, setMemoData] = useState(data);
     // const [prevScrollLeft, setPrevScrollLeft] = useState(0);
     const contentRef = createRef();
     // 总数据量小于 range * 2，直接渲染
@@ -34,7 +41,7 @@ export default function useBigDataRender({ data = [], range = 50, height = 300 }
      * @param {number} halfContentHeight 
      */
     const setStepAndOffsetTop = (nextIndex, halfContentHeight) => {
-        console.log('setStepAndOffsetTop', nextIndex)
+        console.log(nextIndex)
         // 顶部
         if (nextIndex <= 0) {
             setIndex(0);
@@ -103,7 +110,6 @@ export default function useBigDataRender({ data = [], range = 50, height = 300 }
             setOverSpeed(true);
             clearTimeout(timer);
             setTimer(setTimeout(() => {
-                console.log(`重置！`, scrollTop,halfContentHeight );
                 const ranges = Math.floor(scrollTop / halfContentHeight);
                 setStepAndOffsetTop(ranges * range, halfContentHeight);
                 setOverSpeed(false);
@@ -131,26 +137,16 @@ export default function useBigDataRender({ data = [], range = 50, height = 300 }
         }
     };
 
-    // data改变时，重置数据
-    useMemo(()=>{
-        setIndex(0);
-        setOffsetTop(0);
-        setOverSpeed(false);
-    }, [data]);
-    
     useEffect(() => {
         if (shouldRenderDirectly) {
-            setContentHeight(0);
-            setTotalHeight(0);
             return;
         }
-        contentRef.current.parentElement.parentElement.scrollTop = 0;
         // 计算实际内容高度及 所有内容的总高度
         const contentHeight = contentRef.current.clientHeight;
         setContentHeight(contentHeight);
         setTotalHeight(contentHeight / 2 * (data.length / range));
     }, [data]);
-    
+
 
     return {
         // 占位div高度

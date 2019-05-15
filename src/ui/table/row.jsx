@@ -3,10 +3,8 @@ import ExpandRow from './expand-row';
 import Checkbox from './checkbox';
 import PropTypes from 'prop-types';
 import cn from './utils/class-name';
-import config from './config';
-const {
-    ArrowDown,
-} = config.icon;
+import tableConfig from './config';
+
 
 const HOVER = 'HOVER';
 const HEIGHT = 'HEIGHT';
@@ -278,6 +276,7 @@ const renderTdContentWrap = function (col, child) {
 const renderTdContent = function (col) {
     const {rowData, rowIndex, rowKey, isBottom, rowSelection} = this.props;
     const {isCollapse} = this.state;
+    const ArrowDown = tableConfig.icon.ArrowDown;
     return isBottom ?
         renderTdContentWrap.call(this, col, rowData[col.type || col.prop] || null) :
         col.type === 'checkbox' ?
@@ -287,6 +286,8 @@ const renderTdContent = function (col) {
                     rowData={rowData}
                     rowIndex={rowIndex}
                     getCheckboxProps={rowSelection.getCheckboxProps}
+                    checkedIcon={tableConfig.icon.Check}
+                    notCheckedIcon={tableConfig.icon.NotCheck}
                 />
             ) :
             col.type === 'radio' ?
