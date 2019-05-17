@@ -8,7 +8,7 @@ import {
 } from './const-data';
 import cn from './utils/class-name';
 import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
-import useBigDataRender from '../big-data-render/hooks';
+import useBigDataRender from '../big-data-render/hooks-pro';
 
 import Checkbox from '../checkbox';
 import tableConfig from './config';
@@ -1068,11 +1068,11 @@ const FixedTableBody = function ({ parent, rows, height, columns, colGroup, forw
         data,
         index,
         // 状态及数据
-        shouldRenderDirectly,
     } = useBigDataRender({
         data: rows,
         height,
-        range
+        range,
+        querySelect: el=>el.querySelectorAll('.r-tr'),
     });
 
     const extendStyle = Object.assign({}, containerStyle, {
@@ -1085,7 +1085,7 @@ const FixedTableBody = function ({ parent, rows, height, columns, colGroup, forw
         className={'r-table-body'}
         ref={forwardRef}
     >
-        <div style={shouldRenderDirectly ? null : { height: placeholderHeight }}>
+        <div style={{ height: placeholderHeight }}>
             <div
                 ref={contentRef}
                 style={contentStyle}
@@ -1113,11 +1113,11 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
         index,
         // overSpeed,
         // 状态及数据
-        shouldRenderDirectly,
     } = useBigDataRender({
         data: rows,
         height,
-        range
+        range,
+        querySelect: el=>el.querySelectorAll('.r-tr'),
     });
 
     const extendStyle = Object.assign({}, containerStyle, {
@@ -1134,7 +1134,7 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
         className={'r-body__track'}
         ref={forwardRef}
     >
-        <div className={'r-table-body'} style={shouldRenderDirectly ? null : { height: placeholderHeight }}>
+        <div className={'r-table-body'} style={{ height: placeholderHeight }}>
             <div
                 ref={contentRef}
                 style={contentStyle}
