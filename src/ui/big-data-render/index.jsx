@@ -3,7 +3,7 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-03-13 18:14:57
- * @LastEditTime: 2019-05-14 20:54:58
+ * @LastEditTime: 2019-05-15 15:35:26
  */
 
 import React from 'react';
@@ -29,7 +29,7 @@ function BigDataRender({
         index,
         // overSpeed,
         // 状态及数据
-        shouldRenderDirectly,
+       
     } = useBigDataRender({
         data,
         height,
@@ -41,19 +41,13 @@ function BigDataRender({
             onScroll={handleContainerScroll}
             style={containerStyle}
         >
-            <div style={shouldRenderDirectly ? null : {height: placeholderHeight}}>
-                {
-                    shouldRenderDirectly ?
-                        children(data) :
-                        (
-                            <div
-                                ref={contentRef}
-                                style={contentStyle}
-                            >
-                                { children(subData, index) }
-                            </div>
-                        )
-                }
+            <div style={{ height: placeholderHeight }}>
+                <div
+                    ref={contentRef}
+                    style={contentStyle}
+                >
+                    {children(subData, index)}
+                </div>
             </div>
         </div>
     );

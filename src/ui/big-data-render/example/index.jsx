@@ -3,7 +3,7 @@ import BigDataRender from '../index';
 
 function getList(num = 3010) {
     const list = [];
-    for (let i = 0; i < num; i++) {
+    for (let i = 0; i < 3010; i++) {
         list.push(i);
     }
     return list;
