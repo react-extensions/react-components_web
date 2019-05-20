@@ -1072,7 +1072,7 @@ const FixedTableBody = function ({ parent, rows, height, columns, colGroup, forw
         data: rows,
         height,
         range,
-        querySelect: el=>el.querySelectorAll('.r-tr'),
+        querySelect: el => el.querySelectorAll('.r-tr'),
     });
 
     const extendStyle = Object.assign({}, containerStyle, {
@@ -1117,7 +1117,7 @@ const SplitLayoutTableBody = function ({ parent, rows, height, columns, colGroup
         data: rows,
         height,
         range,
-        querySelect: el=>el.querySelectorAll('.r-tr'),
+        querySelect: el => el.querySelectorAll('.r-tr'),
     });
 
     const extendStyle = Object.assign({}, containerStyle, {

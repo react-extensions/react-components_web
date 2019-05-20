@@ -3,7 +3,7 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-04-04 13:50:14
- * @LastEditTime: 2019-05-16 20:36:17
+ * @LastEditTime: 2019-05-20 15:12:53
  */
 
 //
@@ -224,7 +224,7 @@ export default function useBigDataRender({
         if (index > data.length) {
             setIndex(0);
         }
-    }, [data]);
+    }, [data.length]);
 
     // 异步执行
     useEffect(() => {
@@ -232,7 +232,7 @@ export default function useBigDataRender({
         // 第一range范围内节点高度
         setCompleted(true);
         computeRangeAndTotalHeight();
-    }, [data]);
+    }, [data.length]);
 
     useEffect(() => {
         // data更新 =>节点渲染完成并计算完高度后
@@ -274,7 +274,7 @@ export default function useBigDataRender({
         // 内容
         contentRef,
         contentStyle: {
-            transform: `translate3d(0,${offsetTop}px,0)`
+            transform: `translate3d(0,${offsetTop}px,0)`,
         },
         data: shouldRenderDirectly ? data : data.slice(index, index + (2 * range)),
     };

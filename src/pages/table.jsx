@@ -9,7 +9,7 @@ import {
 
 let rows = [];
 let rows2 = [];
-for (let i = 0; i < 200; i++) {
+for (let i = 0; i < 3010; i++) {
     rows.push({
         one: i,
         two: i,

@@ -8,6 +8,6 @@ module.exports = {
     },
     "rules": {
         "semi": ["warn", "always"],
-        "indent": ["warn", 4]
+        "indent": ["warn", 4, { "SwitchCase": 1 }]
     }
 };
