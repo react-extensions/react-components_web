@@ -3,11 +3,11 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-03-13 18:14:57
- * @LastEditTime: 2019-05-15 18:26:41
+ * @LastEditTime: 2019-05-20 16:25:37
  */
 
 import React from 'react';
-import useBigDataRender from './hooks-pro';
+import useBigDataRender from './hook-pro';
 
 function BigDataRender({
     data,

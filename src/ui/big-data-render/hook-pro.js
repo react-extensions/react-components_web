@@ -3,7 +3,7 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-04-04 13:50:14
- * @LastEditTime: 2019-05-20 15:12:53
+ * @LastEditTime: 2019-05-20 18:59:12
  */
 
 //
@@ -19,7 +19,7 @@ import {
     createRef,
     useState,
     useEffect,
-    useMemo
+    useMemo,
 } from 'react';
 
 export default function useBigDataRender({
@@ -30,7 +30,7 @@ export default function useBigDataRender({
 }) {
     const contentRef = createRef();
 
-    const [index, setIndex] = useState(0); // 从index开始截取 到 index+2*range 用于渲染
+    const [step, setStep] = useState(0); // 从index开始截取 到 (step+2)*range 用于渲染
     const [offsetTop, setOffsetTop] = useState(0); // 控制内容wrap元素
     const [totalHeight, setTotalHeight] = useState('auto'); // 所有数据的总高度
     const [isBottom, setIsBottom] = useState(false); // 是否滚动到底部了
@@ -51,8 +51,7 @@ export default function useBigDataRender({
      * @param {event} e 
      */
     const handleScroll = function (e) {
-
-        if (shouldRenderDirectly) {
+        if (shouldRenderDirectly || e.target !== contentRef.current.parentElement.parentElement) {
             return;
         }
         const wrapEl = e.target;
@@ -73,36 +72,39 @@ export default function useBigDataRender({
                 console.log(`重置！`, scrollTop);
                 console.table({
                     range,
-                    index,
+                    step,
                     scrollTop,
                     shouldRenderDirectly,
                 });
                 setOverSpeed(false);
-                const [nextIndex, nextOffsetTop] = getIndexAndOffsetTopByScrollTop(scrollTop);
-                setStepAndOffsetTop(nextIndex, nextOffsetTop);
+                const [nextStep, nextOffsetTop] = getIndexAndOffsetTopByScrollTop(scrollTop);
+                console.table({
+                    nextStep,
+                    nextOffsetTop,
+                });
+                setStepAndOffsetTop(nextStep, nextOffsetTop);
             }, 100));
             return;
         }
 
         //this.props.distance
-        const minDistance = 0;
+        const minDistance = 50;
         // 向下滚动，内容上移
         if (scrollTop > prevScrollTop) {
             // 距最底部内容滚动到视口小于 dist 距离长度时，更换数据
             // 滚动时的位置计算 要根据 content 元素实时高度计算
             const curDistance = offsetTop + contentRef.current.clientHeight - scrollTop - height;
             if (curDistance < minDistance) {
-                const nextIndex = index + range;
-                setStepAndOffsetTop(nextIndex, getOffsetTopByIndex(nextIndex));
+                const nextStep = step + 1;
+                setStepAndOffsetTop(nextStep, getOffsetTopByIndex(nextStep));
             }
         }
         // 向上滚动，内容下移
         else {
             const curDistance = scrollTop - offsetTop;
             if (curDistance < minDistance) {
-                const nextIndex = index - range;
-
-                setStepAndOffsetTop(nextIndex, getOffsetTopByIndex(nextIndex));
+                const nextStep = step - 1;
+                setStepAndOffsetTop(nextStep, getOffsetTopByIndex(nextStep));
             }
         }
     };
@@ -110,25 +112,25 @@ export default function useBigDataRender({
     /**
      * 设置数据区间的起始位置并移动 content div
      * 这是一个没有‘副作用’ 的函数
-     * @param {number} nextIndex 
+     * @param {number} nextStep 
      */
-    const setStepAndOffsetTop = (nextIndex, nextOffsetTop) => {
+    const setStepAndOffsetTop = (nextStep, nextOffsetTop) => {
         // 顶部
-        if (nextIndex <= 0) {
-            setIndex(0);
+        if (nextStep <= 0) {
+            setStep(0);
             setOffsetTop(0);
             setIsBottom(false);
             return;
         }
         // 底部
-        const last = data.length - nextIndex;
+        const last = data.length - nextStep * range;
         if ((2 * range) >= last) {
             if (isBottom) {
                 return;
             }
             // 容错
             if (last < range) {
-                nextIndex -= range;
+                nextStep -= 1;
             }
             setIsBottom(true);
         }
@@ -142,17 +144,16 @@ export default function useBigDataRender({
         // |--- --- --- --- --- --- --- --- --- -|    实际总数据量
         // |--- ---|--- ---|--- ---|--- ---|--- -|    每一间隔代表实际渲染的 数据
         // |---|---|---|---|---|---|---|---|          index递增情况
-        // 可以看到，因为index 以 range 为一个单位递增或递减
-        // 所以即使满足 nextIndex + (2 * range) >= data.length - 1
+        // 可以看到，因为step 以 range 为一个单位递增或递减
+        // 所以即使满足 (nextStep + 2) * range >= data.length - 1
         // 渲染的数据量也不会小于一个range
-        setIndex(nextIndex);
+        setStep(nextStep);
         setOffsetTop(nextOffsetTop);
     };
 
-    const getOffsetTopByIndex = function (nextIndex) {
-        const end = Math.round(nextIndex / range);
+    const getOffsetTopByIndex = function (nextStep) {
         let newOffsetTop = 0;
-        for (let i = 0; i < end; i++) {
+        for (let i = 0; i < nextStep; i++) {
             newOffsetTop += rangeHeightList[i];
         }
         return newOffsetTop;
@@ -161,7 +162,7 @@ export default function useBigDataRender({
      * 根据传入的视口容器scrollTop
      * 遍历并累加 rangeHeightList 各项的值（高度）
      * 直到总高度 大于 scrollTop
-     * 返回 [index, 不大于scrollTop的总高度]
+     * 返回 [step, 不大于scrollTop的总高度]
      * 当shuldRenderDirectly为 True时， 不可调用此方法，因为不存在 rangeHeightList
      * @param {number} scrollTop 
      */
@@ -170,7 +171,7 @@ export default function useBigDataRender({
         for (let i = 0, len = rangeHeightList.length; i < len; i++) {
             totalHeight += rangeHeightList[i];
             if (totalHeight > scrollTop) {
-                return [i * range, totalHeight - rangeHeightList[i]];
+                return [i, totalHeight - rangeHeightList[i]];
             }
         }
         return [0, 0];
@@ -182,13 +183,19 @@ export default function useBigDataRender({
         if (shouldRenderDirectly) {
             return;
         }
+        // 第一range数据渲染出的节点数组
         const nodeList = [].slice.call(querySelect(contentRef.current), 0, range);
-        const step = Math.round(index / range);
+        // 节点总高度
         const newRangeHeight = nodeList.reduce((prev, cur) => (prev + cur.clientHeight), 0);
+        // 
         const firstRangeHeight = rangeHeightListCompleted ? rangeHeightList[0] : newRangeHeight;
-
         let newTotalHeight = 0;
         const newRangeHeightList = [];
+
+        // const x = parseInt(((data.length / range) % 1) * 10);
+
+
+
         for (let i = 0, len = rangeHeightList.length; i < len; i++) {
             if (i === step) {
                 newTotalHeight += newRangeHeight;
@@ -212,17 +219,17 @@ export default function useBigDataRender({
         setRangeHeightList(new Array(Math.ceil(data.length / range)));
         if (shouldRenderDirectly) {
             setTotalHeight('auto');
-            setIndex(0);
+            setStep(0);
             setOffsetTop(0);
         }
 
-        // 假设data 有 3000条， 当滚动到底部时，此时 index 假设为 2920
-        // 如果将data切换成 1200 条，data.slice(index, index + (2 * range))的
+        // 假设data 有 3000条， 当滚动到底部时，此时 step * range 假设为 2920
+        // 如果将data切换成 1200 条，data.slice(step, (step + 2) * range)的
         // 返回值将为空数组， 导致无节点渲染
         // 所以设置成 0 
         // 
-        if (index > data.length) {
-            setIndex(0);
+        if (step * range > data.length) {
+            setStep(0);
         }
     }, [data.length]);
 
@@ -241,11 +248,11 @@ export default function useBigDataRender({
             return;
         }
         // 对应上方提到的
-        // 假设data 有 3000条， 当滚动到底部时，此时 index 假设为 2920, 
+        // 假设data 有 3000条， 当滚动到底部时，此时 step 假设为 2920, 
         // 此时的prevScrollTop 肯定大于将 data切换成 1200 条时的 totalHeight
         const scrollTop = totalHeight < prevScrollTop ? (totalHeight - rangeHeightList[0] * 2) : prevScrollTop;
-        const [nextIndex, nextOffsetTop] = getIndexAndOffsetTopByScrollTop(scrollTop);
-        setStepAndOffsetTop(nextIndex, nextOffsetTop);
+        const [nextStep, nextOffsetTop] = getIndexAndOffsetTopByScrollTop(scrollTop);
+        setStepAndOffsetTop(nextStep, nextOffsetTop);
     }, [rangeHeightListCompleted]);
 
     useEffect(() => {
@@ -254,13 +261,14 @@ export default function useBigDataRender({
             return;
         }
         computeRangeAndTotalHeight();
-    }, [index]);
+    }, [step]);
 
+    const startIndex = step * range;
     return {
         // 超速了
         overSpeed: overSpeed,
         // 状态及数据
-        index: index,
+        index: startIndex,
         shouldRenderDirectly,
         // 容器
         containerStyle: {
@@ -276,6 +284,6 @@ export default function useBigDataRender({
         contentStyle: {
             transform: `translate3d(0,${offsetTop}px,0)`,
         },
-        data: shouldRenderDirectly ? data : data.slice(index, index + (2 * range)),
+        data: shouldRenderDirectly ? data : data.slice(startIndex, (step + 2) * range),
     };
 };

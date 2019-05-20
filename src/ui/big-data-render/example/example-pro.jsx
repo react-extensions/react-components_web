@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import BigDataRender from '../index-pro';
+import BigDataRender from '../view-pro';
 import Mock from 'mockjs';
 
 class index extends Component {
