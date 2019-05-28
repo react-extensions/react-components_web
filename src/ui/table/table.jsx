@@ -940,7 +940,7 @@ const renderTBody = function (columns, data, startIndex, tType) {
                         return (
                             <Row
                                 {...customerProps}
-                                key={key}
+                                key={i}
                                 rowKey={key}
                                 rowIndex={isBottom ? ('b-' + index) : index}
                                 rowData={rowData}

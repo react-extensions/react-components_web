@@ -3,17 +3,8 @@
  * @Email: fitz-i@foxmail.com
  * @Description: 
  * @Date: 2019-04-04 13:50:14
- * @LastEditTime: 2019-05-20 18:59:12
+ * @LastEditTime: 2019-05-27 15:21:37
  */
-
-//
-// .______   .______        ______   
-// |   _  \  |   _  \      /  __  \  
-// |  |_)  | |  |_)  |    |  |  |  | 
-// |   ___/  |      /     |  |  |  | 
-// |  |      |  |\  \----.|  `--'  | 
-// | _|      | _| `._____| \______/  oooooooooooooooooooooooooooooooooooooooooooooo
-//
 
 import {
     createRef,
@@ -51,6 +42,7 @@ export default function useBigDataRender({
      * @param {event} e 
      */
     const handleScroll = function (e) {
+        console.log('scroll');
         if (shouldRenderDirectly || e.target !== contentRef.current.parentElement.parentElement) {
             return;
         }
@@ -192,10 +184,6 @@ export default function useBigDataRender({
         let newTotalHeight = 0;
         const newRangeHeightList = [];
 
-        // const x = parseInt(((data.length / range) % 1) * 10);
-
-
-
         for (let i = 0, len = rangeHeightList.length; i < len; i++) {
             if (i === step) {
                 newTotalHeight += newRangeHeight;
@@ -261,6 +249,20 @@ export default function useBigDataRender({
             return;
         }
         computeRangeAndTotalHeight();
+
+        //this.props.distance
+        const minDistance = 50;
+        const contentEl = contentRef.current;
+        const scrollTop = contentEl.parentElement.parentElement.scrollTop;
+        const curDistance = offsetTop + contentEl.clientHeight - scrollTop - height;
+        if (curDistance < minDistance) {
+            const nextStep = step + 1;
+            setStepAndOffsetTop(nextStep, getOffsetTopByIndex(nextStep));
+        }
+        if (scrollTop - offsetTop < minDistance) {
+            const nextStep = step - 1;
+            setStepAndOffsetTop(nextStep, getOffsetTopByIndex(nextStep));
+        }
     }, [step]);
 
     const startIndex = step * range;

@@ -64,7 +64,6 @@ class Row extends React.Component {
             isHover: false,      // 鼠标移入
             trHeight: syncObj ? syncObj.height : (props.height || null)       // 行宽度
         };
-
         this.mounted = false;
         this.getTrHeight = this.getTrHeight.bind(this);
     }
