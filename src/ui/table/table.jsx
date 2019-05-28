@@ -8,7 +8,7 @@ import {
 } from './const-data';
 import cn from './utils/class-name';
 import SCROLL_BAR_WIDTH from './utils/scroll-bar-width';
-import useBigDataRender from '../big-data-render/hook-pro';
+import useBigDataRender from '../big-data-render/hook-same-height';
 
 import Checkbox from '../checkbox';
 import tableConfig from './config';

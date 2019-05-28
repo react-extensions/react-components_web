@@ -1,3 +1,5 @@
+// TODO: 来回切换数据可能导致白屏
+
 import {
     createRef,
     useState,
@@ -10,16 +12,13 @@ import {
  * @param {array} data 数据
  * @param {number} range 实际渲染数量的 1/2
  * @param {number} height 视口高度
- * @param {number} minDistance 最小触发距离
- * @param {function} querySelect 
  */
 export default function useBigDataRender({
     data = [],
     range = 50,
     height = 300,
-    minDistance = 50,
-    querySelect,
 }) {
+    const doubleRange = range * 2;
     /**
      * 用于包裹内容的容器， 通过offsetTop控制位置
      */
@@ -28,7 +27,7 @@ export default function useBigDataRender({
     /**
      * 总数据量小于 range * 2，直接渲染
      */
-    const shouldRenderDirectly = data.length < (range * 2);
+    const shouldRenderDirectly = data.length < doubleRange;
 
     /**
      * --- --- --
@@ -61,114 +60,43 @@ export default function useBigDataRender({
     const [contentHeight, setContentHeight] = useState(0);
 
     /**
-     * data初始化或更新完成， rangeHeightList、totalHeight 已被初始化
-     */
-    const [rangeHeightListCompleted, setCompleted] = useState(false);
-    // const [rangeHeightList, setRangeHeightList] = useState(new Array(Math.ceil(data.length / range)));
-
-    /**
      * 超速滚动情况
      */
     const [timer, setTimer] = useState(null);
 
     /**
-     * 是否超速
+     * flag，标志正在滚动
      */
-    const [overSpeed, setOverSpeed] = useState(false);
+    const [scrolling, setScrolling] = useState(true);
 
     /**
-     * 就是scrollTop，用于算速度
+     * flag，标志有数据更新
      */
-    const [prevScrollTop, setPrevScrollTop] = useState(0);
+    const [hasDataChanged, setHasDataChanged] = useState(false);
 
     /**
-     * 记录上次触发scroll时间的时间，用于算速度
+     * 当前范围渲染数据的起始索引值
      */
-    const [prevTime, setPrevTime] = useState(0);
+    const currentIndex = step * range;
 
     /**
      * 处理视口容器滚动事件
-     * @param {event} e 
      */
-    const handleScroll = (e) => {
+    const handleScroll = () => {
         /**
          * - 直接渲染的情况没必要执行
          * 
          * - 当大数据渲染组件内部放了一些可以滚动的元素时，元素的scroll也会触发此函数
          */
-        if (
-            shouldRenderDirectly
-            || e.target !== contentRef.current.parentElement.parentElement
-        ) {
+        if (shouldRenderDirectly) {
             return;
         }
 
-        const wrapEl = e.target;
-        const scrollTop = wrapEl.scrollTop;
-        console.log('scroll', scrollTop);
-
-        /**
-         * 存储上一次滚动的时间，该时间用于计算滚动速度
-         */
-        const time = Number(new Date());
-
-        /**
-         * 速度 px/ms 
-         */
-        const speed = Math.abs(scrollTop - prevScrollTop) / (time - prevTime);
-
-        /**
-         * 保存滚动位置 时间
-         */
-        setPrevTime(time);
-        setPrevScrollTop(scrollTop);
-
-        /**
-         * 当速度大于20px/ms，判断为超速，此时没必要一直计算渲染，等停下再计算
-         */
-        if (speed > 20) {
-            setOverSpeed(true);
-
-            /**
-             * 延迟函数，判断如果 100ms 内没触发第二次超速，则开始计算渲染
-             */
-            clearTimeout(timer);
-            setTimer(setTimeout(() => {
-                // setOverSpeed(false);
-                // console.log('重置！！');
-                // const [nextStep, nextOffsetTop] = computeStepAndOffsettopByScrollTop(scrollTop, contentHeight);
-                // setStepAndOffsetTop(nextStep, nextOffsetTop);
-            }, 200));
-            return;
-        }
-
-        /**
-         * 向下滚动，内容上移
-         */
-        if (scrollTop > prevScrollTop) {
-            /**
-             * 距最底部内容滚动到视口小于 dist 距离长度时，更换数据
-             * 滚动时的位置计算 要根据 content 元素实时高度计算
-             */
-            const curDistance = offsetTop + contentHeight - scrollTop - height;
-            if (curDistance < minDistance) {
-                const abs = Math.abs(curDistance);
-                const addStep = Math.floor(abs / (contentHeight * 2)) || 1;
-                const nextStep = step + addStep;
-                setStepAndOffsetTop(nextStep);
-            }
-        } else {
-            /**
-             * 向上滚动，内容下移
-             */
-            const curDistance = scrollTop - offsetTop;
-            if (curDistance < minDistance) {
-                const abs = Math.abs(curDistance);
-                const reduceStep = Math.floor(abs / (contentHeight * 2)) || 1;
-                const nextStep = step - reduceStep;
-                setStepAndOffsetTop(nextStep);
-            }
-        }
+        setScrolling(true);
+        clearTimeout(timer);
+        setTimer(setTimeout(() => {
+            setScrolling(false);
+        }, 32));
     };
 
     /**
@@ -185,7 +113,7 @@ export default function useBigDataRender({
             return;
         }
         const last = data.length - nextStep * range;
-        if ((2 * range) >= last) {
+        if (doubleRange >= last) {
             // 底部
             if (isBottom) {
                 return;
@@ -211,11 +139,11 @@ export default function useBigDataRender({
           * 渲染的数据量也不会小于一个range，即，不会导致问题
           */
         setStep(nextStep);
-        /* eslint-disable */
+
         nextOffsetTop = nextOffsetTop === undefined
             ? computeOffsetTopByStep(nextStep)
             : nextOffsetTop;
-        /* eslint-enable */
+
         setOffsetTop(nextOffsetTop);
     };
 
@@ -231,13 +159,12 @@ export default function useBigDataRender({
     /**（TODO）
      * 根据当前的scrollTop计算step和offsetTop
      * @param {*} scrollTop 
-     * @param {*} height 
      */
-    const computeStepAndOffsettopByScrollTop = function (scrollTop, height) {
-        if (scrollTop === 0 || height === 0) {
+    const computeStepAndOffsettopByScrollTop = function (scrollTop) {
+        if (scrollTop === 0 || contentHeight === 0) {
             return [0, 0];
         }
-        const step = Math.floor(scrollTop / height);
+        const step = Math.floor(scrollTop / (contentHeight / 2));
         const offsetTop = computeOffsetTopByStep(step);
         return [step, offsetTop];
     };
@@ -246,8 +173,6 @@ export default function useBigDataRender({
      * data长度改变时，重置数据及状态
      */
     useMemo(() => {
-        setOverSpeed(false);
-        setCompleted(false);
         clearTimeout(timer);
 
         /**
@@ -266,8 +191,10 @@ export default function useBigDataRender({
          * 返回值将为空数组，导致无节点渲染，故将step重置为0，待更新后再根据scrollTop计算出
          * 实际的step
          */
-        if (step * range > data.length) {
+        if (currentIndex > data.length) {
             setStep(0);
+            setOffsetTop(0);
+            setIsBottom(false);
         }
     }, [data.length]);
 
@@ -275,17 +202,19 @@ export default function useBigDataRender({
      * data长度改变，节点更新后，重新计算step
      */
     useEffect(() => {
-        setCompleted(true);
-
         if (shouldRenderDirectly) {
             return;
         }
+        /**
+         * 数据更新后要重新计算位置，设置isDataChange为true,触发一次下方的 useEffect
+         */
+        setHasDataChanged(true);
 
         /**（TODO）
          * 获取渲染出来的内容高度，并估算总高度
          */
         const contentHeight = contentRef.current.clientHeight;
-        const totalHeight = data.length / (range * 2) * contentHeight;
+        const totalHeight = (data.length / doubleRange) * contentHeight;
 
         /**
          * 如果内容高度小于视口容器高度，报错
@@ -299,61 +228,30 @@ export default function useBigDataRender({
         }
 
         /**
-         * recompute step，对应上方data由3000=>1200的情况
+         * 重新存储高度信息
          */
-        if (step === 0 && prevScrollTop !== 0) {
-            const scrollTop = totalHeight < prevScrollTop
-                ? (totalHeight - contentHeight - 1)
-                : prevScrollTop;
-            const [nextStep, nextOffsetTop] = computeStepAndOffsettopByScrollTop(scrollTop, contentHeight);
-            setStepAndOffsetTop(nextStep, nextOffsetTop);
-        }
         setContentHeight(contentHeight);
         setTotalHeight(totalHeight);
     }, [data.length]);
 
-    /**（didMounted, didUpdate）
-     * step更新后，再次校验内容是否移动到视口内
+    /**
+     * 滚动完成后，重新计算位置
      */
     useEffect(() => {
-        if (overSpeed) {
+        if (scrolling && !hasDataChanged) {
             return;
         }
         const scrollTop = contentRef.current.parentElement.parentElement.scrollTop;
-        const curDistance = offsetTop + contentHeight - scrollTop - height;
-        // if (curDistance < minDistance) {
-        //     const [nextStep, nextOffsetTop] = computeStepAndOffsettopByScrollTop(scrollTop, contentRef.current.clientHeight);
-        //     setStepAndOffsetTop(nextStep, nextOffsetTop);
-        // } else if ((scrollTop - offsetTop) < minDistance) {
-        //     const [nextStep, nextOffsetTop] = computeStepAndOffsettopByScrollTop(scrollTop, contentRef.current.clientHeight);
-        //     setStepAndOffsetTop(nextStep, nextOffsetTop);
-        // }
-        // if (scrollTop < offsetTop || curDistance < minDistance) {
-        //     const [nextStep, nextOffsetTop] = computeStepAndOffsettopByScrollTop(scrollTop, contentHeight);
-        //     setStepAndOffsetTop(nextStep, nextOffsetTop);
-        // }
-        console.log('didUpdate）', scrollTop);
-
-        console.log(scrollTop < offsetTop, curDistance < minDistance);
-
-    }, [overSpeed]);
-
-
-    /**
-     * 当前范围渲染数据的起始索引值
-     */
-    const currentIndex = step * range;
+        const [nextStep, nextOffsetTop] = computeStepAndOffsettopByScrollTop(scrollTop);
+        setHasDataChanged(false);
+        setStepAndOffsetTop(nextStep, nextOffsetTop);
+    }, [scrolling, hasDataChanged]);
 
     /**
      * 
      * hook return value
      */
     return {
-        /**
-         * 超速
-         */
-        overSpeed: overSpeed,
-
         /**
          * 状态及数据
          */
